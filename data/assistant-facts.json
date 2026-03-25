@@ -1,0 +1,299 @@
+{
+  "facts": [
+    {
+      "id": "identity.voice-agent",
+      "category": "identity",
+      "value": "I am the voice agent for Shailesh Rana's portfolio, not Shailesh himself.",
+      "spokenForm": "I am the voice agent for Shailesh Rana's portfolio, not Shailesh himself.",
+      "certainty": "explicit",
+      "source": "assistant.product",
+      "entity": "identity",
+      "keywords": ["who are you", "are you ai", "are you an ai", "voice agent", "bot"]
+    },
+    {
+      "id": "background.pm-years",
+      "category": "scalar",
+      "value": "Shailesh has about 4 years of product management experience.",
+      "spokenForm": "Shailesh has about four years of product management experience.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[1]",
+      "entity": "pm_experience_years",
+      "keywords": ["years", "yoe", "product management experience", "pm experience", "how many years"]
+    },
+    {
+      "id": "background.previous-role",
+      "category": "background",
+      "value": "Before product management, he worked as a Data Analyst.",
+      "spokenForm": "Before product management, he worked as a data analyst.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[1]",
+      "entity": "background",
+      "keywords": ["before product management", "before that", "data analyst", "background"]
+    },
+    {
+      "id": "role.current",
+      "category": "current_role",
+      "value": "Shailesh is currently a Product Manager and Member of Technical Staff at Data Sutram, working on the company's only B2B SaaS application.",
+      "spokenForm": "Shailesh is currently a Product Manager and Member of Technical Staff at Data Sutram, working on the company's only business to business software as a service application.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[2]",
+      "entity": "current_role",
+      "keywords": ["current role", "current job", "where does he work", "what does he do now", "datasutram"]
+    },
+    {
+      "id": "role.current-scope",
+      "category": "current_role",
+      "value": "He manages UX and design, product management, development, and testing across the product lifecycle while engineering handles deployment, API products, and infrastructure.",
+      "spokenForm": "He manages UX and design, product management, development, and testing across the product lifecycle, while engineering handles deployment, API products, and infrastructure.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[2]",
+      "entity": "current_role_scope",
+      "keywords": ["responsibilities", "scope", "what does he do", "ux", "testing", "development"]
+    },
+    {
+      "id": "background.team-context",
+      "category": "background",
+      "value": "He is one of three people supporting the product and works in a small team that is growing quickly.",
+      "spokenForm": "He is one of three people supporting the product and works in a small team that is growing quickly.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[2-3]",
+      "entity": "current_team",
+      "keywords": ["team", "small team", "one of three", "growing fast"]
+    },
+    {
+      "id": "research.interests",
+      "category": "research",
+      "value": "For fun, Shailesh works on AI research focused on agents, mechanistic interpretability, and continual learning.",
+      "spokenForm": "For fun, Shailesh works on AI research focused on agents, mechanistic interpretability, and continual learning.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[4]",
+      "entity": "research_interests",
+      "keywords": ["research", "interests", "agents", "mechanistic interpretability", "continual learning"]
+    },
+    {
+      "id": "background.code-with-ai",
+      "category": "background",
+      "value": "All the code in the projects is written using AI.",
+      "spokenForm": "All the code in the projects is written using AI.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[5]",
+      "entity": "coding_style",
+      "keywords": ["code", "using ai", "written using ai"]
+    },
+    {
+      "id": "education.mba",
+      "category": "education",
+      "value": "He completed an MBA in Finance from University Business School, Panjab University, from 2020 to 2022.",
+      "spokenForm": "He completed an MBA in Finance from University Business School, Panjab University, from 2020 to 2022.",
+      "certainty": "explicit",
+      "source": "cv.summary.education",
+      "entity": "education",
+      "keywords": ["mba", "finance", "education", "university", "panjab university"]
+    },
+    {
+      "id": "education.be",
+      "category": "education",
+      "value": "He completed a B.E. in Metallurgical Engineering from PEC University of Technology, Chandigarh, from 2013 to 2017.",
+      "spokenForm": "He completed a B E in Metallurgical Engineering from PEC University of Technology, Chandigarh, from 2013 to 2017.",
+      "certainty": "explicit",
+      "source": "cv.summary.education",
+      "entity": "education",
+      "keywords": ["metallurgical engineering", "pec", "degree", "education", "engineering"]
+    },
+    {
+      "id": "background.location",
+      "category": "background",
+      "value": "He is based in Bengaluru.",
+      "spokenForm": "He is based in Bengaluru.",
+      "certainty": "explicit",
+      "source": "cv.summary.location",
+      "entity": "location",
+      "keywords": ["based", "location", "where is he based", "bengaluru"]
+    },
+    {
+      "id": "background.role-fit",
+      "category": "background",
+      "value": "He looks strongest for Product roles with deep AI ownership and for AI Research roles.",
+      "spokenForm": "He looks strongest for product roles with deep AI ownership and for AI research roles.",
+      "certainty": "explicit",
+      "source": "cv.summary.roleTargets",
+      "entity": "role_fit",
+      "keywords": ["role fit", "what kind of role", "best fit", "ai researcher", "product role"]
+    },
+    {
+      "id": "background.compensation-ask",
+      "category": "background",
+      "value": "For a new role, Shailesh is targeting around 70 lakhs per annum in cash plus ESOPs.",
+      "spokenForm": "For a new role, Shailesh is targeting around seventy lakhs per annum in cash plus E S O Ps.",
+      "certainty": "explicit",
+      "source": "user.provided.compensation",
+      "entity": "compensation_expectation",
+      "keywords": [
+        "compensation",
+        "expected compensation",
+        "salary expectation",
+        "package",
+        "ctc",
+        "ask",
+        "cash",
+        "esops"
+      ]
+    },
+    {
+      "id": "contact.next-step",
+      "category": "contact",
+      "value": "The cleanest next step is LinkedIn or the CV button on the site.",
+      "spokenForm": "The cleanest next step is LinkedIn or the C V button on the site.",
+      "certainty": "explicit",
+      "source": "contact.links",
+      "entity": "contact",
+      "keywords": ["contact", "linkedin", "cv", "resume", "email"]
+    },
+    {
+      "id": "boundary.unsupported-personal",
+      "category": "boundary",
+      "value": "I can help with details grounded in Shailesh's portfolio and CV summary, but I do not have reliable information about private personal topics such as salary, exact address, relationships, age, religion, or politics.",
+      "spokenForm": "I can help with details grounded in Shailesh's portfolio and C V summary, but I do not have reliable information about private personal topics such as salary, exact address, relationships, age, religion, or politics.",
+      "certainty": "explicit",
+      "source": "assistant.boundary",
+      "entity": "unsupported_personal",
+      "keywords": ["salary", "married", "wife", "girlfriend", "relationship", "address", "age", "religion", "politics"]
+    }
+  ],
+  "timeline": [
+    {
+      "id": "timeline.datasutram",
+      "company": "Data Sutram",
+      "title": "Product Manager / Member of Technical Staff",
+      "start": null,
+      "end": null,
+      "summary": "At Data Sutram, he supports the company's only B2B SaaS application and owns UX, design, product management, development, and testing across the product lifecycle.",
+      "spokenForm": "At Data Sutram, he supports the company's only business to business software as a service application and owns U X, design, product management, development, and testing across the product lifecycle.",
+      "certainty": "explicit",
+      "source": "home.introParagraphs[2]",
+      "keywords": ["datasutram", "current company", "product manager", "member of technical staff"]
+    },
+    {
+      "id": "timeline.caastle",
+      "company": "CaaStle Technologies",
+      "title": "AI data platform / assistant work",
+      "start": "2022-10",
+      "end": "2025-04",
+      "summary": "At CaaStle Technologies from October 2022 to April 2025, he led the creation of an AI data platform, built AI assistants, shipped natural-language data querying with Gemini and Slack, and won a company hackathon with a GPT-4 customer-service chatbot.",
+      "spokenForm": "At CaaStle Technologies from October 2022 to April 2025, he led the creation of an A I data platform, built A I assistants, shipped natural language data querying with Gemini and Slack, and won a company hackathon with a G P T four customer service chatbot.",
+      "certainty": "explicit",
+      "source": "cv.summary.timeline.caastle",
+      "keywords": ["caastle", "previous company", "gemini", "slack", "hackathon"]
+    },
+    {
+      "id": "timeline.bajaj",
+      "company": "Bajaj Finserv Health",
+      "title": "Product and growth",
+      "start": "2022-05",
+      "end": "2022-09",
+      "summary": "At Bajaj Finserv Health from May 2022 to September 2022, he worked on organic growth and built systems that linked healthcare entities for diagnosis, test recommendations, and doctor discovery.",
+      "spokenForm": "At Bajaj Finserv Health from May 2022 to September 2022, he worked on organic growth and built systems that linked healthcare entities for diagnosis, test recommendations, and doctor discovery.",
+      "certainty": "explicit",
+      "source": "cv.summary.timeline.bajaj",
+      "keywords": ["bajaj", "finserv", "healthcare", "growth"]
+    }
+  ],
+  "flagshipProjects": [
+    {
+      "slug": "research-paper-semantic-gravity",
+      "title": "Research Paper : Semantic Gravity",
+      "aliases": [
+        "semantic gravity",
+        "semantic gravity wells",
+        "research paper",
+        "paper",
+        "negative constraints",
+        "semantic pressure"
+      ],
+      "coreSummary": "Semantic Gravity is Shailesh's strongest research signal: a mechanistic interpretability paper that explains why language models fail negative constraints and introduces semantic pressure as a predictor of those failures.",
+      "spokenCoreSummary": "Semantic Gravity is Shailesh's strongest research signal: a mechanistic interpretability paper that explains why language models fail negative constraints and introduces semantic pressure as a predictor of those failures.",
+      "whyItMatters": "It shows original AI research, careful experimentation, and the ability to turn a model-behavior problem into a publishable explanatory framework.",
+      "spokenWhyItMatters": "It shows original AI research, careful experimentation, and the ability to turn a model behavior problem into a publishable explanatory framework.",
+      "pmAiAngle": "It matters for both AI research and product judgment because it connects model behavior to practical failure modes that can affect user trust and system design.",
+      "source": "projects.research-paper-semantic-gravity"
+    },
+    {
+      "slug": "q-commerce-demo-list-to-cart",
+      "title": "Q-Commerce Demo: List to Cart",
+      "aliases": [
+        "list to cart",
+        "list-to-cart",
+        "grocery cart",
+        "q-commerce demo",
+        "q commerce demo"
+      ],
+      "coreSummary": "List to Cart is the clearest product-management proof point: a demo that generates a full grocery cart from a simple list of items.",
+      "spokenCoreSummary": "List to Cart is the clearest product management proof point: a demo that generates a full grocery cart from a simple list of items.",
+      "whyItMatters": "It shows product thinking, UX judgment, and the ability to turn an AI capability into a concrete workflow people can understand quickly.",
+      "spokenWhyItMatters": "It shows product thinking, U X judgment, and the ability to turn an A I capability into a concrete workflow people can understand quickly.",
+      "pmAiAngle": "It demonstrates user-facing AI product design rather than only research depth.",
+      "source": "projects.q-commerce-demo-list-to-cart"
+    },
+    {
+      "slug": "how-a-7-billion-parameter-ai-cannot-add",
+      "title": "How a 7-Billion-Parameter AI Cannot Add",
+      "aliases": [
+        "7 billion parameter ai cannot add",
+        "cannot add",
+        "7 billion model",
+        "length bias",
+        "addition paper"
+      ],
+      "coreSummary": "How a 7-Billion-Parameter AI Cannot Add is an interpretability project that uncovered a systematic length bias in large-number addition.",
+      "spokenCoreSummary": "The seven billion parameter addition interpretability project uncovered a systematic length bias in large number addition.",
+      "whyItMatters": "It shows the ability to inspect model behavior closely, spot a non-obvious failure pattern, and explain why the model sometimes appears to do better on harder examples.",
+      "spokenWhyItMatters": "It shows the ability to inspect model behavior closely, spot a non obvious failure pattern, and explain why the model sometimes appears to do better on harder examples.",
+      "pmAiAngle": "Together with Semantic Gravity, it proves serious model-behavior analysis rather than surface-level AI experimentation.",
+      "source": "projects.how-a-7-billion-parameter-ai-cannot-add"
+    }
+  ],
+  "projectAliases": {
+    "research-paper-semantic-gravity": [
+      "semantic gravity",
+      "semantic gravity wells",
+      "research paper",
+      "negative constraints",
+      "semantic pressure"
+    ],
+    "q-commerce-demo-list-to-cart": [
+      "list to cart",
+      "list-to-cart",
+      "grocery cart",
+      "grocery items",
+      "q commerce demo",
+      "q-commerce demo"
+    ],
+    "how-a-7-billion-parameter-ai-cannot-add": [
+      "7 billion",
+      "cannot add",
+      "length bias",
+      "addition"
+    ],
+    "continuous-learning-llm": [
+      "continuous learning",
+      "continual learning",
+      "continuous learning llm"
+    ],
+    "ai-agent-communication-protocol": [
+      "communication protocol",
+      "agent communication protocol",
+      "data analyst agent"
+    ],
+    "smart-medical-search": ["smart medical search", "medical search"],
+    "q-commerce-demo-grocery-crate-analysis-wrt-customer-profile": [
+      "grocery crate",
+      "crate analysis",
+      "customer profile"
+    ],
+    "ai-shoe-design": ["shoe design", "ai shoe"],
+    "the-medium-ai-articles": ["medium articles", "medium ai articles", "articles"],
+    "garden-watering-system": ["garden watering", "watering system"],
+    "claude-3-5-sonnet-twitter-account": ["claude twitter", "twitter account"],
+    "parker-square-search": ["parker square", "square search"]
+  }
+}

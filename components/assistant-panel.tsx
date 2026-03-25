@@ -4,7 +4,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getAudioExtension, normalizeAudioMimeType } from "@/lib/audio";
-import type { AssistantHistoryItem } from "@/lib/types";
+import type {
+  AssistantHistoryItem,
+  AssistantTurnOrigin,
+  WorkingMemory
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type AssistantResponse = {
@@ -12,8 +16,9 @@ type AssistantResponse = {
   replyText: string;
   spokenText?: string;
   sources: string[];
-  audio?: string;
-  audioMimeType?: string;
+  selectedFactIds?: string[];
+  modelUsed?: string;
+  nextWorkingMemory?: WorkingMemory;
   remainingTurns: number;
   limitReached: boolean;
   errorCode?: string;
@@ -26,23 +31,37 @@ type TranscriptionResponse = {
   errorCode?: string;
 };
 
+type SpeakResponse = {
+  audio?: string;
+  audioMimeType?: string;
+  replyText?: string;
+  spokenText?: string;
+};
+
 type AssistantPanelProps = {
   variant?: "hero" | "floating";
+  contextProjectSlug?: string;
 };
 
 type OpenEventDetail = {
   prompt?: string;
   autoSubmit?: boolean;
+  contextProjectSlug?: string;
+  source?: "hero" | "project" | "launcher" | "external";
 };
 
 type AssistantStatus =
   | "idle"
+  | "arming"
   | "recording"
   | "transcribing"
-  | "finding_context"
-  | "writing_answer"
+  | "grounding"
+  | "composing"
+  | "preparing_voice"
+  | "ready"
   | "speaking"
-  | "error";
+  | "error"
+  | "limit_reached";
 
 type RecorderSession = {
   stream: MediaStream;
@@ -60,15 +79,27 @@ type WaveformSession = {
   startedAt: number;
 };
 
+type PersistedAssistantState = {
+  history: AssistantHistoryItem[];
+  draft: string;
+  remainingTurns: number;
+  open: boolean;
+  workingMemory: WorkingMemory;
+  updatedAt: number;
+};
+
+type LastAudioState = {
+  src: string;
+  mimeType: string;
+} | null;
+
 const MAX_RECORDING_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 60_000;
 const DEFAULT_TURNS = 6;
-const WAVEFORM_BAR_COUNT = 20;
-const waveformMidpoint = (WAVEFORM_BAR_COUNT - 1) / 2;
-const defaultWaveform = Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) => {
-  const distanceFromCenter = Math.abs(index - waveformMidpoint) / waveformMidpoint;
-  return 0.18 + (1 - distanceFromCenter) * 0.18;
-});
+const ASSISTANT_STORAGE_KEY = "portfolio-assistant-state-v5";
+const ASSISTANT_STORAGE_TTL_MS = 6 * 60 * 60 * 1000;
+const WAVEFORM_POINT_COUNT = 72;
+const defaultWaveform = Array.from({ length: WAVEFORM_POINT_COUNT }, () => 0);
 
 const starterPrompts = [
   "What kind of role is Shailesh a fit for?",
@@ -96,7 +127,7 @@ function getRecordingMimeType() {
   );
 }
 
-function dispatchAssistantEvent(detail?: { prompt?: string; autoSubmit?: boolean }) {
+function dispatchAssistantEvent(detail?: OpenEventDetail) {
   window.dispatchEvent(
     new CustomEvent("portfolio-assistant:open", {
       detail
@@ -115,16 +146,24 @@ function formatRecordingTime(ms: number) {
 
 function getStatusLabel(status: AssistantStatus) {
   switch (status) {
+    case "arming":
+      return "Allow mic access";
     case "recording":
       return "Listening";
     case "transcribing":
       return "Transcribing";
-    case "finding_context":
-      return "Finding context";
-    case "writing_answer":
+    case "grounding":
+      return "Selecting context";
+    case "composing":
       return "Writing answer";
+    case "preparing_voice":
+      return "Preparing voice";
+    case "ready":
+      return "Ready";
     case "speaking":
       return "Speaking";
+    case "limit_reached":
+      return "Limit reached";
     case "error":
       return "Retry needed";
     default:
@@ -134,57 +173,120 @@ function getStatusLabel(status: AssistantStatus) {
 
 function getStatusDescription(status: AssistantStatus) {
   switch (status) {
+    case "arming":
+      return "Preparing the mic.";
     case "recording":
       return "Recording live audio from the mic.";
     case "transcribing":
       return "Turning the recording into a clean question.";
-    case "finding_context":
-      return "Pulling the strongest portfolio and CV context.";
-    case "writing_answer":
-      return "Assembling a short, recruiter-ready answer.";
+    case "grounding":
+      return "Selecting the smallest reliable context pack.";
+    case "composing":
+      return "Writing the answer.";
+    case "preparing_voice":
+      return "Turning the answer into speech.";
+    case "ready":
+      return "Answer ready.";
     case "speaking":
       return "Reading the answer out loud.";
+    case "limit_reached":
+      return "Start a new conversation later.";
     case "error":
       return "Something slipped. Retry or use text.";
     default:
-      return "Talk or type for a direct answer.";
+      return "Speak or type for grounded context.";
   }
 }
 
 function isProcessingStatus(status: AssistantStatus) {
   return (
+    status === "arming" ||
+    status === "recording" ||
     status === "transcribing" ||
-    status === "finding_context" ||
-    status === "writing_answer"
+    status === "grounding" ||
+    status === "composing" ||
+    status === "preparing_voice"
   );
 }
 
-function WaveformBars({
-  levels,
+function buildWaveformPath(samples: number[]) {
+  const width = 100;
+  const height = 44;
+  const centerY = height / 2;
+  const usableAmplitude = 15;
+
+  return samples
+    .map((sample, index) => {
+      const x = (index / Math.max(1, samples.length - 1)) * width;
+      const y = centerY - sample * usableAmplitude;
+      return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+}
+
+function WaveformLine({
+  samples,
   emphasis = "idle"
 }: {
-  levels: number[];
+  samples: number[];
   emphasis?: "idle" | "recording" | "speaking";
 }) {
+  const path = buildWaveformPath(samples);
+
   return (
-    <div className="flex h-28 items-center justify-center gap-1 overflow-hidden">
-      {levels.map((level, index) => (
-        <span
-          key={`${index}-${level}`}
+    <div className="relative h-20 overflow-hidden border border-line bg-[rgba(14,6,8,0.75)] px-3 py-3">
+      <div className="absolute inset-y-0 left-1/2 w-px bg-white/8" />
+      <svg viewBox="0 0 100 44" preserveAspectRatio="none" className="h-full w-full">
+        <line x1="0" y1="22" x2="100" y2="22" className="stroke-white/10" strokeWidth="0.7" />
+        <path
+          d={path}
+          fill="none"
           className={cn(
-            "block h-full w-full max-w-[12px] rounded-full transition-[height,background-color,opacity] duration-150",
             emphasis === "recording"
-              ? "bg-[linear-gradient(180deg,rgba(255,213,203,0.95),rgba(255,67,35,0.95))]"
+              ? "stroke-[#ff5b3d]"
               : emphasis === "speaking"
-                ? "bg-[linear-gradient(180deg,rgba(255,244,238,0.9),rgba(245,232,222,0.62))]"
-                : "bg-white/14"
+                ? "stroke-[rgba(255,244,238,0.92)]"
+                : "stroke-white/35"
           )}
-          style={{
-            height: `${Math.max(16, Math.round(level * 112))}px`,
-            opacity: emphasis === "idle" ? 0.55 : 0.95
-          }}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+          strokeLinecap="round"
         />
-      ))}
+      </svg>
+    </div>
+  );
+}
+
+function RecordingStrip({
+  status,
+  samples,
+  elapsedMs
+}: {
+  status: AssistantStatus;
+  samples: number[];
+  elapsedMs: number;
+}) {
+  const label = status === "arming" ? "Allow mic access..." : "Listening";
+  const helper =
+    status === "arming"
+      ? "Stay pressed while the mic is prepared."
+      : "Release to send. Recording stops automatically at 25 seconds.";
+
+  return (
+    <div className="space-y-3 border border-line bg-[linear-gradient(180deg,rgba(14,6,8,0.94),rgba(8,3,4,0.98))] px-4 py-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-ember-amber">
+            {label}
+          </p>
+          <p className="text-sm leading-6 text-smoke-gray">{helper}</p>
+        </div>
+        <p className="font-structure text-sm uppercase tracking-[0.22em] text-bone-white">
+          {formatRecordingTime(elapsedMs)}
+        </p>
+      </div>
+
+      <WaveformLine samples={samples} emphasis={status === "recording" ? "recording" : "idle"} />
     </div>
   );
 }
@@ -201,33 +303,38 @@ function StatusRail({
       key: "transcribing",
       label: "Transcript",
       active: status === "transcribing",
-      complete: transcriptVisible || status !== "transcribing"
+      complete:
+        transcriptVisible ||
+        status === "grounding" ||
+        status === "composing" ||
+        status === "ready" ||
+        status === "speaking"
     },
     {
-      key: "finding_context",
+      key: "grounding",
       label: "Context",
-      active: status === "finding_context",
-      complete: status === "writing_answer" || status === "speaking"
+      active: status === "grounding",
+      complete: status === "composing" || status === "ready" || status === "speaking"
     },
     {
-      key: "writing_answer",
+      key: "composing",
       label: "Answer",
-      active: status === "writing_answer",
-      complete: status === "speaking"
+      active: status === "composing",
+      complete: status === "ready" || status === "speaking"
     },
     {
       key: "speaking",
       label: "Voice",
-      active: status === "speaking",
-      complete: false
+      active: status === "preparing_voice" || status === "speaking",
+      complete: status === "ready" || status === "preparing_voice" || status === "speaking"
     }
   ];
 
   return (
     <div className="space-y-3 border border-line bg-charcoal-steel/60 px-4 py-4">
-      <div className="font-structure flex items-center justify-between text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
+      <div className="font-structure flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
         <span>{getStatusLabel(status)}</span>
-        <span>{getStatusDescription(status)}</span>
+        <span className="text-right">{getStatusDescription(status)}</span>
       </div>
       <div className="grid grid-cols-4 gap-2">
         {steps.map((step) => (
@@ -241,7 +348,11 @@ function StatusRail({
             <p
               className={cn(
                 "font-structure text-[10px] uppercase tracking-[0.24em] transition-colors",
-                step.active ? "text-bone-white" : step.complete ? "text-smoke-gray" : "text-smoke-gray-soft"
+                step.active
+                  ? "text-bone-white"
+                  : step.complete
+                    ? "text-smoke-gray"
+                    : "text-smoke-gray-soft"
               )}
             >
               {step.label}
@@ -256,11 +367,15 @@ function StatusRail({
 function LatestTurn({
   history,
   pendingUserText,
-  hideAssistant = false
+  hideAssistant = false,
+  canReplayAudio = false,
+  onReplayAudio
 }: {
   history: AssistantHistoryItem[];
   pendingUserText: string | null;
   hideAssistant?: boolean;
+  canReplayAudio?: boolean;
+  onReplayAudio?: () => Promise<void> | void;
 }) {
   const latestUserMessage = [...history].reverse().find((item) => item.role === "user");
   const latestAssistantMessage = [...history].reverse().find(
@@ -284,9 +399,20 @@ function LatestTurn({
 
       {latestAssistantMessage && !hideAssistant ? (
         <div className="border border-line bg-charcoal-steel/76 px-4 py-4">
-          <p className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
-            Answer
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <p className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
+              Answer
+            </p>
+            {canReplayAudio && onReplayAudio ? (
+              <button
+                type="button"
+                onClick={() => void onReplayAudio()}
+                className="font-structure text-[10px] uppercase tracking-[0.22em] text-smoke-gray transition-colors hover:text-bone-white"
+              >
+                Play answer
+              </button>
+            ) : null}
+          </div>
           <p className="mt-2 text-sm leading-7 text-bone-white">{latestAssistantMessage.content}</p>
         </div>
       ) : null}
@@ -294,45 +420,22 @@ function LatestTurn({
   );
 }
 
-function RecordingTakeover({
-  levels,
-  elapsedMs,
-  onStop
-}: {
-  levels: number[];
-  elapsedMs: number;
-  onStop: () => Promise<void>;
-}) {
-  return (
-    <div className="space-y-5 border border-line bg-[linear-gradient(180deg,rgba(16,6,9,0.9),rgba(10,4,5,0.96))] px-4 py-5 md:px-5 md:py-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2">
-          <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-ember-amber">
-            Recording live
-          </p>
-          <p className="text-lg leading-tight text-bone-white">Hold to record. Release to answer.</p>
-        </div>
-        <p className="font-structure text-sm uppercase tracking-[0.24em] text-bone-white">
-          {formatRecordingTime(elapsedMs)}
-        </p>
-      </div>
-
-      <WaveformBars levels={levels} emphasis="recording" />
-
-      <div className="flex items-center justify-between gap-3">
-        <p className="max-w-sm text-sm leading-6 text-smoke-gray">
-          The recording stops automatically at 25 seconds, or you can stop it now.
-        </p>
-        <button
-          type="button"
-          onClick={() => void onStop()}
-          className="font-structure cut-corner border border-ember-amber bg-ember-amber-soft px-4 py-3 text-sm uppercase tracking-[0.12em] text-bone-white transition-colors hover:bg-ember-amber/18"
-        >
-          Stop and answer
-        </button>
-      </div>
-    </div>
-  );
+function getRecordButtonLabel(status: AssistantStatus) {
+  switch (status) {
+    case "arming":
+      return "Allow mic access...";
+    case "recording":
+      return "Release to send";
+    case "transcribing":
+    case "grounding":
+    case "composing":
+    case "preparing_voice":
+      return "Working...";
+    case "limit_reached":
+      return "Limit reached";
+    default:
+      return "Hold to talk";
+  }
 }
 
 function AssistantSurface({
@@ -343,15 +446,16 @@ function AssistantSurface({
   setDraft,
   notice,
   pendingUserText,
-  waveformLevels,
+  waveformSamples,
   recordingMs,
   onSubmit,
   onRecordPressStart,
   onRecordPressEnd,
-  onStopRecording,
+  onReplayAudio,
   onStarterPrompt,
   onClose,
-  floating
+  floating,
+  hasReplayAudio
 }: {
   history: AssistantHistoryItem[];
   status: AssistantStatus;
@@ -360,19 +464,29 @@ function AssistantSurface({
   setDraft: (value: string) => void;
   notice: string | null;
   pendingUserText: string | null;
-  waveformLevels: number[];
+  waveformSamples: number[];
   recordingMs: number;
   onSubmit: (event: React.FormEvent) => Promise<void>;
-  onRecordPressStart: () => Promise<void>;
-  onRecordPressEnd: () => Promise<void>;
-  onStopRecording: () => Promise<void>;
+  onRecordPressStart: (
+    event: React.PointerEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
+  ) => Promise<void>;
+  onRecordPressEnd: (
+    event?: React.PointerEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
+  ) => Promise<void>;
+  onReplayAudio: () => Promise<void>;
   onStarterPrompt: (prompt: string) => Promise<void>;
   onClose?: () => void;
   floating: boolean;
+  hasReplayAudio: boolean;
 }) {
   const showPrompts = history.length === 0 && !pendingUserText && status === "idle";
-  const showProgress = isProcessingStatus(status) || status === "speaking";
-  const busy = isProcessingStatus(status) || status === "recording";
+  const showStatusRail =
+    Boolean(pendingUserText) ||
+    ["transcribing", "grounding", "composing", "preparing_voice", "ready", "speaking"].includes(
+      status
+    );
+  const busy = isProcessingStatus(status);
+  const recordingActive = status === "arming" || status === "recording";
 
   return (
     <section
@@ -386,7 +500,7 @@ function AssistantSurface({
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-smoke-gray">
-              Quick answers
+              Voice agent
             </p>
             <h2
               className={cn(
@@ -394,10 +508,10 @@ function AssistantSurface({
                 floating ? "text-xl font-medium leading-tight" : "text-[1.9rem] font-medium leading-[1.02]"
               )}
             >
-              Ask about projects, role fit, background, or what stands out.
+              Ask about projects, background, or role fit.
             </h2>
             <p className="max-w-md text-sm leading-7 text-smoke-gray">
-              Talk or type for a sharp answer on the work.
+              Speak or type for grounded context from the portfolio and CV.
             </p>
           </div>
 
@@ -414,53 +528,49 @@ function AssistantSurface({
       </div>
 
       <div className="space-y-4 px-4 py-4 md:px-5 md:py-5">
-        {status === "recording" ? (
-          <RecordingTakeover
-            levels={waveformLevels}
-            elapsedMs={recordingMs}
-            onStop={onStopRecording}
-          />
+        {showPrompts ? (
+          <div className="space-y-3">
+            {starterPrompts.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => void onStarterPrompt(prompt)}
+                className="font-structure cut-corner flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_44%)]"
+              >
+                <span>{prompt}</span>
+                <span aria-hidden="true" className="text-ember-amber">
+                  /
+                </span>
+              </button>
+            ))}
+          </div>
         ) : (
-          <>
-            {showPrompts ? (
-              <div className="space-y-3">
-                {starterPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => void onStarterPrompt(prompt)}
-                    className="font-structure cut-corner flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_44%)]"
-                  >
-                    <span>{prompt}</span>
-                    <span aria-hidden="true" className="text-ember-amber">
-                      /
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <LatestTurn
-                history={history}
-                pendingUserText={pendingUserText}
-                hideAssistant={Boolean(pendingUserText && isProcessingStatus(status))}
-              />
+          <LatestTurn
+            history={history}
+            pendingUserText={pendingUserText}
+            hideAssistant={Boolean(
+              pendingUserText && ["transcribing", "grounding", "composing"].includes(status)
             )}
-
-            {showProgress ? (
-              <StatusRail
-                status={status}
-                transcriptVisible={Boolean(pendingUserText)}
-              />
-            ) : null}
-          </>
+            canReplayAudio={hasReplayAudio}
+            onReplayAudio={onReplayAudio}
+          />
         )}
+
+        {recordingActive ? (
+          <RecordingStrip status={status} samples={waveformSamples} elapsedMs={recordingMs} />
+        ) : null}
+
+        {showStatusRail ? (
+          <StatusRail status={status} transcriptVisible={Boolean(pendingUserText)} />
+        ) : null}
 
         <div className="font-structure flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-smoke-gray">
           <span>{remainingTurns} turns left</span>
           <span
             className={cn(
-              status === "recording" && "text-ember-amber",
-              showProgress && "text-bone-white"
+              recordingActive && "text-ember-amber",
+              ["ready", "speaking"].includes(status) && "text-bone-white",
+              status === "limit_reached" && "text-ember-amber"
             )}
           >
             {getStatusLabel(status)}
@@ -469,69 +579,79 @@ function AssistantSurface({
 
         {notice ? <p className="text-sm leading-6 text-smoke-gray">{notice}</p> : null}
 
-        {status !== "recording" ? (
-          <form onSubmit={(event) => void onSubmit(event)} className="space-y-3">
-            <textarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask about projects, skills, background, or role fit"
-              rows={floating ? 3 : 4}
-              className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-ember-amber/70"
-            />
+        <form onSubmit={(event) => void onSubmit(event)} className="space-y-3">
+          <textarea
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="Ask about projects, skills, background, or role fit"
+            rows={floating ? 3 : 4}
+            disabled={recordingActive || status === "limit_reached"}
+            className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-ember-amber/70 disabled:cursor-not-allowed disabled:opacity-65"
+          />
 
-            <div className={cn("flex gap-2", !floating && "md:grid md:grid-cols-[1fr_auto]")}>
-              <button
-                type="button"
-                onPointerDown={() => void onRecordPressStart()}
-                onPointerUp={() => void onRecordPressEnd()}
-                onPointerCancel={() => void onRecordPressEnd()}
-                onKeyDown={(event) => {
-                  if ((event.key === " " || event.key === "Enter") && !event.repeat) {
-                    event.preventDefault();
-                    void onRecordPressStart();
-                  }
-                }}
-                onKeyUp={(event) => {
-                  if (event.key === " " || event.key === "Enter") {
-                    event.preventDefault();
-                    void onRecordPressEnd();
-                  }
-                }}
-                disabled={remainingTurns <= 0 || busy}
-                className={cn(
-                  "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
-                  !floating && "md:w-full",
-                  "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white disabled:cursor-not-allowed disabled:opacity-50"
-                )}
-              >
-                Hold to talk
-              </button>
-              <button
-                type="submit"
-                disabled={!draft.trim() || remainingTurns <= 0 || busy}
-                className="font-structure cut-corner bg-ember-amber px-5 py-3 text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:bg-[#ff5b3d] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Send
-              </button>
-            </div>
-          </form>
-        ) : null}
+          <div className={cn("flex gap-2", !floating && "md:grid md:grid-cols-[1fr_auto]")}>
+            <button
+              type="button"
+              onPointerDown={(event) => void onRecordPressStart(event)}
+              onPointerUp={(event) => void onRecordPressEnd(event)}
+              onPointerCancel={(event) => void onRecordPressEnd(event)}
+              onKeyDown={(event) => {
+                if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+                  event.preventDefault();
+                  void onRecordPressStart(event);
+                }
+              }}
+              onKeyUp={(event) => {
+                if (event.key === " " || event.key === "Enter") {
+                  event.preventDefault();
+                  void onRecordPressEnd(event);
+                }
+              }}
+              disabled={
+                remainingTurns <= 0 ||
+                (busy && !recordingActive) ||
+                status === "limit_reached"
+              }
+              className={cn(
+                "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
+                !floating && "md:w-full",
+                recordingActive
+                  ? "border-ember-amber bg-ember-amber-soft text-bone-white"
+                  : "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white",
+                (busy && !recordingActive) || status === "limit_reached"
+                  ? "cursor-not-allowed opacity-50"
+                  : undefined
+              )}
+            >
+              {getRecordButtonLabel(status)}
+            </button>
+            <button
+              type="submit"
+              disabled={!draft.trim() || busy || status === "limit_reached"}
+              className="font-structure cut-corner bg-ember-amber px-5 py-3 text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:bg-[#ff5b3d] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+        </form>
 
         <div className="flex items-center justify-between border-t border-line pt-4">
           <span className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
             Powered by Sarvam AI
           </span>
-          <div className="flex items-center gap-2">
-            <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
-          </div>
+          <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
         </div>
       </div>
     </section>
   );
 }
 
-export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
+export function AssistantPanel({
+  variant = "floating",
+  contextProjectSlug
+}: AssistantPanelProps) {
   const isHero = variant === "hero";
+  const [hydrated, setHydrated] = useState(false);
   const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<AssistantHistoryItem[]>([]);
   const [status, setStatus] = useState<AssistantStatus>("idle");
@@ -539,8 +659,10 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   const [notice, setNotice] = useState<string | null>(null);
   const [remainingTurns, setRemainingTurns] = useState(DEFAULT_TURNS);
   const [pendingUserText, setPendingUserText] = useState<string | null>(null);
-  const [waveformLevels, setWaveformLevels] = useState<number[]>(defaultWaveform);
+  const [waveformSamples, setWaveformSamples] = useState<number[]>(defaultWaveform);
   const [recordingMs, setRecordingMs] = useState(0);
+  const [workingMemory, setWorkingMemory] = useState<WorkingMemory>({});
+  const [lastAudioState, setLastAudioState] = useState<LastAudioState>(null);
 
   const stopTimeoutRef = useRef<number | null>(null);
   const stageTimeoutsRef = useRef<number[]>([]);
@@ -549,12 +671,60 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   const recorderSessionRef = useRef<RecorderSession | null>(null);
   const waveformSessionRef = useRef<WaveformSession | null>(null);
   const recordPressActiveRef = useRef(false);
-  const shouldStopAfterStartRef = useRef(false);
-  const recordReleaseHandledRef = useRef(false);
+  const releaseHandledRef = useRef(false);
+  const pointerTargetRef = useRef<HTMLButtonElement | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
+
+  const floatingLauncherEyebrow = "Voice agent";
+  const floatingLauncherTitle = isHero ? "Talk to the voice agent" : "Talk about this project";
+  const floatingLauncherSubline = isHero
+    ? "Get project and background context fast."
+    : "Get project context without leaving the page.";
 
   useEffect(() => {
     historyRef.current = history;
   }, [history]);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+
+    try {
+      const raw = window.sessionStorage.getItem(ASSISTANT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as PersistedAssistantState;
+      if (Date.now() - parsed.updatedAt > ASSISTANT_STORAGE_TTL_MS) {
+        window.sessionStorage.removeItem(ASSISTANT_STORAGE_KEY);
+        return;
+      }
+
+      setHistory(parsed.history ?? []);
+      setDraft(parsed.draft ?? "");
+      setRemainingTurns(parsed.remainingTurns ?? DEFAULT_TURNS);
+      setOpen(Boolean(parsed.open));
+      setWorkingMemory(parsed.workingMemory ?? {});
+    } catch {
+      window.sessionStorage.removeItem(ASSISTANT_STORAGE_KEY);
+    }
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+
+    const snapshot: PersistedAssistantState = {
+      history,
+      draft,
+      remainingTurns,
+      open,
+      workingMemory,
+      updatedAt: Date.now()
+    };
+
+    window.sessionStorage.setItem(ASSISTANT_STORAGE_KEY, JSON.stringify(snapshot));
+  }, [draft, history, hydrated, open, remainingTurns, workingMemory]);
 
   useEffect(() => {
     return () => {
@@ -566,23 +736,11 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   }, []);
 
   useEffect(() => {
-    if (status !== "recording") return;
+    if (!hydrated) return;
 
-    const handleRelease = () => {
-      void handleRecordPressEnd();
-    };
-
-    window.addEventListener("pointerup", handleRelease);
-    window.addEventListener("pointercancel", handleRelease);
-    return () => {
-      window.removeEventListener("pointerup", handleRelease);
-      window.removeEventListener("pointercancel", handleRelease);
-    };
-  }, [status]);
-
-  useEffect(() => {
     async function handleOpen(event: Event) {
       const detail = (event as CustomEvent<OpenEventDetail>).detail;
+
       if (!isHero || window.innerWidth < 1024) {
         setOpen(true);
       }
@@ -590,7 +748,13 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       if (!detail?.prompt) return;
 
       if (detail.autoSubmit) {
-        await submitTextTurn(detail.prompt, false);
+        const turnOrigin: AssistantTurnOrigin =
+          detail.source === "project"
+            ? "project"
+            : detail.source === "hero"
+              ? "starter"
+              : detail.source ?? "external";
+        await submitTextTurn(detail.prompt, false, turnOrigin, detail.contextProjectSlug ?? null);
       } else {
         setDraft(detail.prompt);
       }
@@ -598,7 +762,36 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
 
     window.addEventListener("portfolio-assistant:open", handleOpen);
     return () => window.removeEventListener("portfolio-assistant:open", handleOpen);
-  }, [isHero]);
+  }, [hydrated, isHero]);
+
+  useEffect(() => {
+    function handleInterruption() {
+      if (status === "recording") {
+        void stopRecordingAndSubmit("interrupted");
+        return;
+      }
+
+      if (status === "arming") {
+        recordPressActiveRef.current = false;
+        setStatus("idle");
+        setNotice("Mic is ready. Hold again to talk.");
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "visible") {
+        handleInterruption();
+      }
+    }
+
+    window.addEventListener("blur", handleInterruption);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("blur", handleInterruption);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [status]);
 
   function clearStageTimers() {
     for (const timeoutId of stageTimeoutsRef.current) {
@@ -611,8 +804,8 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     clearStageTimers();
     stageTimeoutsRef.current.push(
       window.setTimeout(() => {
-        setStatus((current) => (current === "finding_context" ? "writing_answer" : current));
-      }, 1200)
+        setStatus((current) => (current === "grounding" ? "composing" : current));
+      }, 850)
     );
   }
 
@@ -621,6 +814,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     if (!session) return;
 
     waveformSessionRef.current = null;
+
     if (session.frameId) {
       window.cancelAnimationFrame(session.frameId);
     }
@@ -631,7 +825,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       await session.context.close();
     }
 
-    setWaveformLevels(defaultWaveform);
+    setWaveformSamples(defaultWaveform);
     setRecordingMs(0);
   }
 
@@ -665,27 +859,50 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       : null;
   }
 
-  async function playAudioIfPresent(response: AssistantResponse) {
-    if (!response.audio || !response.audioMimeType) {
-      setStatus("idle");
-      return;
-    }
-
-    const src = `data:${response.audioMimeType};base64,${response.audio}`;
-    if (!audioRef.current) {
-      setStatus("idle");
-      return;
-    }
+  async function playAudioFromState(audioState: LastAudioState) {
+    if (!audioState || !audioRef.current) return;
 
     audioRef.current.pause();
     audioRef.current.currentTime = 0;
-    audioRef.current.src = src;
+    audioRef.current.src = audioState.src;
+
     try {
       await audioRef.current.play();
       setStatus("speaking");
+      setNotice(null);
     } catch {
-      setStatus("idle");
+      setStatus("ready");
+      setNotice("Answer is ready. Tap play answer to hear it out loud.");
     }
+  }
+
+  function clearAudioPlayback() {
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+  }
+
+  async function requestSpeech(spokenText: string) {
+    const { response, data } = await fetchAssistantResponse({
+      mode: "speak",
+      spokenText
+    });
+
+    if (!response.ok) {
+      throw new Error((data as SpeakResponse).replyText || "voice_failed");
+    }
+
+    const speechData = data as SpeakResponse;
+    if (!speechData.audio || !speechData.audioMimeType) {
+      throw new Error("voice_missing");
+    }
+
+    const audioState = {
+      src: `data:${speechData.audioMimeType};base64,${speechData.audio}`,
+      mimeType: speechData.audioMimeType
+    };
+    setLastAudioState(audioState);
+    return audioState;
   }
 
   async function fetchAssistantResponse(payload: FormData | Record<string, unknown>) {
@@ -699,9 +916,14 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
           payload instanceof FormData
             ? (() => {
                 payload.set("history", JSON.stringify(historyRef.current));
+                payload.set("workingMemory", JSON.stringify(workingMemory));
                 return payload;
               })()
-            : JSON.stringify({ ...payload, history: historyRef.current }),
+            : JSON.stringify({
+                ...payload,
+                history: historyRef.current,
+                workingMemory
+              }),
         headers:
           payload instanceof FormData
             ? undefined
@@ -711,45 +933,69 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
         signal: controller.signal
       });
 
-      const data = (await response.json()) as AssistantResponse | TranscriptionResponse;
+      const data = (await response.json()) as
+        | AssistantResponse
+        | TranscriptionResponse
+        | SpeakResponse;
       return { response, data };
     } finally {
       window.clearTimeout(timeoutId);
     }
   }
 
-  async function submitTextTurn(text: string, returnAudio: boolean) {
+  async function submitTextTurn(
+    text: string,
+    shouldAutoSpeak: boolean,
+    turnOrigin: AssistantTurnOrigin,
+    contextProjectSlugForTurn?: string | null
+  ) {
+    clearAudioPlayback();
+    setLastAudioState(null);
     setPendingUserText(text);
-    setStatus("finding_context");
-    setNotice("Pulling the strongest context for the question.");
+    setStatus("grounding");
+    setNotice("Selecting the strongest context for the question.");
     scheduleAnswerStages();
 
     try {
       const { response, data } = await fetchAssistantResponse({
-        text,
-        returnAudio
+        mode: "answer",
+        transcript: text,
+        contextProjectSlug: contextProjectSlugForTurn ?? undefined,
+        turnOrigin
       });
-      const assistantData = data as AssistantResponse;
 
       if (!response.ok) {
         clearStageTimers();
-        setStatus("error");
-        setRemainingTurns(assistantData.remainingTurns ?? remainingTurns);
-        setNotice("The assistant hit a snag. Retry, or ask the same thing as text.");
+        const assistantData = data as AssistantResponse;
         setPendingUserText(null);
-        setHistory((current) => [
-          ...current,
+        const nextHistory: AssistantHistoryItem[] = [
+          ...historyRef.current,
           { role: "user", content: text },
           { role: "assistant", content: assistantData.replyText || "Something went wrong." }
-        ]);
+        ];
+        historyRef.current = nextHistory;
+        setHistory(nextHistory);
+        setRemainingTurns(assistantData.remainingTurns ?? remainingTurns);
+        setLastAudioState(null);
+
+        if (assistantData.limitReached || response.status === 429) {
+          setStatus("limit_reached");
+          setNotice("This conversation has reached its limit. Start again later.");
+          return;
+        }
+
+        setStatus("error");
+        setNotice("The assistant hit a snag. Retry, or ask the same thing as text.");
         return;
       }
 
       clearStageTimers();
+      const assistantData = data as AssistantResponse;
       setRemainingTurns(assistantData.remainingTurns);
+      setWorkingMemory(assistantData.nextWorkingMemory ?? {});
       setNotice(null);
 
-      const nextHistory = [...historyRef.current];
+      const nextHistory: AssistantHistoryItem[] = [...historyRef.current];
       const userText = assistantData.transcript ?? text;
       nextHistory.push({ role: "user", content: userText });
       nextHistory.push({ role: "assistant", content: assistantData.replyText });
@@ -757,7 +1003,28 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       historyRef.current = nextHistory;
       setHistory(nextHistory);
       setPendingUserText(null);
-      void playAudioIfPresent(assistantData);
+
+      if (assistantData.limitReached) {
+        setStatus("limit_reached");
+        setNotice("This conversation has reached its limit. Start again later.");
+        return;
+      }
+
+      if (shouldAutoSpeak && assistantData.spokenText) {
+        setStatus("preparing_voice");
+        setNotice("Preparing the voice answer.");
+
+        try {
+          const audioState = await requestSpeech(assistantData.spokenText);
+          setNotice(null);
+          await playAudioFromState(audioState);
+        } catch {
+          setStatus("ready");
+          setNotice("Answer is ready. Tap play answer to hear it out loud.");
+        }
+      } else {
+        setStatus("ready");
+      }
     } catch (error) {
       clearStageTimers();
       const aborted = error instanceof DOMException && error.name === "AbortError";
@@ -768,8 +1035,9 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
           : "The assistant hit a snag. Retry, or use text."
       );
       setPendingUserText(null);
-      setHistory((current) => [
-        ...current,
+      setLastAudioState(null);
+      const nextHistory: AssistantHistoryItem[] = [
+        ...historyRef.current,
         { role: "user", content: text },
         {
           role: "assistant",
@@ -777,7 +1045,9 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
             ? "That request timed out. Please try again, or ask the same question more briefly."
             : "I hit a temporary issue while processing that request. Please try again."
         }
-      ]);
+      ];
+      historyRef.current = nextHistory;
+      setHistory(nextHistory);
     }
   }
 
@@ -819,32 +1089,32 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   async function handleTextSubmit(event: React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
-    if (!text || isProcessingStatus(status) || status === "recording") return;
+    if (!text || isProcessingStatus(status) || status === "limit_reached") return;
     setDraft("");
-    await submitTextTurn(text, false);
+    await submitTextTurn(text, false, "text");
   }
 
   async function handleStarterPrompt(prompt: string) {
     setDraft("");
-    await submitTextTurn(prompt, false);
+    await submitTextTurn(prompt, false, "starter", contextProjectSlug ?? null);
   }
 
   function startWaveform(stream: MediaStream) {
-    const AudioContextCtor = window.AudioContext || (window as typeof window & {
-      webkitAudioContext?: typeof AudioContext;
-    }).webkitAudioContext;
+    const AudioContextCtor =
+      window.AudioContext ||
+      (window as typeof window & {
+        webkitAudioContext?: typeof AudioContext;
+      }).webkitAudioContext;
 
-    if (!AudioContextCtor) {
-      return;
-    }
+    if (!AudioContextCtor) return;
 
     const context = new AudioContextCtor();
     const analyser = context.createAnalyser();
-    analyser.fftSize = 128;
-    analyser.smoothingTimeConstant = 0.82;
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.84;
     const source = context.createMediaStreamSource(stream);
     source.connect(analyser);
-    const data = new Uint8Array(analyser.frequencyBinCount);
+    const data = new Uint8Array(analyser.fftSize);
 
     const session: WaveformSession = {
       context,
@@ -857,23 +1127,13 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
 
     const tick = () => {
       analyser.getByteTimeDomainData(data);
-
-      const halfCount = WAVEFORM_BAR_COUNT / 2;
-      const bucketSize = Math.max(1, Math.floor(data.length / halfCount));
-      const mirroredLevels = Array.from({ length: halfCount }, (_, index) => {
-        const start = index * bucketSize;
-        const slice = data.slice(start, start + bucketSize);
-        const amplitude =
-          slice.reduce((sum, value) => sum + Math.abs(value - 128), 0) /
-          Math.max(1, slice.length) /
-          128;
-        const centerBias = 0.78 + ((index + 1) / halfCount) * 0.34;
-        return Math.max(0.16, amplitude * centerBias * 1.85);
+      const step = Math.max(1, Math.floor(data.length / WAVEFORM_POINT_COUNT));
+      const samples = Array.from({ length: WAVEFORM_POINT_COUNT }, (_, index) => {
+        const sampleIndex = Math.min(data.length - 1, index * step);
+        return (data[sampleIndex] - 128) / 128;
       });
 
-      const nextLevels = [...mirroredLevels, ...mirroredLevels.slice().reverse()];
-
-      setWaveformLevels(nextLevels);
+      setWaveformSamples(samples);
       setRecordingMs(performance.now() - session.startedAt);
       session.frameId = window.requestAnimationFrame(tick);
     };
@@ -891,10 +1151,9 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
 
     try {
       const mimeType = getRecordingMimeType();
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
+      clearAudioPlayback();
+      setStatus("arming");
+      setNotice("Allow mic access to start recording.");
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -903,6 +1162,13 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
           autoGainControl: true
         }
       });
+
+      if (!recordPressActiveRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        setStatus("idle");
+        setNotice("Mic is ready. Hold again to talk.");
+        return;
+      }
 
       const recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
@@ -936,29 +1202,24 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
 
       startWaveform(stream);
       setStatus("recording");
-      setNotice("Listening live. Release when the question is complete.");
+      setNotice("Release to send the question.");
 
       stopTimeoutRef.current = window.setTimeout(() => {
-        void stopRecordingAndSubmit();
+        void stopRecordingAndSubmit("timeout");
       }, MAX_RECORDING_MS);
-
-      if (shouldStopAfterStartRef.current || !recordPressActiveRef.current) {
-        shouldStopAfterStartRef.current = false;
-        await stopRecordingAndSubmit();
-      }
     } catch {
       recordPressActiveRef.current = false;
-      shouldStopAfterStartRef.current = false;
-      recordReleaseHandledRef.current = true;
+      releaseHandledRef.current = true;
       setStatus("error");
       setNotice("Mic access failed. Type the question instead.");
     }
   }
 
-  async function stopRecordingAndSubmit() {
+  async function stopRecordingAndSubmit(reason: "release" | "timeout" | "interrupted") {
+    if (releaseHandledRef.current) return;
+
+    releaseHandledRef.current = true;
     recordPressActiveRef.current = false;
-    recordReleaseHandledRef.current = true;
-    shouldStopAfterStartRef.current = false;
 
     if (stopTimeoutRef.current) {
       window.clearTimeout(stopTimeoutRef.current);
@@ -974,51 +1235,88 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
 
     if (session.blob.size < 1_500) {
       setStatus("error");
-      setNotice("I couldn't hear enough audio. Try again or type the question instead.");
+      setNotice("Too short to transcribe. Try again or type the question instead.");
       return;
+    }
+
+    if (reason === "interrupted") {
+      setNotice("The page focus changed, but the captured audio is still being processed.");
     }
 
     const transcript = await transcribeRecording(session.blob, session.mimeType);
     if (!transcript) return;
-    await submitTextTurn(transcript, true);
+    await submitTextTurn(transcript, true, "voice");
   }
 
-  async function handleRecordPressStart() {
-    if (remainingTurns <= 0 || isProcessingStatus(status) || status === "recording") return;
+  async function handleRecordPressStart(
+    event: React.PointerEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
+  ) {
+    if (remainingTurns <= 0 || isProcessingStatus(status) || status === "limit_reached") return;
+
+    clearAudioPlayback();
+    setLastAudioState(null);
+    setPendingUserText(null);
     recordPressActiveRef.current = true;
-    shouldStopAfterStartRef.current = false;
-    recordReleaseHandledRef.current = false;
+    releaseHandledRef.current = false;
+
+    if ("pointerId" in event) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      pointerTargetRef.current = event.currentTarget;
+      activePointerIdRef.current = event.pointerId;
+    }
+
     await startRecording();
   }
 
-  async function handleRecordPressEnd() {
-    if (recordReleaseHandledRef.current) return;
-    if (!recordPressActiveRef.current && status !== "recording") return;
-    recordReleaseHandledRef.current = true;
+  async function handleRecordPressEnd(
+    event?: React.PointerEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>
+  ) {
+    if ("pointerId" in (event ?? {})) {
+      const pointerEvent = event as React.PointerEvent<HTMLButtonElement>;
+      if (
+        pointerTargetRef.current &&
+        activePointerIdRef.current !== null &&
+        pointerTargetRef.current.hasPointerCapture(activePointerIdRef.current)
+      ) {
+        pointerTargetRef.current.releasePointerCapture(activePointerIdRef.current);
+      }
+      pointerTargetRef.current = null;
+      activePointerIdRef.current = null;
+      pointerEvent.preventDefault();
+    }
+
     recordPressActiveRef.current = false;
 
     if (status === "recording") {
-      await stopRecordingAndSubmit();
+      await stopRecordingAndSubmit("release");
       return;
     }
 
-    shouldStopAfterStartRef.current = true;
+    if (status === "arming") {
+      setNotice("Mic is ready. Hold again to talk.");
+      return;
+    }
   }
 
-  const floatingLauncherLabel = isHero ? "Quick answers" : "Ask about the work";
-  const pulsingWaveform = useMemo(
+  async function handleReplayAudio() {
+    if (!lastAudioState) return;
+    await playAudioFromState(lastAudioState);
+  }
+
+  const speakingWaveform = useMemo(
     () =>
-      defaultWaveform.map((level, index) =>
-        status === "speaking" ? level + ((index % 4) + 1) * 0.02 : level
-      ),
-    [status]
+      waveformSamples.map((sample, index) => {
+        const modulation = Math.sin((index / 6) * Math.PI) * 0.12;
+        return sample * 0.5 + modulation;
+      }),
+    [waveformSamples]
   );
 
   return (
     <>
       <audio
         ref={audioRef}
-        onEnded={() => setStatus("idle")}
+        onEnded={() => setStatus("ready")}
         className="hidden"
         aria-hidden="true"
       />
@@ -1033,22 +1331,25 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
             setDraft={setDraft}
             notice={notice}
             pendingUserText={pendingUserText}
-            waveformLevels={status === "speaking" ? pulsingWaveform : waveformLevels}
+            waveformSamples={status === "speaking" ? speakingWaveform : waveformSamples}
             recordingMs={recordingMs}
             onSubmit={handleTextSubmit}
             onRecordPressStart={handleRecordPressStart}
             onRecordPressEnd={handleRecordPressEnd}
-            onStopRecording={stopRecordingAndSubmit}
+            onReplayAudio={handleReplayAudio}
             onStarterPrompt={handleStarterPrompt}
             floating={false}
+            hasReplayAudio={Boolean(lastAudioState)}
           />
         </div>
       ) : null}
 
       <div
         className={cn(
-          "fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[24rem]",
-          isHero && "lg:hidden"
+          isHero
+            ? "fixed inset-x-4 z-50 lg:hidden"
+            : "fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[24rem]",
+          isHero && "bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
         )}
       >
         <AnimatePresence initial={false}>
@@ -1058,6 +1359,14 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 24 }}
+              className={cn(isHero && "overflow-y-auto")}
+              style={
+                isHero
+                  ? {
+                      maxHeight: "calc(100svh - env(safe-area-inset-bottom, 0px) - 2rem)"
+                    }
+                  : undefined
+              }
             >
               <AssistantSurface
                 history={history}
@@ -1067,15 +1376,16 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
                 setDraft={setDraft}
                 notice={notice}
                 pendingUserText={pendingUserText}
-                waveformLevels={status === "speaking" ? pulsingWaveform : waveformLevels}
+                waveformSamples={status === "speaking" ? speakingWaveform : waveformSamples}
                 recordingMs={recordingMs}
                 onSubmit={handleTextSubmit}
                 onRecordPressStart={handleRecordPressStart}
                 onRecordPressEnd={handleRecordPressEnd}
-                onStopRecording={stopRecordingAndSubmit}
+                onReplayAudio={handleReplayAudio}
                 onStarterPrompt={handleStarterPrompt}
                 onClose={() => setOpen(false)}
                 floating
+                hasReplayAudio={Boolean(lastAudioState)}
               />
             </motion.section>
           ) : (
@@ -1086,19 +1396,27 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 24 }}
               onClick={() => setOpen(true)}
-              className="ml-auto flex w-full items-center gap-3 border border-line bg-[rgba(16,9,10,0.94)] px-4 py-3 text-left shadow-[0_16px_60px_rgba(0,0,0,0.42)] backdrop-blur transition-colors hover:border-line-strong"
+              className={cn(
+                "ml-auto flex w-full items-center gap-3 border border-line bg-[rgba(16,9,10,0.94)] px-4 py-3 text-left shadow-[0_16px_60px_rgba(0,0,0,0.42)] backdrop-blur transition-colors hover:border-line-strong",
+                isHero && "mx-auto max-w-none"
+              )}
             >
               <span
                 className={cn(
-                  "inline-flex h-2 w-2 bg-ember-amber",
+                  "mt-1 inline-flex h-2 w-2 shrink-0 bg-ember-amber",
                   (status === "recording" || status === "speaking") && "animate-pulse"
                 )}
               />
-              <span>
+              <span className="min-w-0">
                 <span className="font-structure block text-[11px] uppercase tracking-[0.26em] text-smoke-gray">
-                  Quick answers
+                  {floatingLauncherEyebrow}
                 </span>
-                <span className="block text-sm text-bone-white">{floatingLauncherLabel}</span>
+                <span className="mt-1 block text-sm text-bone-white">
+                  {floatingLauncherTitle}
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-smoke-gray">
+                  {floatingLauncherSubline}
+                </span>
               </span>
             </motion.button>
           )}
@@ -1108,13 +1426,23 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   );
 }
 
-export function openAssistant(prompt?: string, autoSubmit = false) {
+export function openAssistant(
+  prompt?: string,
+  autoSubmit = false,
+  contextProjectSlug?: string,
+  source: OpenEventDetail["source"] = "external"
+) {
   dispatchAssistantEvent(
     prompt
       ? {
           prompt,
-          autoSubmit
+          autoSubmit,
+          contextProjectSlug,
+          source
         }
-      : undefined
+      : {
+          contextProjectSlug,
+          source
+        }
   );
 }

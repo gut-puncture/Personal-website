@@ -71,3 +71,92 @@ export type AssistantHistoryItem = {
   role: "user" | "assistant";
   content: string;
 };
+
+export type AssistantFactCertainty = "explicit" | "derived";
+
+export type AssistantFactCategory =
+  | "identity"
+  | "background"
+  | "current_role"
+  | "experience"
+  | "education"
+  | "research"
+  | "scalar"
+  | "contact"
+  | "boundary";
+
+export type AssistantFact = {
+  id: string;
+  category: AssistantFactCategory;
+  value: string;
+  spokenForm?: string;
+  certainty: AssistantFactCertainty;
+  source: string;
+  entity?: string;
+  keywords: string[];
+};
+
+export type ExperienceTimelineItem = {
+  id: string;
+  company: string;
+  title: string;
+  start?: string | null;
+  end?: string | null;
+  summary: string;
+  spokenForm?: string;
+  certainty: AssistantFactCertainty;
+  source: string;
+  keywords: string[];
+};
+
+export type FlagshipProjectBrief = {
+  slug: string;
+  title: string;
+  aliases: string[];
+  coreSummary: string;
+  spokenCoreSummary?: string;
+  whyItMatters: string;
+  spokenWhyItMatters?: string;
+  pmAiAngle: string;
+  source: string;
+};
+
+export type AssistantTurnOrigin =
+  | "text"
+  | "voice"
+  | "starter"
+  | "hero"
+  | "project"
+  | "launcher"
+  | "external";
+
+export type QuestionShape =
+  | "fact"
+  | "count_or_duration"
+  | "summary"
+  | "compare"
+  | "project"
+  | "follow_up"
+  | "edge_case";
+
+export type WorkingMemory = {
+  lastQuestionType?: QuestionShape;
+  lastEntity?: string | null;
+  lastProjectSlug?: string | null;
+  lastAnswerSummary?: string | null;
+  turnOrigin?: AssistantTurnOrigin | null;
+};
+
+export type TurnStage =
+  | "listening"
+  | "transcribing"
+  | "selecting_context"
+  | "writing_answer"
+  | "preparing_voice"
+  | "speaking";
+
+export type EscalationReason =
+  | "comparison"
+  | "open_ended_summary"
+  | "nuanced_project_explanation"
+  | "broad_background_synthesis";

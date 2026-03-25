@@ -1,79 +1,259 @@
 [
   {
-    "id": "education-background",
+    "id": "fact-education",
     "question": "What is Shailesh's educational background?",
     "requiredAll": ["MBA", "Metallurgical Engineering"],
-    "forbiddenAny": ["http", "drive.google.com", "**"],
-    "maxCharacters": 420
+    "requiredFactIds": ["education.mba", "education.be"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "drive.google.com", "**", "recruiter"],
+    "maxCharacters": 220
   },
   {
-    "id": "broad-project-summary",
+    "id": "fact-current-role",
+    "question": "What is his current role?",
+    "requiredAll": ["Product Manager", "Data Sutram"],
+    "requiredFactIds": ["role.current", "role.current-scope"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["CaaStle", "Bajaj", "http", "**", "recruiter"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "fact-pm-years",
+    "question": "How many years of product management experience does Shailesh have?",
+    "requiredAll": ["4 years"],
+    "requiredFactIds": ["background.pm-years"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["Data Sutram", "CaaStle", "Bajaj", "http", "**"],
+    "maxCharacters": 120
+  },
+  {
+    "id": "fact-research-interests",
+    "question": "What kind of AI research does Shailesh do?",
+    "requiredAll": ["agents"],
+    "requiredAny": ["mechanistic interpretability", "continual learning"],
+    "requiredFactIds": ["research.interests"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 180
+  },
+  {
+    "id": "fact-previous-role",
+    "question": "What did he do before product management?",
+    "requiredAll": ["Data Analyst"],
+    "requiredFactIds": ["background.previous-role"],
+    "allowedModels": ["sarvam-30b-16k", "direct"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 180
+  },
+  {
+    "id": "fact-caastle",
+    "question": "What did he do at CaaStle Technologies?",
+    "requiredAll": ["AI data platform"],
+    "requiredAny": ["AI assistants", "Gemini", "Slack"],
+    "requiredFactIds": ["timeline.caastle"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 320
+  },
+  {
+    "id": "fact-bajaj",
+    "question": "What did he do at Bajaj Finserv Health?",
+    "requiredAll": ["organic growth"],
+    "requiredAny": ["doctor discovery", "diagnosis", "test recommendations"],
+    "requiredFactIds": ["timeline.bajaj"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 320
+  },
+  {
+    "id": "fact-data-sutram",
+    "question": "What did he build at Data Sutram?",
+    "requiredAll": ["Data Sutram"],
+    "requiredAny": ["UX", "product management", "development", "testing"],
+    "requiredFactIds": ["timeline.datasutram"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 260
+  },
+  {
+    "id": "fact-current-company-duration",
+    "question": "How long has he been at Data Sutram?",
+    "requiredAll": ["does not state a canonical duration"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 120
+  },
+  {
+    "id": "summary-career",
+    "question": "Can you summarize Shailesh's career?",
+    "requiredAll": ["Data Sutram", "CaaStle", "Bajaj"],
+    "requiredAny": ["MBA", "mechanistic interpretability"],
+    "allowedModels": ["direct", "sarvam-30b-16k"],
+    "forbiddenAny": ["Semantic Gravity", "List to Cart", "http", "**", "recruiter"],
+    "maxCharacters": 320
+  },
+  {
+    "id": "summary-role-fit",
+    "question": "What kind of role is Shailesh a fit for?",
+    "requiredAll": ["Product"],
+    "requiredAny": ["AI Research", "AI research"],
+    "allowedModels": ["sarvam-30b-16k"],
+    "forbiddenAny": ["http", "**", "recruiter", "open to work"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "summary-broad-projects",
     "question": "Can you give me a brief summary of the projects done by Shailesh?",
-    "requiredAll": [
-      "Semantic Gravity",
-      "List to Cart",
-      "How a 7-Billion-Parameter AI Cannot Add"
-    ],
+    "requiredAll": ["Semantic Gravity", "List to Cart", "How a 7-Billion-Parameter AI Cannot Add"],
+    "allowedModels": ["direct", "sarvam-30b-16k"],
     "forbiddenAny": [
       "Q-Commerce Demo: Grocery Crate Analysis wrt Customer Profile",
       "The Medium AI Articles",
+      "http",
       "**",
-      "http"
+      "recruiter"
     ],
-    "maxCharacters": 900
+    "maxCharacters": 420
   },
   {
-    "id": "pm-ai-proof",
+    "id": "summary-pm-ai-proof",
     "question": "Which projects best show product management and AI skills?",
     "requiredAll": ["List to Cart", "Semantic Gravity"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 700
+    "requiredAny": ["7-Billion-Parameter", "7-Billion-Parameter AI Cannot Add"],
+    "allowedModels": ["sarvam-105b-32k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 320
   },
   {
-    "id": "role-fit",
-    "question": "What kind of role is Shailesh a fit for?",
-    "requiredAll": ["Product", "AI Researcher"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 550
-  },
-  {
-    "id": "semantic-gravity",
-    "question": "Tell me about the Semantic Gravity project and why it matters.",
+    "id": "project-semantic-gravity",
+    "question": "Tell me about the Semantic Gravity project.",
     "requiredAll": ["negative constraints"],
     "requiredAny": ["semantic pressure", "mechanistic interpretability"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 750
+    "allowedModels": ["direct", "sarvam-30b-16k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 280
   },
   {
-    "id": "list-to-cart",
+    "id": "project-list-to-cart",
     "question": "Tell me about List to Cart.",
     "requiredAll": ["List to Cart", "grocery"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 650
+    "allowedModels": ["direct", "sarvam-30b-16k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 240
+  },
+  {
+    "id": "project-7b-add",
+    "question": "Tell me about How a 7-Billion-Parameter AI Cannot Add.",
+    "requiredAll": ["length bias"],
+    "requiredAny": ["interpretability", "large-number addition"],
+    "allowedModels": ["direct", "sarvam-30b-16k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 260
+  },
+  {
+    "id": "compare-semantic-vs-7b",
+    "question": "Compare Semantic Gravity with How a 7-Billion-Parameter AI Cannot Add.",
+    "requiredAll": ["Semantic Gravity", "How a 7-Billion-Parameter AI Cannot Add"],
+    "requiredAny": ["negative constraints", "length bias"],
+    "allowedModels": ["direct", "sarvam-105b-32k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 360
+  },
+  {
+    "id": "compare-what-stands-out",
+    "question": "What stands out most about his work?",
+    "requiredAll": ["Semantic Gravity", "List to Cart"],
+    "requiredAny": ["7-Billion-Parameter", "research", "product"],
+    "allowedModels": ["direct", "sarvam-105b-32k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 320
   },
   {
     "id": "identity",
     "question": "Are you an AI?",
-    "requiredAll": ["site guide"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 280
+    "requiredAll": ["voice agent"],
+    "expectedModelUsed": "direct",
+    "requiredFactIds": ["identity.voice-agent"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 140
+  },
+  {
+    "id": "contact",
+    "question": "How should someone contact Shailesh?",
+    "requiredAll": ["LinkedIn"],
+    "requiredAny": ["CV", "site"],
+    "expectedModelUsed": "direct",
+    "requiredFactIds": ["contact.next-step"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 160
   },
   {
     "id": "unsupported-personal",
     "question": "Is Shailesh married?",
-    "requiredAll": ["don't have reliable information"],
-    "forbiddenAny": ["http", "drive.google.com", "**"],
-    "maxCharacters": 420
+    "requiredAll": ["do not have reliable information"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "drive.google.com", "**", "recruiter"],
+    "maxCharacters": 200
+  },
+  {
+    "id": "summary-compensation-ask",
+    "question": "What compensation is Shailesh targeting for a new role?",
+    "requiredAll": ["70 lakhs"],
+    "requiredAny": ["cash", "ESOP"],
+    "allowedModels": ["sarvam-30b-16k"],
+    "requiredFactIds": ["background.compensation-ask"],
+    "forbiddenAny": ["http", "**", "recruiter", "current salary"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "unsupported-current-salary",
+    "question": "What is his current salary?",
+    "requiredAll": ["do not have reliable information"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["70 lakhs", "cash", "ESOP", "http", "**", "recruiter"],
+    "maxCharacters": 200
   },
   {
     "id": "off-topic",
     "question": "Who will win the next IPL?",
     "requiredAll": ["questions about Shailesh Rana"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 240
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 140
   },
   {
-    "id": "follow-up-history",
+    "id": "profanity-on-topic",
+    "question": "What the fuck did he build at Data Sutram?",
+    "requiredAll": ["Data Sutram"],
+    "requiredAny": ["UX", "product management", "development", "testing"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 260
+  },
+  {
+    "id": "speech-saas",
+    "question": "What is his current role?",
+    "requiredAll": ["Product Manager", "Data Sutram"],
+    "requiredAny": ["business to business", "software as a service"],
+    "expectedModelUsed": "direct",
+    "requiredFactIds": ["role.current", "role.current-scope"],
+    "forbiddenAny": ["B2B", "SaaS", "http", "**"],
+    "maxCharacters": 220,
+    "checkSpokenText": true
+  },
+  {
+    "id": "speech-research-terms",
+    "question": "What kind of AI research does Shailesh do?",
+    "requiredAll": ["agents"],
+    "requiredAny": ["mechanistic interpretability", "continual learning"],
+    "expectedModelUsed": "direct",
+    "requiredFactIds": ["research.interests"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 180,
+    "checkSpokenText": true
+  },
+  {
+    "id": "follow-up-project-why",
     "question": "Why does it matter?",
     "history": [
       {
@@ -82,11 +262,120 @@
       },
       {
         "role": "assistant",
-        "content": "Semantic Gravity is a mechanistic interpretability paper on why models fail negative constraints."
+        "content": "Semantic Gravity is a mechanistic interpretability paper that explains why language models fail negative constraints."
       }
     ],
-    "requiredAny": ["negative constraints", "AI research", "model behavior"],
-    "forbiddenAny": ["http", "**"],
-    "maxCharacters": 520
+    "workingMemory": {
+      "lastQuestionType": "project",
+      "lastEntity": "project:research-paper-semantic-gravity",
+      "lastProjectSlug": "research-paper-semantic-gravity",
+      "lastAnswerSummary": "Semantic Gravity is a mechanistic interpretability paper that explains why language models fail negative constraints.",
+      "turnOrigin": "text"
+    },
+    "allowedModels": ["direct", "sarvam-105b-32k"],
+    "requiredAny": ["negative constraints", "model behavior", "AI research"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "contamination-career-to-pm-years",
+    "question": "How many years of product management experience does Shailesh have?",
+    "history": [
+      {
+        "role": "user",
+        "content": "Can you summarize Shailesh's career?"
+      },
+      {
+        "role": "assistant",
+        "content": "Shailesh is currently a Product Manager and Member of Technical Staff at Data Sutram, and earlier he worked at CaaStle Technologies and Bajaj Finserv Health."
+      }
+    ],
+    "requiredAll": ["4 years"],
+    "requiredFactIds": ["background.pm-years"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["CaaStle", "Bajaj", "Data Sutram", "http", "**"],
+    "maxCharacters": 120
+  },
+  {
+    "id": "contamination-career-to-current-role",
+    "question": "What is his current role?",
+    "history": [
+      {
+        "role": "user",
+        "content": "Can you summarize Shailesh's career?"
+      },
+      {
+        "role": "assistant",
+        "content": "Shailesh is currently at Data Sutram, and before that he worked at CaaStle and Bajaj."
+      }
+    ],
+    "requiredAll": ["Product Manager", "Data Sutram"],
+    "requiredFactIds": ["role.current", "role.current-scope"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["CaaStle", "Bajaj", "http", "**"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "contamination-project-to-education",
+    "question": "What is his educational background?",
+    "history": [
+      {
+        "role": "user",
+        "content": "Tell me about List to Cart."
+      },
+      {
+        "role": "assistant",
+        "content": "List to Cart is a quick-commerce demo that turns a simple grocery list into a full cart."
+      }
+    ],
+    "requiredAll": ["MBA", "Metallurgical Engineering"],
+    "requiredFactIds": ["education.mba", "education.be"],
+    "expectedModelUsed": "direct",
+    "forbiddenAny": ["List to Cart", "grocery", "http", "**"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "contamination-project-to-role-fit",
+    "question": "What kind of role is Shailesh a fit for?",
+    "history": [
+      {
+        "role": "user",
+        "content": "Tell me about the Semantic Gravity project."
+      },
+      {
+        "role": "assistant",
+        "content": "Semantic Gravity is a mechanistic interpretability paper about negative constraints."
+      }
+    ],
+    "requiredAll": ["Product"],
+    "requiredAny": ["AI Research", "AI research"],
+    "allowedModels": ["sarvam-30b-16k"],
+    "forbiddenAny": ["negative constraints", "http", "**", "recruiter"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "fresh-follow-up-like-question-without-memory",
+    "question": "Why does it matter?",
+    "requiredAny": ["not clearly stated", "Which project do you mean", "I need the project"],
+    "allowedModels": ["sarvam-30b-16k", "direct"],
+    "forbiddenAny": ["Semantic Gravity", "List to Cart", "http", "**"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "summary-skills",
+    "question": "What are Shailesh's strongest skills?",
+    "requiredAny": ["product management", "agents", "retrieval", "prompt"],
+    "allowedModels": ["sarvam-30b-16k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 220
+  },
+  {
+    "id": "summary-company-before-current",
+    "question": "Where did Shailesh work before Data Sutram?",
+    "requiredAll": ["CaaStle"],
+    "requiredAny": ["Bajaj", "Bajaj Finserv Health"],
+    "allowedModels": ["direct", "sarvam-30b-16k"],
+    "forbiddenAny": ["http", "**", "recruiter"],
+    "maxCharacters": 220
   }
 ]

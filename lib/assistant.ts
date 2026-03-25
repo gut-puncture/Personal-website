@@ -1,10 +1,21 @@
 import {
-  assistantProfile,
+  assistantTimeline,
+  ensureAssistantFactsConsistency,
   flagshipProjectKnowledge,
   flagshipProjectOrder,
+  getAssistantFact,
   projectAliasMap
 } from "@/lib/assistant-knowledge";
-import type { AssistantHistoryItem, PortfolioContent, ProjectEntry, SkillEntry } from "@/lib/types";
+import type {
+  AssistantFact,
+  AssistantHistoryItem,
+  AssistantTurnOrigin,
+  EscalationReason,
+  PortfolioContent,
+  ProjectEntry,
+  QuestionShape,
+  WorkingMemory
+} from "@/lib/types";
 
 const portfolioKeywords = new Set([
   "shailesh",
@@ -19,10 +30,7 @@ const portfolioKeywords = new Set([
   "research",
   "researcher",
   "role",
-  "recruiter",
-  "hire",
-  "hiring",
-  "job",
+  "fit",
   "cv",
   "linkedin",
   "datasutram",
@@ -32,50 +40,149 @@ const portfolioKeywords = new Set([
   "paper",
   "education",
   "background",
-  "experience"
+  "experience",
+  "caastle",
+  "bajaj"
 ]);
 
 const profanity = ["fuck", "shit", "bitch", "bastard", "asshole", "fucking"];
-const followUpSignals = ["it", "that", "this project", "that project", "why does it matter"];
 
-type AssistantIntent =
-  | "empty"
-  | "identity"
-  | "role_fit"
-  | "education_background"
-  | "work_background"
-  | "broad_project_summary"
-  | "pm_ai_proof"
-  | "skills"
-  | "project_deep_dive"
-  | "contact"
-  | "unsupported_personal"
-  | "off_topic"
-  | "general";
+const unsupportedPersonalKeywords = [
+  "family",
+  "wife",
+  "married",
+  "girlfriend",
+  "boyfriend",
+  "relationship",
+  "personal life",
+  "religion",
+  "politics",
+  "salary",
+  "address",
+  "age"
+];
+
+const transcriptRepairPatterns: Array<[RegExp, string]> = [
+  [/\b(shellish|shellies|shalish|shaylesh|shailes|shaillesh|shelish|saleesh)\b/gi, "Shailesh"],
+  [/\b(datasatram|datasutrm|datasutramm)\b/gi, "Data Sutram"],
+  [/\bcastle\b/gi, "CaaStle"],
+  [/\bhow many years of product management experience the shailesh have\b/gi, "How many years of product management experience does Shailesh have"],
+  [/\bwhat is how many years of product management experience\b/gi, "How many years of product management experience"]
+];
+
+const speechLexicon: Array<[RegExp, string]> = [
+  [
+    /How a 7-Billion-Parameter AI Cannot Add/gi,
+    "the seven billion parameter addition interpretability project"
+  ],
+  [/\b7-?Billion-Parameter\b/gi, "seven billion parameter"],
+  [/\bSaaS\b/g, "software as a service"],
+  [/\bB2B\b/g, "business to business"],
+  [/\bQ-?commerce\b/gi, "quick commerce"],
+  [/\bLLM\b/g, "large language model"],
+  [/\bRAG\b/g, "retrieval augmented generation"],
+  [/\bGPT-4\b/gi, "G P T four"],
+  [/\bv2\.0\b/gi, "version 2"],
+  [/\bCaaStle\b/g, "Castle"]
+];
+
+const followUpSignals = [
+  "it",
+  "that",
+  "this project",
+  "that project",
+  "why does it matter",
+  "tell me more",
+  "more detail",
+  "go deeper",
+  "explain more",
+  "what about that",
+  "and this",
+  "and that"
+];
+
+type EdgeIntent = "empty" | "identity" | "contact" | "unsupported_personal" | "off_topic";
 
 type AssistantDirectPlan = {
   kind: "direct";
-  intent: AssistantIntent;
+  intent: EdgeIntent | "fact";
   replyText: string;
   spokenText: string;
   sources: string[];
+  selectedFactIds: string[];
+  nextWorkingMemory: WorkingMemory;
 };
 
 type AssistantModelPlan = {
   kind: "model";
-  intent: AssistantIntent;
+  questionShape: QuestionShape;
   system: string;
   user: string;
   sources: string[];
+  selectedFactIds: string[];
+  nextWorkingMemory: WorkingMemory;
+  modelPreference: "fast" | "strong";
+  escalationReason?: EscalationReason;
 };
 
 export type AssistantPlan = AssistantDirectPlan | AssistantModelPlan;
 
-type RetrievedContext = {
-  homeContext: string;
-  projects: ProjectEntry[];
-  skills: SkillEntry[];
-  focusProject?: ProjectEntry;
+type BuildAssistantPlanOptions = {
+  contextProjectSlug?: string;
+  workingMemory?: WorkingMemory;
+  turnOrigin?: AssistantTurnOrigin;
+};
+
+type QuestionEntity =
+  | "empty"
+  | "identity"
+  | "contact"
+  | "unsupported_personal"
+  | "off_topic"
+  | "current_role"
+  | "education"
+  | "role_fit"
+  | "career_background"
+  | "prior_companies"
+  | "compensation_expectation"
+  | "skills"
+  | "research_interests"
+  | "location"
+  | "background_previous_role"
+  | "pm_experience_years"
+  | "current_company_duration"
+  | "count_unknown"
+  | "company_timeline"
+  | `project:${string}`
+  | `company:${string}`
+  | "general";
+
+type QuestionAnalysis = {
+  shape: QuestionShape;
+  entity: QuestionEntity;
+  targetProject?: ProjectEntry;
+  comparisonProjects?: ProjectEntry[];
+  targetCompany?: string;
+  memoryNeed: "none" | "last_topic" | "active_project";
+  edgeIntent?: EdgeIntent;
+  includeOnTopicProfanity: boolean;
+  explicitFactIds: string[];
+  needsStrongModel: boolean;
+  escalationReason?: EscalationReason;
+  repairedQuery: string;
+};
+
+type ContextPack = {
+  facts: AssistantFact[];
+  timeline: typeof assistantTimeline;
+  projects: Array<{
+    slug: string;
+    title: string;
+    summary: string;
+    whyItMatters: string;
+    support?: string;
+  }>;
+  workingMemorySummary?: string;
 };
 
 function normalizeForMatch(text: string) {
@@ -87,19 +194,17 @@ function normalizeForMatch(text: string) {
     .trim();
 }
 
-function includesAny(text: string, patterns: string[]) {
-  return patterns.some((pattern) => text.includes(normalizeForMatch(pattern)));
+function tokenize(text: string) {
+  return normalizeForMatch(text).split(" ").filter(Boolean);
 }
 
-function scoreText(queryTokens: string[], haystack: string) {
-  const normalized = normalizeForMatch(haystack);
-  let score = 0;
-
-  for (const token of queryTokens) {
-    if (normalized.includes(token)) score += token.length;
-  }
-
-  return score;
+function includesAny(text: string, patterns: string[]) {
+  return patterns.some((pattern) => {
+    const normalizedPattern = normalizeForMatch(pattern);
+    if (!normalizedPattern) return false;
+    const escaped = normalizedPattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(?:^| )${escaped}(?:$| )`).test(text);
+  });
 }
 
 function sanitizeParagraph(text: string) {
@@ -113,22 +218,69 @@ function sanitizeParagraph(text: string) {
     .trim();
 }
 
-function sanitizeForSpeech(text: string) {
-  return sanitizeParagraph(text)
-    .replace(/\bhttps?:\/\/\S+/gi, "")
-    .replace(/\bwww\.\S+/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
+function normalizeSpeechTerms(text: string) {
+  return speechLexicon.reduce(
+    (current, [pattern, replacement]) => current.replace(pattern, replacement),
+    text
+  );
 }
 
-function buildReply(replyText: string, sources: string[]): AssistantDirectPlan {
+function sanitizeForSpeech(text: string) {
+  return normalizeSpeechTerms(
+    sanitizeParagraph(text)
+      .replace(/\bhttps?:\/\/\S+/gi, "")
+      .replace(/\bwww\.\S+/gi, "")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
+}
+
+function repairTranscriptForRouting(text: string) {
+  return transcriptRepairPatterns.reduce(
+    (current, [pattern, replacement]) => current.replace(pattern, replacement),
+    text
+  );
+}
+
+function summarizeForMemory(text: string) {
+  const cleaned = sanitizeParagraph(text);
+  if (!cleaned) return null;
+  const sentence = cleaned.split(/(?<=[.?!])\s+/)[0] ?? cleaned;
+  return sentence.slice(0, 220);
+}
+
+function buildWorkingMemory(
+  analysis: QuestionAnalysis,
+  turnOrigin: AssistantTurnOrigin | undefined,
+  replyText: string
+): WorkingMemory {
+  return {
+    lastQuestionType: analysis.shape,
+    lastEntity: analysis.entity,
+    lastProjectSlug: analysis.targetProject?.slug ?? null,
+    lastAnswerSummary: summarizeForMemory(replyText),
+    turnOrigin: turnOrigin ?? null
+  };
+}
+
+function buildDirectReply(
+  intent: AssistantDirectPlan["intent"],
+  replyText: string,
+  sources: string[],
+  selectedFactIds: string[],
+  analysis: QuestionAnalysis,
+  turnOrigin?: AssistantTurnOrigin,
+  spokenText?: string
+): AssistantDirectPlan {
   const cleanedReply = sanitizeParagraph(replyText);
   return {
     kind: "direct",
-    intent: "general",
+    intent,
     replyText: cleanedReply,
-    spokenText: sanitizeForSpeech(cleanedReply),
-    sources
+    spokenText: sanitizeForSpeech(spokenText ?? cleanedReply),
+    sources,
+    selectedFactIds,
+    nextWorkingMemory: buildWorkingMemory(analysis, turnOrigin, cleanedReply)
   };
 }
 
@@ -138,160 +290,6 @@ function getFlagshipProjects(content: PortfolioContent) {
     .filter((project): project is ProjectEntry => Boolean(project));
 }
 
-function buildRoleFitReply(content: PortfolioContent): AssistantDirectPlan {
-  const flagshipProjects = getFlagshipProjects(content);
-  return {
-    kind: "direct",
-    intent: "role_fit",
-    replyText:
-      "Shailesh looks strongest for Product roles with serious AI ownership, and the portfolio explicitly invites outreach for Product and AI Researcher roles. His current work combines UX, product management, development, and testing on a B2B SaaS product, while projects like Semantic Gravity and List to Cart show both research depth and product judgment.",
-    spokenText:
-      "Shailesh looks strongest for Product roles with serious AI ownership, and the portfolio explicitly invites outreach for Product and AI Researcher roles. His current work combines product, UX, development, and testing, while Semantic Gravity and List to Cart show both research depth and product judgment.",
-    sources: [
-      ...flagshipProjects.slice(0, 2).map((project) => `/projects/${project.slug}`),
-      content.home.contactLinks.linkedin
-    ]
-  };
-}
-
-function buildEducationReply(content: PortfolioContent): AssistantDirectPlan {
-  return {
-    kind: "direct",
-    intent: "education_background",
-    replyText:
-      "Shailesh has an MBA in Finance from University Business School, Panjab University, completed from 2020 to 2022. He also has a B.E. in Metallurgical Engineering from PEC University of Technology, Chandigarh, completed from 2013 to 2017.",
-    spokenText:
-      "Shailesh has an MBA in Finance from University Business School, Panjab University, completed from 2020 to 2022. He also has a B.E. in Metallurgical Engineering from PEC University of Technology, Chandigarh, completed from 2013 to 2017.",
-    sources: [content.home.contactLinks.cv]
-  };
-}
-
-function buildBackgroundReply(content: PortfolioContent): AssistantDirectPlan {
-  return {
-    kind: "direct",
-    intent: "work_background",
-    replyText: `${assistantProfile.currentRole} ${assistantProfile.currentRoleHighlights[0]} Earlier, he worked at CaaStle Technologies on internal AI systems and assistants, and at Bajaj Finserv Health on product and growth work in healthcare.`,
-    spokenText: `${assistantProfile.currentRole} ${assistantProfile.currentRoleHighlights[0]} Earlier, he worked at CaaStle Technologies on internal AI systems and assistants, and at Bajaj Finserv Health on product and growth work in healthcare.`,
-    sources: [content.home.contactLinks.cv, content.home.contactLinks.company]
-  };
-}
-
-function buildBroadSummaryReply(content: PortfolioContent): AssistantDirectPlan {
-  const flagshipProjects = getFlagshipProjects(content);
-  const sources = flagshipProjects.map((project) => `/projects/${project.slug}`);
-
-  return {
-    kind: "direct",
-    intent: "broad_project_summary",
-    replyText:
-      "The three projects that best summarize Shailesh's work are Semantic Gravity, List to Cart, and How a 7-Billion-Parameter AI Cannot Add. Semantic Gravity is a mechanistic interpretability paper on why models fail negative constraints. List to Cart is a user-facing Q-commerce demo that turns a simple grocery list into a full cart. How a 7-Billion-Parameter AI Cannot Add is an interpretability project that uncovered a systematic length bias in addition. Together they show AI research depth, product judgment, and execution.",
-    spokenText:
-      "The three projects that best summarize Shailesh's work are Semantic Gravity, List to Cart, and How a 7-Billion-Parameter AI Cannot Add. Semantic Gravity is a mechanistic interpretability paper on why models fail negative constraints. List to Cart is a user-facing grocery demo that turns a simple list into a full cart. How a 7-Billion-Parameter AI Cannot Add uncovered a systematic length bias in addition. Together they show AI research depth, product judgment, and execution.",
-    sources
-  };
-}
-
-function buildPmAiReply(content: PortfolioContent): AssistantDirectPlan {
-  const flagshipProjects = getFlagshipProjects(content);
-  return {
-    kind: "direct",
-    intent: "pm_ai_proof",
-    replyText:
-      "If you want the clearest proof of both product management and AI depth, start with List to Cart, Semantic Gravity, and How a 7-Billion-Parameter AI Cannot Add. List to Cart is the best product-facing demo. Semantic Gravity is the strongest original AI research signal. How a 7-Billion-Parameter AI Cannot Add strengthens the interpretability story by showing careful model-behavior analysis.",
-    spokenText:
-      "If you want the clearest proof of both product management and AI depth, start with List to Cart, Semantic Gravity, and How a 7-Billion-Parameter AI Cannot Add. List to Cart is the best product-facing demo. Semantic Gravity is the strongest original research signal. How a 7-Billion-Parameter AI Cannot Add strengthens the interpretability story with careful model-behavior analysis.",
-    sources: flagshipProjects.map((project) => `/projects/${project.slug}`)
-  };
-}
-
-function buildSkillsReply(content: PortfolioContent): AssistantDirectPlan {
-  const visibleSkills = content.skills.map((skill) => skill.name);
-  const opening = visibleSkills.slice(0, 6).join(", ");
-  return {
-    kind: "direct",
-    intent: "skills",
-    replyText: `The strongest visible skills on the site are ${opening}, plus Python, GitHub, OpenAI Platform, and Google AI Studio. In practice, the portfolio combines product management, stakeholder management, agentic engineering, retrieval work, vector embeddings, and prompt design.`,
-    spokenText: `The strongest visible skills on the site are ${opening}, plus Python, GitHub, OpenAI Platform, and Google AI Studio. In practice, the portfolio combines product management, stakeholder management, agentic engineering, retrieval work, vector embeddings, and prompt design.`,
-    sources: ["/#skills"]
-  };
-}
-
-function buildIdentityReply(content: PortfolioContent): AssistantDirectPlan {
-  return {
-    kind: "direct",
-    intent: "identity",
-    replyText:
-      "Yes. I'm the site guide for Shailesh Rana's portfolio, not Shailesh himself. I can help with projects, background, skills, and role fit.",
-    spokenText:
-      "Yes. I'm the site guide for Shailesh Rana's portfolio, not Shailesh himself. I can help with projects, background, skills, and role fit.",
-    sources: [content.home.contactLinks.linkedin]
-  };
-}
-
-function buildContactReply(content: PortfolioContent): AssistantDirectPlan {
-  return {
-    kind: "direct",
-    intent: "contact",
-    replyText:
-      "The cleanest next step is LinkedIn or the CV button on the site. The contact section also includes email, GitHub, and Medium.",
-    spokenText:
-      "The cleanest next step is LinkedIn or the CV button on the site. The contact section also includes email, GitHub, and Medium.",
-    sources: [
-      content.home.contactLinks.linkedin,
-      content.home.contactLinks.cv,
-      `mailto:${content.home.contactLinks.email}`
-    ]
-  };
-}
-
-function buildUnsupportedPersonalReply(content: PortfolioContent): AssistantDirectPlan {
-  return {
-    kind: "direct",
-    intent: "unsupported_personal",
-    replyText:
-      "I can help with recruiter-relevant details from Shailesh's portfolio and CV summary, but I don't have reliable information about that. The safest next step is LinkedIn or the CV button on the page.",
-    spokenText:
-      "I can help with recruiter-relevant details from Shailesh's portfolio and CV summary, but I don't have reliable information about that. The safest next step is LinkedIn or the CV button on the page.",
-    sources: [content.home.contactLinks.linkedin, content.home.contactLinks.cv]
-  };
-}
-
-function buildOffTopicReply(content: PortfolioContent): AssistantDirectPlan {
-  return {
-    kind: "direct",
-    intent: "off_topic",
-    replyText:
-      "I’m here for questions about Shailesh Rana, his projects, his background, and recruiter-relevant role fit.",
-    spokenText:
-      "I’m here for questions about Shailesh Rana, his projects, his background, and recruiter-relevant role fit.",
-    sources: [content.home.contactLinks.linkedin]
-  };
-}
-
-function buildProjectReply(project: ProjectEntry, content: PortfolioContent): AssistantDirectPlan {
-  const flagship = flagshipProjectKnowledge.find((item) => item.slug === project.slug);
-
-  if (flagship) {
-    return {
-      kind: "direct",
-      intent: "project_deep_dive",
-      replyText: `${flagship.recruiterSummary} ${flagship.whyItMatters}`,
-      spokenText: `${flagship.recruiterSummary} ${flagship.whyItMatters}`,
-      sources: [`/projects/${project.slug}`]
-    };
-  }
-
-  const fallback = `${project.title} is ${project.summary} ${project.previewExcerpt}`;
-
-  return {
-    kind: "direct",
-    intent: "project_deep_dive",
-    replyText: sanitizeParagraph(fallback),
-    spokenText: sanitizeForSpeech(fallback),
-    sources: [`/projects/${project.slug}`]
-  };
-}
-
 function getProjectAliases(project: ProjectEntry) {
   return [
     normalizeForMatch(project.title),
@@ -299,43 +297,250 @@ function getProjectAliases(project: ProjectEntry) {
   ];
 }
 
-function detectReferencedProject(
-  query: string,
-  history: AssistantHistoryItem[],
-  content: PortfolioContent
-) {
-  const normalizedQuery = normalizeForMatch(query);
-  const projects = [...content.projects].sort((a, b) => a.priority - b.priority);
+function getFlagshipBrief(projectSlug: string) {
+  return flagshipProjectKnowledge.find((project) => project.slug === projectSlug);
+}
 
-  const directMatch = projects.find((project) =>
-    getProjectAliases(project).some((alias) => normalizedQuery.includes(alias))
-  );
-
-  if (directMatch) return directMatch;
-  if (!includesAny(normalizedQuery, followUpSignals)) return undefined;
-
-  const recentContext = history
-    .slice(-4)
-    .map((item) => normalizeForMatch(item.content))
-    .join(" ");
-
-  return projects.find((project) =>
-    getProjectAliases(project).some((alias) => recentContext.includes(alias))
+function findProjectByQuery(query: string, content: PortfolioContent) {
+  const normalized = normalizeForMatch(query);
+  return content.projects.find((project) =>
+    getProjectAliases(project).some((alias) => normalized.includes(alias))
   );
 }
 
-function detectIntent(
-  query: string,
-  history: AssistantHistoryItem[],
-  content: PortfolioContent
-): { intent: AssistantIntent; project?: ProjectEntry } {
+function findProjectsByQuery(query: string, content: PortfolioContent) {
   const normalized = normalizeForMatch(query);
+  const seen = new Set<string>();
 
-  if (!normalized) return { intent: "empty" };
+  return content.projects.filter((project) => {
+    if (seen.has(project.slug)) return false;
+    const matches = getProjectAliases(project).some(
+      (alias) => alias.length >= 4 && normalized.includes(alias)
+    );
+    if (matches) {
+      seen.add(project.slug);
+    }
+    return matches;
+  });
+}
+
+function isReferentialQuery(normalizedQuery: string) {
+  return includesAny(normalizedQuery, followUpSignals);
+}
+
+function isCompensationAskQuery(normalizedQuery: string) {
+  return (
+    includesAny(normalizedQuery, [
+      "compensation",
+      "salary expectation",
+      "expected salary",
+      "salary ask",
+      "expected package",
+      "target package",
+      "expected ctc",
+      "target ctc",
+      "cash plus esops",
+      "cash and esops"
+    ]) ||
+    (normalizedQuery.includes("salary") &&
+      includesAny(normalizedQuery, [
+        "expect",
+        "expected",
+        "expectation",
+        "ask",
+        "target",
+        "looking for"
+      ]))
+  );
+}
+
+function detectEdgeIntent(normalizedQuery: string): EdgeIntent | undefined {
+  if (!normalizedQuery) return "empty";
+
   if (
-    includesAny(normalized, ["are you ai", "are you an ai", "who are you", "are you a bot"])
+    includesAny(normalizedQuery, ["are you ai", "are you an ai", "who are you", "are you a bot"])
   ) {
-    return { intent: "identity" };
+    return "identity";
+  }
+
+  if (includesAny(normalizedQuery, ["contact", "email", "linkedin", "cv", "resume"])) {
+    return "contact";
+  }
+
+  if (!isCompensationAskQuery(normalizedQuery) && includesAny(normalizedQuery, unsupportedPersonalKeywords)) {
+    return "unsupported_personal";
+  }
+
+  return undefined;
+}
+
+function detectCompanyEntity(normalizedQuery: string) {
+  if (normalizedQuery.includes("caastle")) return "CaaStle Technologies";
+  if (normalizedQuery.includes("bajaj")) return "Bajaj Finserv Health";
+  if (normalizedQuery.includes("data sutram") || normalizedQuery.includes("datasutram")) {
+    return "Data Sutram";
+  }
+  return undefined;
+}
+
+function analyzeQuestion(
+  query: string,
+  content: PortfolioContent,
+  workingMemory?: WorkingMemory,
+  contextProjectSlug?: string
+): QuestionAnalysis {
+  const repairedQuery = repairTranscriptForRouting(query).trim();
+  const normalized = normalizeForMatch(repairedQuery);
+  const edgeIntent = detectEdgeIntent(normalized);
+  const includeOnTopicProfanity = profanity.some((word) => normalized.includes(word));
+  const explicitFactIds: string[] = [];
+
+  if (edgeIntent) {
+    return {
+      shape: "edge_case",
+      entity: edgeIntent,
+      memoryNeed: "none",
+      edgeIntent,
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  const currentProject = contextProjectSlug
+    ? content.projects.find((project) => project.slug === contextProjectSlug)
+    : undefined;
+  const referencedProjects = findProjectsByQuery(repairedQuery, content);
+  const referencedProject = referencedProjects[0] ?? findProjectByQuery(repairedQuery, content);
+  const referential = isReferentialQuery(normalized);
+  const workingMemoryProject = workingMemory?.lastProjectSlug
+    ? content.projects.find((project) => project.slug === workingMemory.lastProjectSlug)
+    : undefined;
+  const targetProject =
+    referencedProject ??
+    (referential ? workingMemoryProject ?? currentProject ?? undefined : undefined);
+  const targetCompany = detectCompanyEntity(normalized);
+  const tokens = tokenize(normalized);
+  const hasPortfolioSignal =
+    tokens.some((token) => portfolioKeywords.has(token)) ||
+    Boolean(targetProject) ||
+    Boolean(targetCompany) ||
+    normalized.includes("shailesh") ||
+    normalized.includes("data sutram");
+
+  const isCountOrDuration =
+    includesAny(normalized, [
+      "how many years",
+      "how long",
+      "years of",
+      "yoe",
+      "number of years",
+      "duration"
+    ]) || /\b\d+\s+years\b/.test(normalized);
+
+  if (
+    includesAny(normalized, [
+      "where is he based",
+      "where is shailesh based",
+      "location",
+      "based in"
+    ])
+  ) {
+    explicitFactIds.push("background.location");
+    return {
+      shape: "fact",
+      entity: "location",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    isCountOrDuration &&
+    includesAny(normalized, ["product management", "pm experience", "product manager"])
+  ) {
+    explicitFactIds.push("background.pm-years");
+    return {
+      shape: "count_or_duration",
+      entity: "pm_experience_years",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    isCountOrDuration &&
+    includesAny(normalized, ["current company", "data sutram", "current role", "there"])
+  ) {
+    return {
+      shape: "count_or_duration",
+      entity: "current_company_duration",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (isCountOrDuration) {
+    return {
+      shape: "count_or_duration",
+      entity: "count_unknown",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    includesAny(normalized, [
+      "before product management",
+      "before he became a product manager",
+      "before becoming a product manager"
+    ])
+  ) {
+    explicitFactIds.push("background.previous-role");
+    return {
+      shape: "fact",
+      entity: "background_previous_role",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    includesAny(normalized, [
+      "current role",
+      "where does he work",
+      "what does he do now",
+      "what is his role",
+      "what is shailesh doing now",
+      "what does he work on"
+    ])
+  ) {
+    explicitFactIds.push("role.current", "role.current-scope");
+    return {
+      shape: "fact",
+      entity: "current_role",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
   if (
@@ -349,21 +554,55 @@ function detectIntent(
       "university"
     ])
   ) {
-    return { intent: "education_background" };
+    explicitFactIds.push("education.mba", "education.be");
+    return {
+      shape: "fact",
+      entity: "education",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
   if (
     includesAny(normalized, [
-      "looking for a role",
-      "looking for role",
-      "open to work",
-      "role fit",
-      "what kind of role",
-      "good fit",
-      "hire him"
+      "research interests",
+      "what does he research",
+      "what kind of research",
+      "what kind of ai research",
+      "what does he do for fun",
+      "research focus"
     ])
   ) {
-    return { intent: "role_fit" };
+    explicitFactIds.push("research.interests");
+    return {
+      shape: "fact",
+      entity: "research_interests",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    targetCompany &&
+    !includesAny(normalized, ["before"]) &&
+    includesAny(normalized, ["what did", "work on", "there", "at", "role", "did he do", "build"])
+  ) {
+    return {
+      shape: "fact",
+      entity: `company:${targetCompany}`,
+      targetCompany,
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
   if (
@@ -377,7 +616,15 @@ function detectIntent(
       "best work"
     ])
   ) {
-    return { intent: "broad_project_summary" };
+    return {
+      shape: "summary",
+      entity: "general",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
   if (
@@ -389,25 +636,142 @@ function detectIntent(
       "best show product"
     ])
   ) {
-    return { intent: "pm_ai_proof" };
-  }
-
-  const project = detectReferencedProject(query, history, content);
-  if (project) {
-    return { intent: "project_deep_dive", project };
+    return {
+      shape: "compare",
+      entity: "role_fit",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: true,
+      escalationReason: "comparison",
+      repairedQuery
+    };
   }
 
   if (
     includesAny(normalized, [
-      "work background",
-      "experience",
-      "current role",
-      "where does he work",
-      "what does he do now",
-      "background"
+      "looking for a role",
+      "looking for role",
+      "role fit",
+      "what kind of role",
+      "good fit"
     ])
   ) {
-    return { intent: "work_background" };
+    return {
+      shape: "summary",
+      entity: "role_fit",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (isCompensationAskQuery(normalized)) {
+    explicitFactIds.push("background.compensation-ask");
+    return {
+      shape: "summary",
+      entity: "compensation_expectation",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    includesAny(normalized, [
+      "before data sutram",
+      "before his current role",
+      "before current role",
+      "before joining data sutram"
+    ])
+  ) {
+    return {
+      shape: "summary",
+      entity: "prior_companies",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    includesAny(normalized, [
+      "career",
+      "journey",
+      "work background",
+      "background",
+      "tell me about shailesh",
+      "who is shailesh",
+      "what has he done"
+    ])
+  ) {
+    return {
+      shape: "summary",
+      entity: "career_background",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
+  }
+
+  if (
+    includesAny(normalized, [
+      "compare",
+      "versus",
+      "vs",
+      "difference between",
+      "better than",
+      "what stands out"
+    ])
+  ) {
+    return {
+      shape: "compare",
+      entity: targetProject ? `project:${targetProject.slug}` : "general",
+      targetProject,
+      comparisonProjects: referencedProjects,
+      memoryNeed: targetProject ? "active_project" : "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: true,
+      escalationReason: "comparison",
+      repairedQuery
+    };
+  }
+
+  if (targetProject) {
+    const needsNuancedProjectExplanation =
+      referential ||
+      includesAny(normalized, [
+        "why does",
+        "how does",
+        "how did",
+        "tradeoff",
+        "tradeoffs",
+        "limitations",
+        "architecture"
+      ]);
+
+    return {
+      shape: referential ? "follow_up" : "project",
+      entity: `project:${targetProject.slug}`,
+      targetProject,
+      memoryNeed: referential ? "active_project" : "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: needsNuancedProjectExplanation,
+      escalationReason: needsNuancedProjectExplanation
+        ? "nuanced_project_explanation"
+        : undefined,
+      repairedQuery
+    };
   }
 
   if (
@@ -420,229 +784,656 @@ function detectIntent(
       "capabilities"
     ])
   ) {
-    return { intent: "skills" };
+    return {
+      shape: "summary",
+      entity: "skills",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
-  if (includesAny(normalized, ["contact", "email", "linkedin", "cv", "resume"])) {
-    return { intent: "contact" };
+  if (referential && workingMemory?.lastProjectSlug) {
+    const project = content.projects.find((item) => item.slug === workingMemory.lastProjectSlug);
+    return {
+      shape: "follow_up",
+      entity: project ? `project:${project.slug}` : "general",
+      targetProject: project,
+      memoryNeed: project ? "active_project" : "last_topic",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
-  if (
-    includesAny(normalized, [
-      "family",
-      "wife",
-      "married",
-      "girlfriend",
-      "boyfriend",
-      "relationship",
-      "personal life",
-      "religion",
-      "politics",
-      "salary",
-      "address",
-      "age"
-    ])
-  ) {
-    return { intent: "unsupported_personal" };
-  }
-
-  const tokens = normalized.match(/[a-z0-9]+/g) ?? [];
-  const hasPortfolioSignal = tokens.some((token) => portfolioKeywords.has(token));
-  const swearingOnly =
-    profanity.some((word) => normalized.includes(word)) &&
-    !hasPortfolioSignal &&
-    !normalized.includes("shailesh");
-
-  if (swearingOnly) {
-    return { intent: "off_topic" };
+  if (referential) {
+    return {
+      shape: "follow_up",
+      entity: "general",
+      memoryNeed: "none",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
   if (!hasPortfolioSignal) {
-    return { intent: "off_topic" };
+    return {
+      shape: "edge_case",
+      entity: "off_topic",
+      memoryNeed: "none",
+      edgeIntent: "off_topic",
+      includeOnTopicProfanity,
+      explicitFactIds,
+      needsStrongModel: false,
+      repairedQuery
+    };
   }
 
-  return { intent: "general" };
+  return {
+    shape: "summary",
+    entity: "general",
+    memoryNeed: "none",
+    includeOnTopicProfanity,
+    explicitFactIds,
+    needsStrongModel: false,
+    repairedQuery
+  };
+}
+
+function getProjectSupport(project: ProjectEntry) {
+  return project.plainText.slice(0, 520).replace(/\s+/g, " ").trim();
+}
+
+function getRelevantFactsForEntity(entity: QuestionEntity) {
+  switch (entity) {
+    case "current_role":
+      return ["role.current", "role.current-scope"];
+    case "education":
+      return ["education.mba", "education.be"];
+    case "pm_experience_years":
+      return ["background.pm-years", "background.previous-role"];
+    case "career_background":
+      return [
+        "background.pm-years",
+        "background.previous-role",
+        "role.current",
+        "role.current-scope",
+        "research.interests",
+        "education.mba",
+        "education.be"
+      ];
+    case "prior_companies":
+      return ["background.previous-role"];
+    case "compensation_expectation":
+      return ["background.compensation-ask", "background.role-fit"];
+    case "research_interests":
+      return ["research.interests"];
+    case "location":
+      return ["background.location"];
+    case "background_previous_role":
+      return ["background.previous-role"];
+    case "role_fit":
+      return ["background.role-fit", "role.current", "research.interests"];
+    case "skills":
+      return [
+        "background.pm-years",
+        "role.current-scope",
+        "research.interests",
+        "background.code-with-ai"
+      ];
+    default:
+      return [];
+  }
+}
+
+function compileContextPack(
+  analysis: QuestionAnalysis,
+  content: PortfolioContent,
+  workingMemory?: WorkingMemory
+): ContextPack {
+  const factIds = new Set<string>(analysis.explicitFactIds);
+  for (const factId of getRelevantFactsForEntity(analysis.entity)) {
+    factIds.add(factId);
+  }
+
+  if (analysis.entity.startsWith("company:")) {
+    const company = analysis.entity.replace("company:", "");
+    const timelineItem = assistantTimeline.find((item) => item.company === company);
+    if (timelineItem) {
+      factIds.add("background.pm-years");
+    }
+  }
+
+  const facts = [...factIds]
+    .map((factId) => getAssistantFact(factId))
+    .filter((fact): fact is AssistantFact => Boolean(fact));
+
+  const timeline =
+    analysis.entity === "career_background"
+      ? assistantTimeline
+      : analysis.entity.startsWith("company:")
+        ? assistantTimeline.filter(
+            (item) => item.company === analysis.entity.replace("company:", "")
+          )
+        : [];
+
+  const projects: ContextPack["projects"] = [];
+
+  if (analysis.shape === "summary" && analysis.entity === "general") {
+    for (const brief of flagshipProjectKnowledge.slice(0, 3)) {
+      projects.push({
+        slug: brief.slug,
+        title: brief.title,
+        summary: brief.coreSummary,
+        whyItMatters: brief.whyItMatters
+      });
+    }
+  } else if (analysis.entity === "role_fit" || analysis.entity === "skills") {
+    for (const brief of flagshipProjectKnowledge.slice(0, 3)) {
+      projects.push({
+        slug: brief.slug,
+        title: brief.title,
+        summary: brief.coreSummary,
+        whyItMatters: brief.pmAiAngle
+      });
+    }
+  } else if (analysis.targetProject) {
+    const brief = getFlagshipBrief(analysis.targetProject.slug);
+    projects.push({
+      slug: analysis.targetProject.slug,
+      title: analysis.targetProject.title,
+      summary: brief?.coreSummary ?? analysis.targetProject.summary,
+      whyItMatters: brief?.whyItMatters ?? analysis.targetProject.previewExcerpt,
+      support: getProjectSupport(analysis.targetProject)
+    });
+  } else if (analysis.shape === "compare") {
+    const candidates =
+      analysis.comparisonProjects && analysis.comparisonProjects.length >= 2
+        ? analysis.comparisonProjects
+        : getFlagshipProjects(content).slice(0, 3);
+    for (const project of candidates) {
+      const brief = getFlagshipBrief(project.slug);
+      if (!brief) continue;
+      projects.push({
+        slug: project.slug,
+        title: project.title,
+        summary: brief.coreSummary,
+        whyItMatters: brief.pmAiAngle
+      });
+    }
+  }
+
+  let workingMemorySummary: string | undefined;
+  if (analysis.memoryNeed !== "none" && workingMemory?.lastAnswerSummary) {
+    workingMemorySummary = workingMemory.lastAnswerSummary;
+  }
+
+  return { facts, timeline, projects, workingMemorySummary };
+}
+
+function buildEdgeReply(
+  edgeIntent: EdgeIntent,
+  content: PortfolioContent,
+  analysis: QuestionAnalysis,
+  turnOrigin?: AssistantTurnOrigin
+) {
+  switch (edgeIntent) {
+    case "empty":
+      return buildDirectReply(
+        "empty",
+        "Ask about Shailesh's projects, current role, education, background, or role fit.",
+        [content.home.contactLinks.linkedin],
+        [],
+        analysis,
+        turnOrigin
+      );
+    case "identity":
+      return buildDirectReply(
+        "identity",
+        "I am the voice agent for Shailesh Rana's portfolio, not Shailesh himself.",
+        [content.home.contactLinks.linkedin],
+        ["identity.voice-agent"],
+        analysis,
+        turnOrigin
+      );
+    case "contact":
+      return buildDirectReply(
+        "contact",
+        "The cleanest next step is LinkedIn or the CV button on the site.",
+        [content.home.contactLinks.linkedin, content.home.contactLinks.cv],
+        ["contact.next-step"],
+        analysis,
+        turnOrigin
+      );
+    case "unsupported_personal":
+      return buildDirectReply(
+        "unsupported_personal",
+        "I can help with details grounded in Shailesh's portfolio and CV summary, but I do not have reliable information about that private personal topic.",
+        [content.home.contactLinks.linkedin, content.home.contactLinks.cv],
+        ["boundary.unsupported-personal"],
+        analysis,
+        turnOrigin
+      );
+    case "off_topic":
+    default:
+      return buildDirectReply(
+        "off_topic",
+        "I’m here for questions about Shailesh Rana, his projects, his background, and role fit.",
+        [content.home.contactLinks.linkedin],
+        [],
+        analysis,
+        turnOrigin
+      );
+  }
+}
+
+function buildExactFactReply(
+  analysis: QuestionAnalysis,
+  content: PortfolioContent,
+  turnOrigin?: AssistantTurnOrigin
+): AssistantDirectPlan | null {
+  if (analysis.entity === "pm_experience_years") {
+    const fact = getAssistantFact("background.pm-years");
+    if (!fact) return null;
+    return buildDirectReply(
+      "fact",
+      fact.value,
+      [content.home.contactLinks.cv],
+      [fact.id],
+      analysis,
+      turnOrigin,
+      fact.spokenForm
+    );
+  }
+
+  if (analysis.entity === "background_previous_role") {
+    const fact = getAssistantFact("background.previous-role");
+    if (!fact) return null;
+    return buildDirectReply(
+      "fact",
+      fact.value,
+      [content.home.contactLinks.cv],
+      [fact.id],
+      analysis,
+      turnOrigin,
+      fact.spokenForm
+    );
+  }
+
+  if (analysis.entity === "current_role") {
+    const roleFact = getAssistantFact("role.current");
+    const scopeFact = getAssistantFact("role.current-scope");
+    if (!roleFact || !scopeFact) return null;
+    return buildDirectReply(
+      "fact",
+      "Shailesh is currently a Product Manager and Member of Technical Staff at Data Sutram, where he owns UX, design, product management, development, and testing for the company's only B2B SaaS application.",
+      [content.home.contactLinks.company, content.home.contactLinks.cv],
+      [roleFact.id, scopeFact.id],
+      analysis,
+      turnOrigin
+    );
+  }
+
+  if (analysis.entity === "education") {
+    const mba = getAssistantFact("education.mba");
+    const be = getAssistantFact("education.be");
+    if (!mba || !be) return null;
+    return buildDirectReply(
+      "fact",
+      "Shailesh has an MBA in Finance from University Business School, Panjab University, and a B.E. in Metallurgical Engineering from PEC University of Technology, Chandigarh.",
+      [content.home.contactLinks.cv],
+      [mba.id, be.id],
+      analysis,
+      turnOrigin
+    );
+  }
+
+  if (analysis.entity === "research_interests") {
+    const fact = getAssistantFact("research.interests");
+    if (!fact) return null;
+    return buildDirectReply(
+      "fact",
+      fact.value,
+      ["/#projects"],
+      [fact.id],
+      analysis,
+      turnOrigin,
+      fact.spokenForm
+    );
+  }
+
+  if (analysis.entity === "location") {
+    const fact = getAssistantFact("background.location");
+    if (!fact) return null;
+    return buildDirectReply(
+      "fact",
+      fact.value,
+      [content.home.contactLinks.linkedin],
+      [fact.id],
+      analysis,
+      turnOrigin,
+      fact.spokenForm
+    );
+  }
+
+  if (analysis.entity === "current_company_duration") {
+    return buildDirectReply(
+      "fact",
+      "The site does not state a canonical duration for Shailesh's time at Data Sutram.",
+      [content.home.contactLinks.cv],
+      [],
+      analysis,
+      turnOrigin
+    );
+  }
+
+  if (analysis.entity === "prior_companies") {
+    return buildDirectReply(
+      "fact",
+      "Before Data Sutram, Shailesh worked at CaaStle Technologies and Bajaj Finserv Health.",
+      [content.home.contactLinks.cv],
+      ["timeline.caastle", "timeline.bajaj"],
+      analysis,
+      turnOrigin
+    );
+  }
+
+  if (analysis.entity === "career_background") {
+    return buildDirectReply(
+      "fact",
+      "Shailesh is a Product Manager and Member of Technical Staff at Data Sutram; earlier he worked at CaaStle Technologies and Bajaj Finserv Health after starting as a Data Analyst. He has an MBA in Finance, a B.E. in Metallurgical Engineering, and researches agents, mechanistic interpretability, and continual learning.",
+      [content.home.contactLinks.cv, content.home.contactLinks.linkedin],
+      [
+        "role.current",
+        "background.previous-role",
+        "education.mba",
+        "education.be",
+        "research.interests",
+        "timeline.datasutram",
+        "timeline.caastle",
+        "timeline.bajaj"
+      ],
+      analysis,
+      turnOrigin
+    );
+  }
+
+  if (analysis.shape === "summary" && analysis.entity === "general") {
+    return buildDirectReply(
+      "fact",
+      "The strongest work starts with Semantic Gravity, a mechanistic interpretability paper on negative constraints, then List to Cart, a grocery-cart generation demo, and then How a 7-Billion-Parameter AI Cannot Add, which uncovered length bias in large-number addition.",
+      flagshipProjectOrder.map((slug) => `/projects/${slug}`),
+      [],
+      analysis,
+      turnOrigin,
+      "The strongest work starts with Semantic Gravity, a mechanistic interpretability paper on negative constraints, then List to Cart, a grocery cart generation demo, and then the seven billion parameter addition interpretability project, which uncovered length bias in large number addition."
+    );
+  }
+
+  if (analysis.entity === "count_unknown") {
+    return buildDirectReply(
+      "fact",
+      "The site does not state a canonical count or duration for that.",
+      [content.home.contactLinks.cv],
+      [],
+      analysis,
+      turnOrigin
+    );
+  }
+
+  if (analysis.entity.startsWith("company:")) {
+    const company = analysis.entity.replace("company:", "");
+    const item = assistantTimeline.find((timelineItem) => timelineItem.company === company);
+    if (!item) return null;
+    return buildDirectReply(
+      "fact",
+      item.summary,
+      [content.home.contactLinks.cv],
+      [item.id],
+      analysis,
+      turnOrigin,
+      item.spokenForm
+    );
+  }
+
+  if (analysis.shape === "project" && analysis.targetProject) {
+    const brief = getFlagshipBrief(analysis.targetProject.slug);
+    if (brief) {
+      return buildDirectReply(
+        "fact",
+        brief.coreSummary,
+        [`/projects/${analysis.targetProject.slug}`],
+        [],
+        analysis,
+        turnOrigin,
+        brief.spokenCoreSummary ?? brief.coreSummary
+      );
+    }
+  }
+
+  if (
+    analysis.shape === "follow_up" &&
+    analysis.targetProject &&
+    includesAny(normalizeForMatch(analysis.repairedQuery), [
+      "why does it matter",
+      "why does that matter",
+      "why is it important",
+      "why does this matter"
+    ])
+  ) {
+    const brief = getFlagshipBrief(analysis.targetProject.slug);
+    if (brief) {
+      return buildDirectReply(
+        "fact",
+        brief.whyItMatters,
+        [`/projects/${analysis.targetProject.slug}`],
+        [],
+        analysis,
+        turnOrigin,
+        brief.spokenWhyItMatters ?? brief.whyItMatters
+      );
+    }
+  }
+
+  if (analysis.shape === "compare" && analysis.comparisonProjects?.length) {
+    const comparisonSlugs = analysis.comparisonProjects.map((project) => project.slug);
+    const sources = analysis.comparisonProjects.map((project) => `/projects/${project.slug}`);
+
+    if (
+      comparisonSlugs.includes("research-paper-semantic-gravity") &&
+      comparisonSlugs.includes("how-a-7-billion-parameter-ai-cannot-add")
+    ) {
+      return buildDirectReply(
+        "fact",
+        "Semantic Gravity is the stronger explanatory research piece around negative constraints, while How a 7-Billion-Parameter AI Cannot Add focuses on length bias in arithmetic behavior; together they show serious model-behavior analysis.",
+        sources,
+        [],
+        analysis,
+        turnOrigin,
+        "Semantic Gravity is the stronger explanatory research piece around negative constraints, while the seven billion parameter addition interpretability project focuses on length bias in arithmetic behavior; together they show serious model behavior analysis."
+      );
+    }
+  }
+
+  if (
+    analysis.shape === "compare" &&
+    analysis.entity === "general" &&
+    includesAny(normalizeForMatch(analysis.repairedQuery), ["what stands out", "stands out most"])
+  ) {
+    return buildDirectReply(
+      "fact",
+      "What stands out is the mix of serious AI research and product judgment: Semantic Gravity and the 7-Billion-Parameter AI Cannot Add project show model-behavior research, while List to Cart shows user-facing AI product design.",
+      flagshipProjectOrder.map((slug) => `/projects/${slug}`),
+      [],
+      analysis,
+      turnOrigin,
+      "What stands out is the mix of serious AI research and product judgment: Semantic Gravity and the seven billion parameter addition interpretability project show model behavior research, while List to Cart shows user facing AI product design."
+    );
+  }
+
+  return null;
+}
+
+function buildModelPrompt(
+  analysis: QuestionAnalysis,
+  contextPack: ContextPack,
+  turnOrigin?: AssistantTurnOrigin
+): AssistantModelPlan {
+  const factsBlock = contextPack.facts
+    .map((fact) => `[${fact.id}] ${fact.value}`)
+    .join("\n");
+  const timelineBlock = contextPack.timeline
+    .map(
+      (item) =>
+        `[${item.id}] ${item.company} | ${item.title}${item.start || item.end ? ` | ${item.start ?? "unknown"} to ${item.end ?? "present"}` : ""}\n${item.summary}`
+    )
+    .join("\n\n");
+  const projectsBlock = contextPack.projects
+    .map(
+      (project) =>
+        `Title: ${project.title}\nSummary: ${project.summary}\nWhy it matters: ${project.whyItMatters}${
+          project.support ? `\nSupport: ${project.support}` : ""
+        }`
+    )
+    .join("\n\n");
+
+  const shapeSpecificRules: string[] = [];
+
+  if (analysis.entity === "career_background") {
+    shapeSpecificRules.push(
+      "For career or background questions, answer in no more than two sentences and include the current role at Data Sutram, the earlier companies CaaStle Technologies and Bajaj Finserv Health, and either education or research focus."
+    );
+  }
+
+  if (analysis.shape === "project") {
+    shapeSpecificRules.push(
+      "For direct project summaries, answer in one sentence under 220 characters unless the user explicitly asks for more detail."
+    );
+  }
+
+  if (analysis.shape === "follow_up") {
+    shapeSpecificRules.push(
+      "For follow-up answers, stay under 220 characters and focus only on the current project or topic."
+    );
+  }
+
+  if (analysis.shape === "compare") {
+    shapeSpecificRules.push(
+      "For comparisons, explicitly name each compared project or work item and keep the answer under 300 characters."
+    );
+  }
+
+  if (analysis.entity === "compensation_expectation") {
+    shapeSpecificRules.push(
+      "For compensation expectation questions, answer in one sentence, use the explicit compensation fact if present, and do not speculate about current salary."
+    );
+  }
+
+  const system = [
+    "You are the voice agent for Shailesh Rana's portfolio.",
+    "Answer only from the provided canonical facts, project briefs, and working memory summary.",
+    "Answer only the question asked.",
+    "Prefer explicit facts over narrative summaries.",
+    "If a requested fact is not clearly stated in the provided context, say that plainly.",
+    "Do not reuse the previous answer format unless this is clearly a follow-up.",
+    "Do not volunteer unrelated biography, projects, or role commentary.",
+    "Keep the answer to one direct sentence by default. Use a second sentence only if the first would be misleading without it.",
+    "Return plain prose only. No markdown, bullets, headings, lists, or raw URLs.",
+    "If the question is a broad work summary, lead with Semantic Gravity, List to Cart, then How a 7-Billion-Parameter AI Cannot Add.",
+    ...shapeSpecificRules
+  ].join(" ");
+
+  const user = [
+    `Question: ${analysis.repairedQuery}`,
+    `Question shape: ${analysis.shape}`,
+    `Target entity: ${analysis.entity}`,
+    `Turn origin: ${turnOrigin ?? "external"}`,
+    contextPack.workingMemorySummary
+      ? `Working memory summary: ${contextPack.workingMemorySummary}`
+      : "",
+    factsBlock ? `Canonical facts:\n${factsBlock}` : "",
+    timelineBlock ? `Career timeline:\n${timelineBlock}` : "",
+    projectsBlock ? `Project briefs:\n${projectsBlock}` : ""
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const selectedFactIds = [
+    ...contextPack.facts.map((fact) => fact.id),
+    ...contextPack.timeline.map((item) => item.id)
+  ];
+  const sources = new Set<string>();
+
+  for (const project of contextPack.projects) {
+    sources.add(`/projects/${project.slug}`);
+  }
+
+  if (selectedFactIds.length) {
+    sources.add("/#contact");
+  }
+
+  return {
+    kind: "model",
+    questionShape: analysis.shape,
+    system,
+    user,
+    sources: [...sources],
+    selectedFactIds,
+    nextWorkingMemory: buildWorkingMemory(
+      analysis,
+      turnOrigin,
+      contextPack.workingMemorySummary ?? analysis.repairedQuery
+    ),
+    modelPreference: analysis.needsStrongModel ? "strong" : "fast",
+    escalationReason: analysis.escalationReason
+  };
 }
 
 export function getSessionTurnCount(history: AssistantHistoryItem[]) {
   return history.filter((item) => item.role === "user").length;
 }
 
-function retrieveContext(
-  query: string,
-  content: PortfolioContent,
-  focusProject?: ProjectEntry
-): RetrievedContext {
-  const queryTokens = normalizeForMatch(query).split(" ").filter(Boolean);
-
-  const rankedProjects = [...content.projects]
-    .map((project) => ({
-      project,
-      score:
-        scoreText(queryTokens, project.title) * 4 +
-        scoreText(queryTokens, project.summary) * 2 +
-        scoreText(queryTokens, project.previewExcerpt) * 2 +
-        scoreText(queryTokens, project.plainText.slice(0, 2200))
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map((item) => item.project);
-
-  const orderedProjects = focusProject
-    ? [focusProject, ...rankedProjects.filter((project) => project.slug !== focusProject.slug)]
-    : rankedProjects;
-
-  const matchedSkills = content.skills
-    .filter((skill) => scoreText(queryTokens, `${skill.name} ${skill.type}`) > 0)
-    .slice(0, 6);
-
-  return {
-    homeContext: [
-      content.home.introHeading,
-      ...content.home.introParagraphs,
-      ...content.home.contactParagraphs
-    ].join("\n"),
-    projects: orderedProjects.slice(0, 3),
-    skills: matchedSkills,
-    focusProject
-  };
-}
-
-function buildModelPrompt(
-  query: string,
-  history: AssistantHistoryItem[],
-  content: PortfolioContent,
-  intent: AssistantIntent,
-  focusProject?: ProjectEntry
-): AssistantModelPlan {
-  const retrieved = retrieveContext(query, content, focusProject);
-  const projectContext = retrieved.projects
-    .map(
-      (project) =>
-        `Title: ${project.title}\nSummary: ${project.summary}\nEvidence: ${project.previewExcerpt}\nDetails: ${project.plainText.slice(0, 1500)}`
-    )
-    .join("\n\n");
-
-  const skillsContext = retrieved.skills
-    .map((skill) => `${skill.name} (${skill.type})`)
-    .join("\n");
-
-  const recentHistory = history
-    .slice(-4)
-    .map((item) => `${item.role.toUpperCase()}: ${item.content}`)
-    .join("\n");
-
-  const flagshipContext = flagshipProjectKnowledge
-    .map(
-      (project) =>
-        `${project.title}: ${project.recruiterSummary} ${project.whyItMatters} ${project.pmAiAngle}`
-    )
-    .join("\n");
-
-  const profileContext = [
-    assistantProfile.currentRole,
-    ...assistantProfile.currentRoleHighlights,
-    ...assistantProfile.priorExperience,
-    ...assistantProfile.education,
-    assistantProfile.location,
-    assistantProfile.roleTargets,
-    assistantProfile.interests
-  ].join("\n");
-
-  const system = [
-    "You are the portfolio guide for Shailesh Rana.",
-    "Answer only from the provided project, portfolio, and CV-summary context.",
-    "Optimize for recruiter usefulness: specific, concise, concrete, and high-signal.",
-    "Return plain prose only. Do not use markdown, bullets, asterisks, headings, or raw URLs.",
-    "If the user asks for a broad summary of the work, prioritize these projects in order: Research Paper : Semantic Gravity, Q-Commerce Demo: List to Cart, How a 7-Billion-Parameter AI Cannot Add.",
-    "If the user asks about a specific project, start with that project.",
-    "If the answer is not in context, say that plainly and point them to LinkedIn or the CV button on the site without writing out a raw link.",
-    "Never claim to be Shailesh."
-  ].join(" ");
-
-  const user = [
-    `Intent: ${intent}`,
-    `Question:\n${query}`,
-    recentHistory ? `Recent conversation:\n${recentHistory}` : "",
-    `Profile and CV summary:\n${profileContext}`,
-    `Portfolio home context:\n${retrieved.homeContext}`,
-    `Flagship project briefs:\n${flagshipContext}`,
-    projectContext ? `Relevant projects:\n${projectContext}` : "",
-    skillsContext ? `Relevant skills:\n${skillsContext}` : ""
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-
-  const sources = new Set<string>();
-
-  if (focusProject) {
-    sources.add(`/projects/${focusProject.slug}`);
-  }
-
-  for (const project of retrieved.projects) {
-    sources.add(`/projects/${project.slug}`);
-  }
-
-  if (
-    intent === "education_background" ||
-    intent === "work_background" ||
-    intent === "role_fit"
-  ) {
-    sources.add(content.home.contactLinks.cv);
-  }
-
-  if (!sources.size) {
-    sources.add(content.home.contactLinks.linkedin);
-  }
-
-  return {
-    kind: "model",
-    intent,
-    system,
-    user,
-    sources: [...sources]
-  };
-}
-
 export function buildAssistantPlan(
   query: string,
-  history: AssistantHistoryItem[],
-  content: PortfolioContent
+  content: PortfolioContent,
+  options: BuildAssistantPlanOptions = {}
 ): AssistantPlan {
-  const { intent, project } = detectIntent(query, history, content);
+  ensureAssistantFactsConsistency(content);
 
-  switch (intent) {
-    case "empty":
-      return buildReply(
-        "Ask about Shailesh's projects, current role, education, skills, or whether he is a fit for a product or AI role.",
-        [content.home.contactLinks.linkedin]
-      );
-    case "identity":
-      return buildIdentityReply(content);
-    case "role_fit":
-      return buildRoleFitReply(content);
-    case "education_background":
-      return buildEducationReply(content);
-    case "work_background":
-      return buildBackgroundReply(content);
-    case "broad_project_summary":
-      return buildBroadSummaryReply(content);
-    case "pm_ai_proof":
-      return buildPmAiReply(content);
-    case "skills":
-      return buildSkillsReply(content);
-    case "contact":
-      return buildContactReply(content);
-    case "unsupported_personal":
-      return buildUnsupportedPersonalReply(content);
-    case "off_topic":
-      return buildOffTopicReply(content);
-    case "project_deep_dive":
-      if (project) return buildProjectReply(project, content);
-      return buildModelPrompt(query, history, content, intent);
-    case "general":
-    default:
-      return buildModelPrompt(query, history, content, intent, project);
+  const analysis = analyzeQuestion(
+    query,
+    content,
+    options.workingMemory,
+    options.contextProjectSlug
+  );
+
+  if (analysis.edgeIntent) {
+    return buildEdgeReply(analysis.edgeIntent, content, analysis, options.turnOrigin);
   }
+
+  if (analysis.shape === "follow_up" && analysis.memoryNeed === "none") {
+    return buildDirectReply(
+      "fact",
+      "I need the project or topic first. Ask about a specific project, role detail, or background detail and then follow up.",
+      ["/#projects"],
+      [],
+      analysis,
+      options.turnOrigin
+    );
+  }
+
+  const exactFactReply = buildExactFactReply(analysis, content, options.turnOrigin);
+  if (exactFactReply) {
+    return exactFactReply;
+  }
+
+  const contextPack = compileContextPack(analysis, content, options.workingMemory);
+  return buildModelPrompt(analysis, contextPack, options.turnOrigin);
 }
 
 export function finalizeAssistantReply(rawText: string) {
@@ -654,4 +1445,11 @@ export function finalizeAssistantReply(rawText: string) {
     "I couldn't assemble a reliable answer from the portfolio context.";
 
   return { replyText, spokenText };
+}
+
+export function finalizeWorkingMemory(plan: AssistantPlan, replyText: string): WorkingMemory {
+  return {
+    ...plan.nextWorkingMemory,
+    lastAnswerSummary: summarizeForMemory(replyText)
+  };
 }

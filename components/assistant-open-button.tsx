@@ -3,6 +3,8 @@
 type AssistantOpenButtonProps = {
   prompt?: string;
   autoSubmit?: boolean;
+  contextProjectSlug?: string;
+  source?: "hero" | "project" | "launcher" | "external";
   children: React.ReactNode;
   className?: string;
 };
@@ -10,6 +12,8 @@ type AssistantOpenButtonProps = {
 export function AssistantOpenButton({
   prompt,
   autoSubmit = false,
+  contextProjectSlug,
+  source = "external",
   children,
   className
 }: AssistantOpenButtonProps) {
@@ -19,7 +23,7 @@ export function AssistantOpenButton({
       onClick={() =>
         window.dispatchEvent(
           new CustomEvent("portfolio-assistant:open", {
-            detail: { prompt, autoSubmit }
+            detail: { prompt, autoSubmit, contextProjectSlug, source }
           })
         )
       }

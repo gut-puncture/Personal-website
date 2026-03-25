@@ -135,23 +135,25 @@ export default async function ProjectPage({
 
           <section className="rounded-[1.25rem] border border-line bg-charcoal-steel/70 p-5">
             <p className="text-[11px] uppercase tracking-[0.28em] text-smoke-gray">
-              Ask about this project
+              Voice agent
             </p>
             <p className="mt-3 text-sm leading-7 text-smoke-gray">
               Get the fast version, role relevance, or the context behind the write-up.
             </p>
             <AssistantOpenButton
               prompt={`Tell me about the ${project.title} project and why it matters.`}
+              contextProjectSlug={project.slug}
+              source="project"
               className="font-structure mt-4 inline-flex items-center gap-2 border border-line px-4 py-3 text-sm uppercase tracking-[0.1em] text-bone-white transition-colors hover:border-line-strong hover:text-ember-amber"
             >
-              Ask about this project
+              Talk about this project
               <span aria-hidden="true">/</span>
             </AssistantOpenButton>
           </section>
         </aside>
       </div>
 
-      <AssistantPanel variant="floating" />
+      <AssistantPanel variant="floating" contextProjectSlug={project.slug} />
     </main>
   );
 }

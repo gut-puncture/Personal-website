@@ -35,9 +35,6 @@ export default async function Home() {
               <a href="#projects" className="transition-colors hover:text-bone-white">
                 Projects
               </a>
-              <a href="#skills" className="transition-colors hover:text-bone-white">
-                Skills
-              </a>
               <a href="#contact" className="transition-colors hover:text-bone-white">
                 Contact
               </a>
@@ -137,13 +134,7 @@ export default async function Home() {
           <ProjectBrowser projects={content.projects} />
         </section>
 
-        <section id="skills" className="space-y-8">
-          <div className="border-b border-line pb-4">
-            <p className="font-structure text-[11px] uppercase tracking-[0.32em] text-smoke-gray">
-              Skills
-            </p>
-          </div>
-
+        <section id="skills">
           <SkillLedger groups={skillGroups} />
         </section>
 

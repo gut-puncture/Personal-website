@@ -6,7 +6,11 @@ const prompts = [
   "Ask for details about any project."
 ];
 
-function dispatchAssistantEvent(detail?: { prompt?: string; autoSubmit?: boolean }) {
+function dispatchAssistantEvent(detail?: {
+  prompt?: string;
+  autoSubmit?: boolean;
+  source?: "hero" | "project" | "launcher" | "external";
+}) {
   window.dispatchEvent(
     new CustomEvent("portfolio-assistant:open", {
       detail
@@ -21,13 +25,13 @@ export function VoiceGuideInvite() {
       <div className="relative space-y-5">
         <div className="space-y-2">
           <p className="font-structure text-[11px] uppercase tracking-[0.34em] text-smoke-gray">
-            Voice guide
+            Voice agent
           </p>
           <h2 className="max-w-sm text-2xl font-medium leading-tight tracking-tight text-bone-white md:text-[2rem]">
             Ask anything about the work.
           </h2>
           <p className="max-w-md text-sm leading-7 text-smoke-gray">
-            Projects, recruiter fit, specifics, context, tradeoffs. Speak or type and get a direct answer from the portfolio guide.
+            Projects, role fit, specifics, context, tradeoffs. Speak or type and get a direct answer grounded in the portfolio and CV.
           </p>
         </div>
 
@@ -36,7 +40,9 @@ export function VoiceGuideInvite() {
             <button
               key={prompt}
               type="button"
-              onClick={() => dispatchAssistantEvent({ prompt, autoSubmit: true })}
+              onClick={() =>
+                dispatchAssistantEvent({ prompt, autoSubmit: true, source: "hero" })
+              }
               className="font-structure flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-line-strong hover:bg-white/[0.02]"
             >
               <span>{prompt}</span>
@@ -53,10 +59,10 @@ export function VoiceGuideInvite() {
           </p>
           <button
             type="button"
-            onClick={() => dispatchAssistantEvent()}
+            onClick={() => dispatchAssistantEvent({ source: "hero" })}
             className="font-structure border border-bone-white/18 px-4 py-2 text-sm uppercase tracking-[0.12em] text-bone-white transition-colors hover:border-bone-white/32"
           >
-            Open guide
+            Open voice agent
           </button>
         </div>
       </div>
