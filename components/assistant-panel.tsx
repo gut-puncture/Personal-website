@@ -95,7 +95,7 @@ function AssistantSurface({
     <section
       id={!floating ? "assistant" : undefined}
       className={cn(
-        "edge-panel cut-corner overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,8,10,0.96),rgba(8,5,6,0.98))]",
+        "edge-panel cut-corner overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.99))]",
         floating && "shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur"
       )}
     >
@@ -138,7 +138,7 @@ function AssistantSurface({
                 key={prompt}
                 type="button"
                 onClick={() => void onStarterPrompt(prompt)}
-                className="font-structure flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-line-strong hover:bg-white/[0.02]"
+                className="font-structure cut-corner flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_40%)]"
               >
                 <span>{prompt}</span>
                 <span aria-hidden="true" className="text-ember-amber">
@@ -198,7 +198,7 @@ function AssistantSurface({
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Ask about projects, role fit, or background"
             rows={floating ? 3 : 4}
-            className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-line-strong"
+            className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-ember-amber/70"
           />
 
           <div className={cn("flex gap-2", !floating && "md:grid md:grid-cols-[1fr_auto]")}>
@@ -207,11 +207,11 @@ function AssistantSurface({
               onClick={() => void onRecordToggle()}
               disabled={remainingTurns <= 0 || status === "loading"}
               className={cn(
-                "font-structure border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
+                "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
                 !floating && "md:w-full",
                 status === "recording"
                   ? "border-ember-amber bg-ember-amber-soft text-bone-white"
-                  : "border-line text-smoke-gray hover:border-line-strong hover:text-bone-white"
+                  : "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white"
               )}
             >
               {status === "recording" ? "Stop recording" : "Push to talk"}
@@ -219,7 +219,7 @@ function AssistantSurface({
             <button
               type="submit"
               disabled={!draft.trim() || remainingTurns <= 0 || status === "loading"}
-              className="font-structure bg-bone-white px-5 py-3 text-sm uppercase tracking-[0.08em] text-obsidian transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              className="font-structure cut-corner bg-ember-amber px-5 py-3 text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:bg-[#ff5b3d] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Send
             </button>

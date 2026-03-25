@@ -32,7 +32,9 @@ export function SkillLedger({
                     id={skill.iconId}
                     className="h-5 w-5 shrink-0 text-bone-white transition-colors group-hover:text-ember-amber"
                   />
-                  <p className="text-sm font-medium text-bone-white">{skill.name}</p>
+                  <p className="text-sm font-medium text-bone-white transition-transform group-hover:translate-x-1">
+                    {skill.name}
+                  </p>
                 </div>
               ))}
             </div>

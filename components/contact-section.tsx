@@ -20,11 +20,11 @@ export function ContactSection({
   return (
     <section
       id="contact"
-      className="rounded-[1.5rem] border border-line bg-charcoal-steel/80 px-6 py-8 md:px-10 md:py-10"
+      className="edge-panel cut-corner border border-line bg-[linear-gradient(180deg,rgba(17,7,9,0.94),rgba(10,4,5,0.98))] px-6 py-8 md:px-10 md:py-10"
     >
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-5">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-smoke-gray">
+          <p className="font-structure text-[11px] uppercase tracking-[0.32em] text-smoke-gray">
             Contact
           </p>
           <div className="max-w-3xl space-y-4 text-base leading-8 text-smoke-gray">
@@ -36,7 +36,7 @@ export function ContactSection({
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.24em] text-smoke-gray">
+            <p className="font-structure text-xs uppercase tracking-[0.24em] text-smoke-gray">
               Primary
             </p>
             <div className="space-y-2">
@@ -46,7 +46,7 @@ export function ContactSection({
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between border-b border-line py-3 text-sm text-bone-white transition-colors hover:text-ember-amber"
+                  className="flex items-center justify-between border-b border-line py-3 text-sm text-bone-white transition-colors hover:border-ember-amber/45 hover:text-ember-amber"
                 >
                   <span>{link.label}</span>
                   <span aria-hidden="true">/</span>
@@ -56,7 +56,7 @@ export function ContactSection({
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.24em] text-smoke-gray">
+            <p className="font-structure text-xs uppercase tracking-[0.24em] text-smoke-gray">
               Secondary
             </p>
             <div className="space-y-2">
@@ -66,7 +66,7 @@ export function ContactSection({
                   href={link.href}
                   target={link.href.startsWith("mailto:") ? undefined : "_blank"}
                   rel={link.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                  className="flex items-center justify-between border-b border-line py-3 text-sm text-smoke-gray transition-colors hover:text-bone-white"
+                  className="flex items-center justify-between border-b border-line py-3 text-sm text-smoke-gray transition-colors hover:border-white/18 hover:text-bone-white"
                 >
                   <span>{link.label}</span>
                   <span aria-hidden="true">/</span>

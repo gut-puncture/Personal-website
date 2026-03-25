@@ -3,16 +3,16 @@
 
 :root {
   color-scheme: dark;
-  --obsidian: #090507;
-  --charcoal-steel: #130a0e;
-  --graphite-blue: #1d0d13;
-  --graphite-blue-strong: #2a1119;
-  --iron-black: #0f0709;
+  --obsidian: #070203;
+  --charcoal-steel: #120507;
+  --graphite-blue: #19080d;
+  --graphite-blue-strong: #2d0d14;
+  --iron-black: #0e0406;
   --bone-white: #f5e8de;
-  --smoke-gray: #aa9798;
-  --smoke-gray-soft: #6e5b5d;
-  --ember-amber: #ff5a36;
-  --ember-amber-soft: rgba(255, 90, 54, 0.14);
+  --smoke-gray: #b19d9d;
+  --smoke-gray-soft: #755c5f;
+  --ember-amber: #ff4323;
+  --ember-amber-soft: rgba(255, 67, 35, 0.14);
   --line: rgba(245, 232, 222, 0.12);
   --line-strong: rgba(245, 232, 222, 0.24);
 }
@@ -41,8 +41,8 @@
 
 html {
   background:
-    radial-gradient(circle at top, rgba(139, 24, 34, 0.32), transparent 34%),
-    linear-gradient(180deg, #12070a 0%, #090507 38%, #090507 100%);
+    radial-gradient(circle at top, rgba(207, 29, 29, 0.34), transparent 34%),
+    linear-gradient(180deg, #120405 0%, #070203 38%, #070203 100%);
   background-color: var(--obsidian);
   scroll-behavior: smooth;
 }
@@ -50,7 +50,10 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: transparent;
+  background:
+    linear-gradient(180deg, rgba(255, 67, 35, 0.04), transparent 12rem),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 88px),
+    transparent;
   color: var(--bone-white);
   font-family: var(--font-body), sans-serif;
   text-rendering: optimizeLegibility;
@@ -81,11 +84,24 @@ textarea {
   position: absolute;
   inset: 0;
   border: 1px solid var(--line);
+  box-shadow: inset 0 0 0 1px rgba(255, 67, 35, 0.04);
+  pointer-events: none;
+}
+
+.edge-panel::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 3.25rem;
+  height: 3.25rem;
+  background:
+    linear-gradient(135deg, transparent 0 58%, rgba(255, 67, 35, 0.18) 58% 61%, transparent 61% 100%);
   pointer-events: none;
 }
 
 .cut-corner {
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
 }
 
 ::selection {
@@ -118,7 +134,7 @@ textarea {
 }
 
 .prose img {
-  border-radius: 1rem;
+  border-radius: 0.65rem;
 }
 
 .prose a {
