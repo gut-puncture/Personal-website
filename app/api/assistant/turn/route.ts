@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { buildAssistantPrompt, classifyGuardrail, getSessionTurnCount } from "@/lib/assistant";
+import {
+  buildAssistantPlan,
+  finalizeAssistantReply,
+  getSessionTurnCount
+} from "@/lib/assistant";
 import { getAudioExtension, normalizeAudioMimeType } from "@/lib/audio";
 import { getPortfolioContent } from "@/lib/content";
 import { getSarvamClient } from "@/lib/sarvam";
@@ -8,14 +12,15 @@ import type { AssistantHistoryItem } from "@/lib/types";
 
 export const runtime = "nodejs";
 
-const HOURLY_LIMIT = 12;
-const SESSION_LIMIT = 6;
+const HOURLY_LIMIT = Number(process.env.ASSISTANT_HOURLY_LIMIT ?? "12");
+const SESSION_LIMIT = Number(process.env.ASSISTANT_SESSION_LIMIT ?? "6");
 type SupportedSarvamModel =
   | "sarvam-m"
   | "sarvam-30b"
   | "sarvam-30b-16k"
   | "sarvam-105b"
   | "sarvam-105b-32k";
+type SupportedReasoningEffort = "low" | "medium" | "high";
 
 type RateStore = Map<string, number[]>;
 
@@ -56,6 +61,11 @@ async function parseRequest(request: Request) {
             ? audio.type
             : "audio/webm"
       ),
+      mode: typeof formData.get("mode") === "string" ? String(formData.get("mode")) : "answer",
+      returnAudio:
+        typeof formData.get("returnAudio") === "string"
+          ? String(formData.get("returnAudio")) === "true"
+          : false,
       history:
         typeof historyRaw === "string"
           ? (JSON.parse(historyRaw) as AssistantHistoryItem[])
@@ -66,11 +76,14 @@ async function parseRequest(request: Request) {
   const body = (await request.json()) as {
     text?: string;
     history?: AssistantHistoryItem[];
+    returnAudio?: boolean;
   };
 
   return {
     text: body.text ?? "",
     history: body.history ?? [],
+    mode: "answer",
+    returnAudio: body.returnAudio ?? false,
     audio: null as File | null,
     audioMimeType: undefined
   };
@@ -97,32 +110,38 @@ export async function POST(request: Request) {
       );
     }
 
-    const rateCheck = registerHit(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        {
-          replyText:
-            "The hourly assistant limit has been reached. Please try again later, or use the CV, LinkedIn, or email links on the page.",
-          sources: [],
-          remainingTurns: 0,
-          limitReached: true
-        },
-        { status: 429 }
-      );
+    if (parsed.mode !== "transcribe") {
+      const rateCheck = registerHit(ip);
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          {
+            replyText:
+              "The hourly assistant limit has been reached. Please try again later, or use the CV, LinkedIn, or email links on the page.",
+            spokenText:
+              "The hourly assistant limit has been reached. Please try again later, or use the CV, LinkedIn, or email links on the page.",
+            sources: [],
+            remainingTurns: 0,
+            limitReached: true
+          },
+          { status: 429 }
+        );
+      }
     }
 
     let transcript = parsed.text?.trim() ?? "";
-    const shouldReturnAudio = Boolean(parsed.audio);
+    const shouldReturnAudio = parsed.returnAudio || Boolean(parsed.audio);
 
     if (parsed.audio) {
       const client = getSarvamClient();
       const buffer = Buffer.from(await parsed.audio.arrayBuffer());
       const mimeType = normalizeAudioMimeType(parsed.audioMimeType ?? parsed.audio.type);
-      const stt = await client.speechToText.translate({
+      const stt = await client.speechToText.transcribe({
         file: new File([buffer], parsed.audio.name || `question.${getAudioExtension(mimeType)}`, {
           type: mimeType
         }),
-        model: "saaras:v2.5"
+        model: "saaras:v3",
+        mode: "translate",
+        language_code: "unknown"
       } as never);
       transcript = stt.transcript.trim();
     }
@@ -132,6 +151,8 @@ export async function POST(request: Request) {
         {
           replyText:
             "I couldn't hear a clear question there. Please try recording again, or type the question instead.",
+          spokenText:
+            "I couldn't hear a clear question there. Please try recording again, or type the question instead.",
           sources: [],
           remainingTurns: Math.max(0, SESSION_LIMIT - sessionTurns),
           limitReached: false
@@ -140,11 +161,19 @@ export async function POST(request: Request) {
       );
     }
 
+    if (parsed.mode === "transcribe") {
+      return NextResponse.json({
+        transcript,
+        remainingTurns: Math.max(0, SESSION_LIMIT - sessionTurns),
+        limitReached: false
+      });
+    }
+
     const content = await getPortfolioContent();
-    const guardrail = classifyGuardrail(transcript, content);
+    const plan = buildAssistantPlan(transcript, parsed.history, content);
     const remainingTurns = Math.max(0, SESSION_LIMIT - (sessionTurns + 1));
 
-    if (guardrail.kind === "direct") {
+    if (plan.kind === "direct") {
       let audio: string | undefined;
       let audioMimeType: string | undefined;
 
@@ -153,7 +182,7 @@ export async function POST(request: Request) {
           const client = getSarvamClient();
           const speech = await client.textToSpeech.convert({
             model: "bulbul:v3",
-            text: guardrail.response,
+            text: plan.spokenText,
             speaker: "anand",
             target_language_code: "en-IN"
           } as never);
@@ -167,8 +196,9 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         transcript,
-        replyText: guardrail.response,
-        sources: [content.home.contactLinks.linkedin],
+        replyText: plan.replyText,
+        spokenText: plan.spokenText,
+        sources: plan.sources,
         audio,
         audioMimeType,
         remainingTurns,
@@ -176,28 +206,33 @@ export async function POST(request: Request) {
       });
     }
 
-    const prompt = buildAssistantPrompt(transcript, parsed.history, content);
     const client = getSarvamClient();
     const model = (process.env.SARVAM_CHAT_MODEL ||
-      "sarvam-30b-16k") as SupportedSarvamModel;
+      "sarvam-105b-32k") as SupportedSarvamModel;
+    const reasoningEffort = (process.env.SARVAM_REASONING_EFFORT ||
+      "medium") as SupportedReasoningEffort;
     const completion = await client.chat.completions({
       model,
-      reasoning_effort: "low",
+      reasoning_effort: reasoningEffort,
+      temperature: 0.2,
+      max_tokens: 220,
+      seed: 7,
       messages: [
         {
           role: "system",
-          content: prompt.system
+          content: plan.system
         },
         {
           role: "user",
-          content: prompt.user
+          content: plan.user
         }
       ]
     });
 
-    const replyText =
+    const { replyText, spokenText } = finalizeAssistantReply(
       completion.choices?.[0]?.message?.content?.trim() ||
-      "I couldn't assemble a reliable answer from the portfolio context.";
+        "I couldn't assemble a reliable answer from the portfolio context."
+    );
 
     let audio: string | undefined;
     let audioMimeType: string | undefined;
@@ -206,7 +241,7 @@ export async function POST(request: Request) {
       try {
         const speech = await client.textToSpeech.convert({
           model: "bulbul:v3",
-          text: replyText,
+          text: spokenText,
           speaker: "anand",
           target_language_code: "en-IN"
         } as never);
@@ -221,7 +256,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       transcript,
       replyText,
-      sources: prompt.sources,
+      spokenText,
+      sources: plan.sources,
       audio,
       audioMimeType,
       remainingTurns,
@@ -236,6 +272,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         replyText:
+          "The assistant hit a temporary issue. You can still use the page directly, or jump to LinkedIn and the CV from the contact section.",
+        spokenText:
           "The assistant hit a temporary issue. You can still use the page directly, or jump to LinkedIn and the CV from the contact section.",
         sources: [],
         remainingTurns: Math.max(0, SESSION_LIMIT - sessionTurns),

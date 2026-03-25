@@ -1,0 +1,92 @@
+[
+  {
+    "id": "education-background",
+    "question": "What is Shailesh's educational background?",
+    "requiredAll": ["MBA", "Metallurgical Engineering"],
+    "forbiddenAny": ["http", "drive.google.com", "**"],
+    "maxCharacters": 420
+  },
+  {
+    "id": "broad-project-summary",
+    "question": "Can you give me a brief summary of the projects done by Shailesh?",
+    "requiredAll": [
+      "Semantic Gravity",
+      "List to Cart",
+      "How a 7-Billion-Parameter AI Cannot Add"
+    ],
+    "forbiddenAny": [
+      "Q-Commerce Demo: Grocery Crate Analysis wrt Customer Profile",
+      "The Medium AI Articles",
+      "**",
+      "http"
+    ],
+    "maxCharacters": 900
+  },
+  {
+    "id": "pm-ai-proof",
+    "question": "Which projects best show product management and AI skills?",
+    "requiredAll": ["List to Cart", "Semantic Gravity"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 700
+  },
+  {
+    "id": "role-fit",
+    "question": "What kind of role is Shailesh a fit for?",
+    "requiredAll": ["Product", "AI Researcher"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 550
+  },
+  {
+    "id": "semantic-gravity",
+    "question": "Tell me about the Semantic Gravity project and why it matters.",
+    "requiredAll": ["negative constraints"],
+    "requiredAny": ["semantic pressure", "mechanistic interpretability"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 750
+  },
+  {
+    "id": "list-to-cart",
+    "question": "Tell me about List to Cart.",
+    "requiredAll": ["List to Cart", "grocery"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 650
+  },
+  {
+    "id": "identity",
+    "question": "Are you an AI?",
+    "requiredAll": ["site guide"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 280
+  },
+  {
+    "id": "unsupported-personal",
+    "question": "Is Shailesh married?",
+    "requiredAll": ["don't have reliable information"],
+    "forbiddenAny": ["http", "drive.google.com", "**"],
+    "maxCharacters": 420
+  },
+  {
+    "id": "off-topic",
+    "question": "Who will win the next IPL?",
+    "requiredAll": ["questions about Shailesh Rana"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 240
+  },
+  {
+    "id": "follow-up-history",
+    "question": "Why does it matter?",
+    "history": [
+      {
+        "role": "user",
+        "content": "Tell me about the Semantic Gravity project."
+      },
+      {
+        "role": "assistant",
+        "content": "Semantic Gravity is a mechanistic interpretability paper on why models fail negative constraints."
+      }
+    ],
+    "requiredAny": ["negative constraints", "AI research", "model behavior"],
+    "forbiddenAny": ["http", "**"],
+    "maxCharacters": 520
+  }
+]

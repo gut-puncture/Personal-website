@@ -168,6 +168,14 @@ function stripMarkdown(markdown) {
     .trim();
 }
 
+function stripInlineMarkdown(text) {
+  return text
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+    .replace(/[*_`~]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function normalizeComparable(text) {
   return stripMarkdown(text)
     .toLowerCase()
@@ -176,14 +184,24 @@ function normalizeComparable(text) {
 }
 
 function extractHeadings(markdown) {
+  const seen = new Set();
+
   return markdown
     .split("\n")
     .map((line) => {
       const match = line.match(/^(#{1,6})\s+(.*)$/);
       if (!match) return null;
+
+      const text = stripInlineMarkdown(match[2]);
+      const depth = match[1].length;
+      const key = `${depth}:${text.toLowerCase()}`;
+
+      if (!text || seen.has(key)) return null;
+      seen.add(key);
+
       return {
-        depth: match[1].length,
-        text: match[2].trim()
+        depth,
+        text
       };
     })
     .filter(Boolean);
@@ -263,6 +281,16 @@ function stripActionLines(markdown) {
 
 function stripLeadSummary(markdown) {
   return markdown.replace(/(^#\s+[^\n]+\n\n)Text:\s.*?\n\n/m, "$1").trim();
+}
+
+function extractFeaturedProjectFiles(markdown) {
+  const match = markdown.match(/## Projects\s+([\s\S]*?)(?=\n##\s|\s*$)/m);
+  if (!match) return [];
+
+  const links = [...match[1].matchAll(/\]\(([^)]+\/Projects\/[^)]+\.md)\)/g)];
+  return links
+    .map((item) => path.basename(decodeURIComponent(item[1])))
+    .filter((value, index, all) => all.indexOf(value) === index);
 }
 
 function extractPreviewExcerpt(markdown, summary, title) {
@@ -367,6 +395,7 @@ async function build() {
   const heroImagePath = path.join(workRoot, "ChatGPT_Image_Mar_25_2026_04_16_07_AM.png");
   const heroImageUrl = await copyAsset(heroImagePath);
   const homeSections = splitSections(homeMarkdown);
+  const featuredProjectFiles = extractFeaturedProjectFiles(homeMarkdown);
   const helloBody = homeSections.sections["Hello, I’m Shailesh Rana."];
   const contactBody = homeSections.sections["Contact Me"];
 
@@ -419,6 +448,7 @@ async function build() {
     projects.push({
       slug,
       title,
+      sourceFile: path.basename(file),
       summary: row?.Text?.trim() ?? "",
       group: projectGroups[title] ?? "Research & systems",
       priority: index + 1,
@@ -433,7 +463,13 @@ async function build() {
   }
 
   const projectsByTitle = new Map(projects.map((project) => [project.title, project]));
-  const orderedProjects = projectRows
+  const projectsBySourceFile = new Map(projects.map((project) => [project.sourceFile, project]));
+  const featuredProjects = featuredProjectFiles
+    .map((file) => projectsBySourceFile.get(file))
+    .filter(Boolean);
+  const featuredSlugs = new Set(featuredProjects.map((project) => project.slug));
+
+  const csvOrderedProjects = projectRows
     .map((row, index) => {
       const project = projectsByTitle.get(row.Name.trim());
       if (!project) return null;
@@ -442,7 +478,24 @@ async function build() {
         priority: index + 1
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((project) => !featuredSlugs.has(project.slug));
+
+  const unorderedRemainder = projects.filter(
+    (project) =>
+      !featuredSlugs.has(project.slug) &&
+      !csvOrderedProjects.some((orderedProject) => orderedProject.slug === project.slug)
+  );
+
+  const orderedProjects = [...featuredProjects, ...csvOrderedProjects, ...unorderedRemainder].map(
+    (project, index) => {
+      const { sourceFile, ...rest } = project;
+      return {
+        ...rest,
+        priority: index + 1
+      };
+    }
+  );
 
   const skills = skillRows
     .filter((row) => selectedSkillNames.has(row.Name))

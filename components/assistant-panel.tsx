@@ -10,9 +10,17 @@ import { cn } from "@/lib/utils";
 type AssistantResponse = {
   transcript?: string;
   replyText: string;
+  spokenText?: string;
   sources: string[];
   audio?: string;
   audioMimeType?: string;
+  remainingTurns: number;
+  limitReached: boolean;
+  errorCode?: string;
+};
+
+type TranscriptionResponse = {
+  transcript?: string;
   remainingTurns: number;
   limitReached: boolean;
   errorCode?: string;
@@ -27,21 +35,43 @@ type OpenEventDetail = {
   autoSubmit?: boolean;
 };
 
+type AssistantStatus =
+  | "idle"
+  | "recording"
+  | "transcribing"
+  | "finding_context"
+  | "writing_answer"
+  | "speaking"
+  | "error";
+
 type RecorderSession = {
   stream: MediaStream;
   recorder: MediaRecorder;
-  chunks: Blob[];
   mimeType: string;
   stopped: Promise<Blob>;
 };
 
+type WaveformSession = {
+  context: AudioContext;
+  analyser: AnalyserNode;
+  source: MediaStreamAudioSourceNode;
+  data: Uint8Array;
+  frameId: number | null;
+  startedAt: number;
+};
+
 const MAX_RECORDING_MS = 25_000;
-const REQUEST_TIMEOUT_MS = 35_000;
+const REQUEST_TIMEOUT_MS = 60_000;
+const DEFAULT_TURNS = 6;
+const WAVEFORM_BAR_COUNT = 20;
+const defaultWaveform = Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) =>
+  0.16 + (index % 5) * 0.018
+);
 
 const starterPrompts = [
   "What kind of role is Shailesh a fit for?",
   "Which projects best show product management and AI skills?",
-  "Summarize his strongest work in one minute."
+  "What is his educational and work background?"
 ];
 
 const recordingMimeCandidates = [
@@ -64,39 +94,288 @@ function getRecordingMimeType() {
   );
 }
 
+function dispatchAssistantEvent(detail?: { prompt?: string; autoSubmit?: boolean }) {
+  window.dispatchEvent(
+    new CustomEvent("portfolio-assistant:open", {
+      detail
+    })
+  );
+}
+
+function formatRecordingTime(ms: number) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function getStatusLabel(status: AssistantStatus) {
+  switch (status) {
+    case "recording":
+      return "Listening";
+    case "transcribing":
+      return "Transcribing";
+    case "finding_context":
+      return "Finding context";
+    case "writing_answer":
+      return "Writing answer";
+    case "speaking":
+      return "Speaking";
+    case "error":
+      return "Retry needed";
+    default:
+      return "Idle";
+  }
+}
+
+function getStatusDescription(status: AssistantStatus) {
+  switch (status) {
+    case "recording":
+      return "Recording live audio from the mic.";
+    case "transcribing":
+      return "Turning the recording into a clean question.";
+    case "finding_context":
+      return "Pulling the strongest portfolio and CV context.";
+    case "writing_answer":
+      return "Assembling a short, recruiter-ready answer.";
+    case "speaking":
+      return "Reading the answer out loud.";
+    case "error":
+      return "Something slipped. Retry or use text.";
+    default:
+      return "Talk or type for a direct answer.";
+  }
+}
+
+function isProcessingStatus(status: AssistantStatus) {
+  return (
+    status === "transcribing" ||
+    status === "finding_context" ||
+    status === "writing_answer"
+  );
+}
+
+function WaveformBars({
+  levels,
+  emphasis = "idle"
+}: {
+  levels: number[];
+  emphasis?: "idle" | "recording" | "speaking";
+}) {
+  return (
+    <div className="grid h-28 grid-cols-20 items-end gap-1">
+      {levels.map((level, index) => (
+        <span
+          key={`${index}-${level}`}
+          className={cn(
+            "block rounded-full transition-[height,background-color,opacity] duration-150",
+            emphasis === "recording"
+              ? "bg-[linear-gradient(180deg,rgba(255,213,203,0.95),rgba(255,67,35,0.95))]"
+              : emphasis === "speaking"
+                ? "bg-[linear-gradient(180deg,rgba(255,244,238,0.9),rgba(245,232,222,0.62))]"
+                : "bg-white/14"
+          )}
+          style={{
+            height: `${Math.max(12, Math.round(level * 108))}px`,
+            opacity: emphasis === "idle" ? 0.55 : 0.95
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function StatusRail({
+  status,
+  transcriptVisible
+}: {
+  status: AssistantStatus;
+  transcriptVisible: boolean;
+}) {
+  const steps = [
+    {
+      key: "transcribing",
+      label: "Transcript",
+      active: status === "transcribing",
+      complete: transcriptVisible || status !== "transcribing"
+    },
+    {
+      key: "finding_context",
+      label: "Context",
+      active: status === "finding_context",
+      complete: status === "writing_answer" || status === "speaking"
+    },
+    {
+      key: "writing_answer",
+      label: "Answer",
+      active: status === "writing_answer",
+      complete: status === "speaking"
+    },
+    {
+      key: "speaking",
+      label: "Voice",
+      active: status === "speaking",
+      complete: false
+    }
+  ];
+
+  return (
+    <div className="space-y-3 border border-line bg-charcoal-steel/60 px-4 py-4">
+      <div className="font-structure flex items-center justify-between text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
+        <span>{getStatusLabel(status)}</span>
+        <span>{getStatusDescription(status)}</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {steps.map((step) => (
+          <div key={step.key} className="space-y-2">
+            <div
+              className={cn(
+                "h-px w-full transition-colors",
+                step.active || step.complete ? "bg-ember-amber" : "bg-white/10"
+              )}
+            />
+            <p
+              className={cn(
+                "font-structure text-[10px] uppercase tracking-[0.24em] transition-colors",
+                step.active ? "text-bone-white" : step.complete ? "text-smoke-gray" : "text-smoke-gray-soft"
+              )}
+            >
+              {step.label}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LatestTurn({
+  history,
+  pendingUserText,
+  hideAssistant = false
+}: {
+  history: AssistantHistoryItem[];
+  pendingUserText: string | null;
+  hideAssistant?: boolean;
+}) {
+  const latestUserMessage = [...history].reverse().find((item) => item.role === "user");
+  const latestAssistantMessage = [...history].reverse().find(
+    (item) => item.role === "assistant"
+  );
+
+  const userText = pendingUserText ?? latestUserMessage?.content;
+
+  if (!userText && !latestAssistantMessage) return null;
+
+  return (
+    <div className="space-y-3">
+      {userText ? (
+        <div className="border border-line bg-[rgba(18,8,10,0.88)] px-4 py-4">
+          <p className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
+            {pendingUserText ? "Transcript" : "Question"}
+          </p>
+          <p className="mt-2 text-sm leading-7 text-bone-white">{userText}</p>
+        </div>
+      ) : null}
+
+      {latestAssistantMessage && !hideAssistant ? (
+        <div className="border border-line bg-charcoal-steel/76 px-4 py-4">
+          <p className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
+            Answer
+          </p>
+          <p className="mt-2 text-sm leading-7 text-bone-white">{latestAssistantMessage.content}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function RecordingTakeover({
+  levels,
+  elapsedMs,
+  onStop
+}: {
+  levels: number[];
+  elapsedMs: number;
+  onStop: () => Promise<void>;
+}) {
+  return (
+    <div className="space-y-5 border border-line bg-[linear-gradient(180deg,rgba(16,6,9,0.9),rgba(10,4,5,0.96))] px-4 py-5 md:px-5 md:py-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-ember-amber">
+            Recording live
+          </p>
+          <p className="text-lg leading-tight text-bone-white">Ask the question naturally.</p>
+        </div>
+        <p className="font-structure text-sm uppercase tracking-[0.24em] text-bone-white">
+          {formatRecordingTime(elapsedMs)}
+        </p>
+      </div>
+
+      <WaveformBars levels={levels} emphasis="recording" />
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="max-w-sm text-sm leading-6 text-smoke-gray">
+          The recording stops automatically at 25 seconds, or you can stop it now.
+        </p>
+        <button
+          type="button"
+          onClick={() => void onStop()}
+          className="font-structure cut-corner border border-ember-amber bg-ember-amber-soft px-4 py-3 text-sm uppercase tracking-[0.12em] text-bone-white transition-colors hover:bg-ember-amber/18"
+        >
+          Stop and answer
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AssistantSurface({
   history,
-  latestMessages,
   status,
   remainingTurns,
   draft,
   setDraft,
   notice,
+  pendingUserText,
+  waveformLevels,
+  recordingMs,
   onSubmit,
   onRecordToggle,
+  onStopRecording,
   onStarterPrompt,
   onClose,
   floating
 }: {
   history: AssistantHistoryItem[];
-  latestMessages: AssistantHistoryItem[];
-  status: "idle" | "recording" | "loading" | "speaking" | "error";
+  status: AssistantStatus;
   remainingTurns: number;
   draft: string;
   setDraft: (value: string) => void;
   notice: string | null;
+  pendingUserText: string | null;
+  waveformLevels: number[];
+  recordingMs: number;
   onSubmit: (event: React.FormEvent) => Promise<void>;
   onRecordToggle: () => Promise<void>;
+  onStopRecording: () => Promise<void>;
   onStarterPrompt: (prompt: string) => Promise<void>;
   onClose?: () => void;
   floating: boolean;
 }) {
+  const showPrompts = history.length === 0 && !pendingUserText && status === "idle";
+  const showProgress = isProcessingStatus(status) || status === "speaking";
+  const busy = isProcessingStatus(status) || status === "recording";
+
   return (
     <section
       id={!floating ? "assistant" : undefined}
       className={cn(
-        "edge-panel cut-corner overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.99))]",
-        floating && "shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur"
+        "edge-panel cut-corner overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.995))]",
+        floating && "shadow-[0_24px_80px_rgba(0,0,0,0.48)] backdrop-blur"
       )}
     >
       <div className="border-b border-line px-4 py-4 md:px-5">
@@ -111,10 +390,10 @@ function AssistantSurface({
                 floating ? "text-xl font-medium leading-tight" : "text-[1.9rem] font-medium leading-[1.02]"
               )}
             >
-              Ask about projects, role fit, or background.
+              Ask about projects, role fit, background, or what stands out.
             </h2>
             <p className="max-w-md text-sm leading-7 text-smoke-gray">
-              Talk or type for a fast answer.
+              Talk or type for a sharp answer on the work.
             </p>
           </div>
 
@@ -131,43 +410,45 @@ function AssistantSurface({
       </div>
 
       <div className="space-y-4 px-4 py-4 md:px-5 md:py-5">
-        {history.length === 0 ? (
-          <div className="space-y-3">
-            {starterPrompts.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                onClick={() => void onStarterPrompt(prompt)}
-                className="font-structure cut-corner flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_40%)]"
-              >
-                <span>{prompt}</span>
-                <span aria-hidden="true" className="text-ember-amber">
-                  /
-                </span>
-              </button>
-            ))}
-          </div>
+        {status === "recording" ? (
+          <RecordingTakeover
+            levels={waveformLevels}
+            elapsedMs={recordingMs}
+            onStop={onStopRecording}
+          />
         ) : (
-          <div
-            className={cn(
-              "space-y-3 overflow-y-auto pr-1",
-              floating ? "max-h-80" : "max-h-[24rem]"
-            )}
-          >
-            {latestMessages.map((item, index) => (
-              <div
-                key={`${item.role}-${index}`}
-                className={cn(
-                  "px-4 py-3 text-sm leading-7",
-                  item.role === "assistant"
-                    ? "bg-charcoal-steel text-bone-white"
-                    : "bg-graphite-blue/70 text-smoke-gray"
-                )}
-              >
-                {item.content}
+          <>
+            {showPrompts ? (
+              <div className="space-y-3">
+                {starterPrompts.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => void onStarterPrompt(prompt)}
+                    className="font-structure cut-corner flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_44%)]"
+                  >
+                    <span>{prompt}</span>
+                    <span aria-hidden="true" className="text-ember-amber">
+                      /
+                    </span>
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <LatestTurn
+                history={history}
+                pendingUserText={pendingUserText}
+                hideAssistant={Boolean(pendingUserText && isProcessingStatus(status))}
+              />
+            )}
+
+            {showProgress ? (
+              <StatusRail
+                status={status}
+                transcriptVisible={Boolean(pendingUserText)}
+              />
+            ) : null}
+          </>
         )}
 
         <div className="font-structure flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-smoke-gray">
@@ -175,62 +456,59 @@ function AssistantSurface({
           <span
             className={cn(
               status === "recording" && "text-ember-amber",
-              status === "loading" && "text-bone-white"
+              showProgress && "text-bone-white"
             )}
           >
-            {status === "recording"
-              ? "Listening"
-              : status === "loading"
-                ? "Answering"
-                : status === "speaking"
-                  ? "Speaking"
-                  : status === "error"
-                    ? "Retry needed"
-                    : "Idle"}
+            {getStatusLabel(status)}
           </span>
         </div>
 
         {notice ? <p className="text-sm leading-6 text-smoke-gray">{notice}</p> : null}
 
-        <form onSubmit={(event) => void onSubmit(event)} className="space-y-3">
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Ask about projects, role fit, or background"
-            rows={floating ? 3 : 4}
-            className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-ember-amber/70"
-          />
+        {status !== "recording" ? (
+          <form onSubmit={(event) => void onSubmit(event)} className="space-y-3">
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Ask about projects, skills, background, or role fit"
+              rows={floating ? 3 : 4}
+              className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-ember-amber/70"
+            />
 
-          <div className={cn("flex gap-2", !floating && "md:grid md:grid-cols-[1fr_auto]")}>
-            <button
-              type="button"
-              onClick={() => void onRecordToggle()}
-              disabled={remainingTurns <= 0 || status === "loading"}
-              className={cn(
-                "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
-                !floating && "md:w-full",
-                status === "recording"
-                  ? "border-ember-amber bg-ember-amber-soft text-bone-white"
-                  : "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white"
-              )}
-            >
-              {status === "recording" ? "Stop recording" : "Push to talk"}
-            </button>
-            <button
-              type="submit"
-              disabled={!draft.trim() || remainingTurns <= 0 || status === "loading"}
-              className="font-structure cut-corner bg-ember-amber px-5 py-3 text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:bg-[#ff5b3d] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Send
-            </button>
-          </div>
-        </form>
+            <div className={cn("flex gap-2", !floating && "md:grid md:grid-cols-[1fr_auto]")}>
+              <button
+                type="button"
+                onClick={() => void onRecordToggle()}
+                disabled={remainingTurns <= 0 || busy}
+                className={cn(
+                  "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
+                  !floating && "md:w-full",
+                  "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white disabled:cursor-not-allowed disabled:opacity-50"
+                )}
+              >
+                Push to talk
+              </button>
+              <button
+                type="submit"
+                disabled={!draft.trim() || remainingTurns <= 0 || busy}
+                className="font-structure cut-corner bg-ember-amber px-5 py-3 text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:bg-[#ff5b3d] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        ) : null}
 
         <div className="flex items-center justify-between border-t border-line pt-4">
           <span className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
-            Powered by
+            Powered by Sarvam AI
           </span>
-          <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
+          <div className="flex items-center gap-2">
+            <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
+            <span className="font-structure text-[10px] uppercase tracking-[0.22em] text-smoke-gray">
+              Sarvam AI
+            </span>
+          </div>
         </div>
       </div>
     </section>
@@ -241,16 +519,20 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   const isHero = variant === "hero";
   const [open, setOpen] = useState(false);
   const [history, setHistory] = useState<AssistantHistoryItem[]>([]);
-  const [status, setStatus] = useState<
-    "idle" | "recording" | "loading" | "speaking" | "error"
-  >("idle");
+  const [status, setStatus] = useState<AssistantStatus>("idle");
   const [draft, setDraft] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
-  const [remainingTurns, setRemainingTurns] = useState(6);
+  const [remainingTurns, setRemainingTurns] = useState(DEFAULT_TURNS);
+  const [pendingUserText, setPendingUserText] = useState<string | null>(null);
+  const [waveformLevels, setWaveformLevels] = useState<number[]>(defaultWaveform);
+  const [recordingMs, setRecordingMs] = useState(0);
+
   const stopTimeoutRef = useRef<number | null>(null);
+  const stageTimeoutsRef = useRef<number[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const historyRef = useRef<AssistantHistoryItem[]>([]);
   const recorderSessionRef = useRef<RecorderSession | null>(null);
+  const waveformSessionRef = useRef<WaveformSession | null>(null);
 
   useEffect(() => {
     historyRef.current = history;
@@ -259,7 +541,9 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   useEffect(() => {
     return () => {
       if (stopTimeoutRef.current) window.clearTimeout(stopTimeoutRef.current);
+      clearStageTimers();
       void teardownRecorder();
+      void teardownWaveform();
     };
   }, []);
 
@@ -273,7 +557,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       if (!detail?.prompt) return;
 
       if (detail.autoSubmit) {
-        await submitTurn({ text: detail.prompt });
+        await submitTextTurn(detail.prompt, false);
       } else {
         setDraft(detail.prompt);
       }
@@ -282,6 +566,41 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     window.addEventListener("portfolio-assistant:open", handleOpen);
     return () => window.removeEventListener("portfolio-assistant:open", handleOpen);
   }, [isHero]);
+
+  function clearStageTimers() {
+    for (const timeoutId of stageTimeoutsRef.current) {
+      window.clearTimeout(timeoutId);
+    }
+    stageTimeoutsRef.current = [];
+  }
+
+  function scheduleAnswerStages() {
+    clearStageTimers();
+    stageTimeoutsRef.current.push(
+      window.setTimeout(() => {
+        setStatus((current) => (current === "finding_context" ? "writing_answer" : current));
+      }, 1200)
+    );
+  }
+
+  async function teardownWaveform() {
+    const session = waveformSessionRef.current;
+    if (!session) return;
+
+    waveformSessionRef.current = null;
+    if (session.frameId) {
+      window.cancelAnimationFrame(session.frameId);
+    }
+
+    session.source.disconnect();
+    session.analyser.disconnect();
+    if (session.context.state !== "closed") {
+      await session.context.close();
+    }
+
+    setWaveformLevels(defaultWaveform);
+    setRecordingMs(0);
+  }
 
   async function teardownRecorder() {
     const session = recorderSessionRef.current;
@@ -302,6 +621,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       blob = null;
     } finally {
       session.stream.getTracks().forEach((track) => track.stop());
+      await teardownWaveform();
     }
 
     return blob
@@ -335,12 +655,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     }
   }
 
-  async function submitTurn(payload: FormData | { text: string }) {
-    setStatus("loading");
-    setNotice(
-      payload instanceof FormData ? "Transcribing your question and preparing an answer..." : null
-    );
-
+  async function fetchAssistantResponse(payload: FormData | Record<string, unknown>) {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -363,75 +678,173 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
         signal: controller.signal
       });
 
-      const data = (await response.json()) as AssistantResponse;
+      const data = (await response.json()) as AssistantResponse | TranscriptionResponse;
+      return { response, data };
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function submitTextTurn(text: string, returnAudio: boolean) {
+    setPendingUserText(text);
+    setStatus("finding_context");
+    setNotice("Pulling the strongest context for the question.");
+    scheduleAnswerStages();
+
+    try {
+      const { response, data } = await fetchAssistantResponse({
+        text,
+        returnAudio
+      });
+      const assistantData = data as AssistantResponse;
 
       if (!response.ok) {
+        clearStageTimers();
         setStatus("error");
-        setRemainingTurns(data.remainingTurns ?? remainingTurns);
-        setNotice("Voice hit a snag. You can retry or type the same question.");
+        setRemainingTurns(assistantData.remainingTurns ?? remainingTurns);
+        setNotice("The assistant hit a snag. Retry, or ask the same thing as text.");
+        setPendingUserText(null);
         setHistory((current) => [
           ...current,
-          { role: "assistant", content: data.replyText || "Something went wrong." }
+          { role: "user", content: text },
+          { role: "assistant", content: assistantData.replyText || "Something went wrong." }
         ]);
         return;
       }
 
-      setRemainingTurns(data.remainingTurns);
+      clearStageTimers();
+      setRemainingTurns(assistantData.remainingTurns);
       setNotice(null);
 
       const nextHistory = [...historyRef.current];
-      if (data.transcript) {
-        nextHistory.push({ role: "user", content: data.transcript });
-      } else if (!(payload instanceof FormData)) {
-        nextHistory.push({ role: "user", content: payload.text });
-      }
+      const userText = assistantData.transcript ?? text;
+      nextHistory.push({ role: "user", content: userText });
+      nextHistory.push({ role: "assistant", content: assistantData.replyText });
 
-      nextHistory.push({ role: "assistant", content: data.replyText });
       historyRef.current = nextHistory;
       setHistory(nextHistory);
-      void playAudioIfPresent(data);
+      setPendingUserText(null);
+      void playAudioIfPresent(assistantData);
     } catch (error) {
-      const aborted =
-        error instanceof DOMException && error.name === "AbortError";
-
+      clearStageTimers();
+      const aborted = error instanceof DOMException && error.name === "AbortError";
       setStatus("error");
       setNotice(
         aborted
-          ? "That took too long. Try once more or send the same question as text."
-          : "Voice hit a snag. You can retry or type the same question."
+          ? "That took too long. Try again, or use a shorter question."
+          : "The assistant hit a snag. Retry, or use text."
       );
+      setPendingUserText(null);
       setHistory((current) => [
         ...current,
+        { role: "user", content: text },
         {
           role: "assistant",
           content: aborted
-            ? "That request timed out. Please try again, or ask the same question as text."
-            : "I hit a temporary issue while processing that request. Please try again, or use text instead."
+            ? "That request timed out. Please try again, or ask the same question more briefly."
+            : "I hit a temporary issue while processing that request. Please try again."
         }
       ]);
-    } finally {
-      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function transcribeRecording(blob: Blob, mimeType: string) {
+    const formData = new FormData();
+    const extension = getAudioExtension(mimeType);
+    formData.set("mode", "transcribe");
+    formData.set("audio", blob, `question.${extension}`);
+    formData.set("audioMimeType", mimeType);
+
+    setStatus("transcribing");
+    setNotice("Turning the recording into a clean question.");
+
+    try {
+      const { response, data } = await fetchAssistantResponse(formData);
+      const transcriptionData = data as TranscriptionResponse;
+
+      if (!response.ok || !transcriptionData.transcript?.trim()) {
+        setStatus("error");
+        setNotice("I couldn't transcribe that clearly. Try again or use text.");
+        return null;
+      }
+
+      setRemainingTurns(transcriptionData.remainingTurns ?? remainingTurns);
+      setPendingUserText(transcriptionData.transcript.trim());
+      return transcriptionData.transcript.trim();
+    } catch (error) {
+      const aborted = error instanceof DOMException && error.name === "AbortError";
+      setStatus("error");
+      setNotice(
+        aborted
+          ? "Transcription took too long. Try again, or type the same question."
+          : "Mic capture worked, but transcription failed. Try again or use text."
+      );
+      return null;
     }
   }
 
   async function handleTextSubmit(event: React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
-    if (!text || status === "loading") return;
+    if (!text || isProcessingStatus(status) || status === "recording") return;
     setDraft("");
-    await submitTurn({ text });
+    await submitTextTurn(text, false);
   }
 
   async function handleStarterPrompt(prompt: string) {
     setDraft("");
-    await submitTurn({ text: prompt });
+    await submitTextTurn(prompt, false);
+  }
+
+  function startWaveform(stream: MediaStream) {
+    const AudioContextCtor = window.AudioContext || (window as typeof window & {
+      webkitAudioContext?: typeof AudioContext;
+    }).webkitAudioContext;
+
+    if (!AudioContextCtor) {
+      return;
+    }
+
+    const context = new AudioContextCtor();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 128;
+    analyser.smoothingTimeConstant = 0.82;
+    const source = context.createMediaStreamSource(stream);
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    const session: WaveformSession = {
+      context,
+      analyser,
+      source,
+      data,
+      frameId: null,
+      startedAt: performance.now()
+    };
+
+    const tick = () => {
+      analyser.getByteFrequencyData(data);
+
+      const bucketSize = Math.max(1, Math.floor(data.length / WAVEFORM_BAR_COUNT));
+      const nextLevels = Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) => {
+        const start = index * bucketSize;
+        const slice = data.slice(start, start + bucketSize);
+        const average =
+          slice.reduce((sum, value) => sum + value, 0) / Math.max(1, slice.length) / 255;
+        return Math.max(0.12, average * 1.6);
+      });
+
+      setWaveformLevels(nextLevels);
+      setRecordingMs(performance.now() - session.startedAt);
+      session.frameId = window.requestAnimationFrame(tick);
+    };
+
+    waveformSessionRef.current = session;
+    tick();
   }
 
   async function startRecording() {
-    if (
-      !navigator.mediaDevices?.getUserMedia ||
-      typeof MediaRecorder === "undefined"
-    ) {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setStatus("error");
       setNotice("Voice capture is unavailable here. Type the question instead.");
       return;
@@ -443,6 +856,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -477,13 +891,13 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       recorderSessionRef.current = {
         stream,
         recorder,
-        chunks,
         mimeType: normalizeAudioMimeType(recorder.mimeType || mimeType || "audio/webm"),
         stopped
       };
 
+      startWaveform(stream);
       setStatus("recording");
-      setNotice("Listening...");
+      setNotice("Listening live. Stop when the question is complete.");
 
       stopTimeoutRef.current = window.setTimeout(() => {
         void stopRecordingAndSubmit();
@@ -513,11 +927,9 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       return;
     }
 
-    const formData = new FormData();
-    const extension = getAudioExtension(session.mimeType);
-    formData.set("audio", session.blob, `question.${extension}`);
-    formData.set("audioMimeType", session.mimeType);
-    await submitTurn(formData);
+    const transcript = await transcribeRecording(session.blob, session.mimeType);
+    if (!transcript) return;
+    await submitTextTurn(transcript, true);
   }
 
   async function handleRecordToggle() {
@@ -529,8 +941,14 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     await startRecording();
   }
 
-  const latestMessages = useMemo(() => history.slice(-6), [history]);
-  const floatingLauncherLabel = isHero ? "Voice or text" : "Ask about the work";
+  const floatingLauncherLabel = isHero ? "Quick answers" : "Ask about the work";
+  const pulsingWaveform = useMemo(
+    () =>
+      defaultWaveform.map((level, index) =>
+        status === "speaking" ? level + ((index % 4) + 1) * 0.02 : level
+      ),
+    [status]
+  );
 
   return (
     <>
@@ -545,14 +963,17 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
         <div className="hidden lg:block">
           <AssistantSurface
             history={history}
-            latestMessages={latestMessages}
             status={status}
             remainingTurns={remainingTurns}
             draft={draft}
             setDraft={setDraft}
             notice={notice}
+            pendingUserText={pendingUserText}
+            waveformLevels={status === "speaking" ? pulsingWaveform : waveformLevels}
+            recordingMs={recordingMs}
             onSubmit={handleTextSubmit}
             onRecordToggle={handleRecordToggle}
+            onStopRecording={stopRecordingAndSubmit}
             onStarterPrompt={handleStarterPrompt}
             floating={false}
           />
@@ -575,14 +996,17 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
             >
               <AssistantSurface
                 history={history}
-                latestMessages={latestMessages}
                 status={status}
                 remainingTurns={remainingTurns}
                 draft={draft}
                 setDraft={setDraft}
                 notice={notice}
+                pendingUserText={pendingUserText}
+                waveformLevels={status === "speaking" ? pulsingWaveform : waveformLevels}
+                recordingMs={recordingMs}
                 onSubmit={handleTextSubmit}
                 onRecordToggle={handleRecordToggle}
+                onStopRecording={stopRecordingAndSubmit}
                 onStarterPrompt={handleStarterPrompt}
                 onClose={() => setOpen(false)}
                 floating
@@ -601,7 +1025,7 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
               <span
                 className={cn(
                   "inline-flex h-2 w-2 bg-ember-amber",
-                  status === "recording" && "animate-pulse"
+                  (status === "recording" || status === "speaking") && "animate-pulse"
                 )}
               />
               <span>
@@ -615,5 +1039,16 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
         </AnimatePresence>
       </div>
     </>
+  );
+}
+
+export function openAssistant(prompt?: string, autoSubmit = false) {
+  dispatchAssistantEvent(
+    prompt
+      ? {
+          prompt,
+          autoSubmit
+        }
+      : undefined
   );
 }

@@ -16,6 +16,16 @@ function hasVisibleContent(node: ReactNode): boolean {
   return false;
 }
 
+function textFromNode(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (!node) return "";
+  if (Array.isArray(node)) return node.map((child) => textFromNode(child)).join("");
+  if (typeof node === "object" && "props" in node) {
+    return textFromNode((node as { props?: { children?: ReactNode } }).props?.children);
+  }
+  return "";
+}
+
 function splitMarkdownBlocks(markdown: string) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const blocks: string[] = [];
@@ -99,7 +109,7 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
             </h1>
           ),
           h2: ({ children }) => {
-            const text = String(children);
+            const text = textFromNode(children);
             return (
               <h2
                 id={slugifyHeading(text)}
@@ -109,11 +119,17 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
               </h2>
             );
           },
-          h3: ({ children }) => (
-            <h3 className="text-xl font-medium tracking-tight text-bone-white md:text-2xl">
-              {children}
-            </h3>
-          ),
+          h3: ({ children }) => {
+            const text = textFromNode(children);
+            return (
+              <h3
+                id={slugifyHeading(text)}
+                className="scroll-mt-24 text-xl font-medium tracking-tight text-bone-white md:text-2xl"
+              >
+                {children}
+              </h3>
+            );
+          },
           a: ({ href = "", children }) =>
             href.startsWith("/") ? (
               <Link

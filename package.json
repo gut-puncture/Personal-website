@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "prepare:content": "node scripts/prepare-content.mjs",
+    "eval:assistant": "node scripts/evaluate-assistant.mjs",
     "predev": "npm run prepare:content",
     "prebuild": "npm run prepare:content",
     "dev": "next dev --turbopack",
