@@ -64,9 +64,11 @@ const MAX_RECORDING_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 60_000;
 const DEFAULT_TURNS = 6;
 const WAVEFORM_BAR_COUNT = 20;
-const defaultWaveform = Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) =>
-  0.16 + (index % 5) * 0.018
-);
+const waveformMidpoint = (WAVEFORM_BAR_COUNT - 1) / 2;
+const defaultWaveform = Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) => {
+  const distanceFromCenter = Math.abs(index - waveformMidpoint) / waveformMidpoint;
+  return 0.18 + (1 - distanceFromCenter) * 0.18;
+});
 
 const starterPrompts = [
   "What kind of role is Shailesh a fit for?",
@@ -165,12 +167,12 @@ function WaveformBars({
   emphasis?: "idle" | "recording" | "speaking";
 }) {
   return (
-    <div className="grid h-28 grid-cols-20 items-end gap-1">
+    <div className="flex h-28 items-center justify-center gap-1 overflow-hidden">
       {levels.map((level, index) => (
         <span
           key={`${index}-${level}`}
           className={cn(
-            "block rounded-full transition-[height,background-color,opacity] duration-150",
+            "block h-full w-full max-w-[12px] rounded-full transition-[height,background-color,opacity] duration-150",
             emphasis === "recording"
               ? "bg-[linear-gradient(180deg,rgba(255,213,203,0.95),rgba(255,67,35,0.95))]"
               : emphasis === "speaking"
@@ -178,7 +180,7 @@ function WaveformBars({
                 : "bg-white/14"
           )}
           style={{
-            height: `${Math.max(12, Math.round(level * 108))}px`,
+            height: `${Math.max(16, Math.round(level * 112))}px`,
             opacity: emphasis === "idle" ? 0.55 : 0.95
           }}
         />
@@ -308,7 +310,7 @@ function RecordingTakeover({
           <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-ember-amber">
             Recording live
           </p>
-          <p className="text-lg leading-tight text-bone-white">Ask the question naturally.</p>
+          <p className="text-lg leading-tight text-bone-white">Hold to record. Release to answer.</p>
         </div>
         <p className="font-structure text-sm uppercase tracking-[0.24em] text-bone-white">
           {formatRecordingTime(elapsedMs)}
@@ -344,7 +346,8 @@ function AssistantSurface({
   waveformLevels,
   recordingMs,
   onSubmit,
-  onRecordToggle,
+  onRecordPressStart,
+  onRecordPressEnd,
   onStopRecording,
   onStarterPrompt,
   onClose,
@@ -360,7 +363,8 @@ function AssistantSurface({
   waveformLevels: number[];
   recordingMs: number;
   onSubmit: (event: React.FormEvent) => Promise<void>;
-  onRecordToggle: () => Promise<void>;
+  onRecordPressStart: () => Promise<void>;
+  onRecordPressEnd: () => Promise<void>;
   onStopRecording: () => Promise<void>;
   onStarterPrompt: (prompt: string) => Promise<void>;
   onClose?: () => void;
@@ -478,7 +482,21 @@ function AssistantSurface({
             <div className={cn("flex gap-2", !floating && "md:grid md:grid-cols-[1fr_auto]")}>
               <button
                 type="button"
-                onClick={() => void onRecordToggle()}
+                onPointerDown={() => void onRecordPressStart()}
+                onPointerUp={() => void onRecordPressEnd()}
+                onPointerCancel={() => void onRecordPressEnd()}
+                onKeyDown={(event) => {
+                  if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+                    event.preventDefault();
+                    void onRecordPressStart();
+                  }
+                }}
+                onKeyUp={(event) => {
+                  if (event.key === " " || event.key === "Enter") {
+                    event.preventDefault();
+                    void onRecordPressEnd();
+                  }
+                }}
                 disabled={remainingTurns <= 0 || busy}
                 className={cn(
                   "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
@@ -486,7 +504,7 @@ function AssistantSurface({
                   "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white disabled:cursor-not-allowed disabled:opacity-50"
                 )}
               >
-                Push to talk
+                Hold to talk
               </button>
               <button
                 type="submit"
@@ -505,9 +523,6 @@ function AssistantSurface({
           </span>
           <div className="flex items-center gap-2">
             <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
-            <span className="font-structure text-[10px] uppercase tracking-[0.22em] text-smoke-gray">
-              Sarvam AI
-            </span>
           </div>
         </div>
       </div>
@@ -533,6 +548,9 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
   const historyRef = useRef<AssistantHistoryItem[]>([]);
   const recorderSessionRef = useRef<RecorderSession | null>(null);
   const waveformSessionRef = useRef<WaveformSession | null>(null);
+  const recordPressActiveRef = useRef(false);
+  const shouldStopAfterStartRef = useRef(false);
+  const recordReleaseHandledRef = useRef(false);
 
   useEffect(() => {
     historyRef.current = history;
@@ -546,6 +564,21 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
       void teardownWaveform();
     };
   }, []);
+
+  useEffect(() => {
+    if (status !== "recording") return;
+
+    const handleRelease = () => {
+      void handleRecordPressEnd();
+    };
+
+    window.addEventListener("pointerup", handleRelease);
+    window.addEventListener("pointercancel", handleRelease);
+    return () => {
+      window.removeEventListener("pointerup", handleRelease);
+      window.removeEventListener("pointercancel", handleRelease);
+    };
+  }, [status]);
 
   useEffect(() => {
     async function handleOpen(event: Event) {
@@ -823,16 +856,22 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     };
 
     const tick = () => {
-      analyser.getByteFrequencyData(data);
+      analyser.getByteTimeDomainData(data);
 
-      const bucketSize = Math.max(1, Math.floor(data.length / WAVEFORM_BAR_COUNT));
-      const nextLevels = Array.from({ length: WAVEFORM_BAR_COUNT }, (_, index) => {
+      const halfCount = WAVEFORM_BAR_COUNT / 2;
+      const bucketSize = Math.max(1, Math.floor(data.length / halfCount));
+      const mirroredLevels = Array.from({ length: halfCount }, (_, index) => {
         const start = index * bucketSize;
         const slice = data.slice(start, start + bucketSize);
-        const average =
-          slice.reduce((sum, value) => sum + value, 0) / Math.max(1, slice.length) / 255;
-        return Math.max(0.12, average * 1.6);
+        const amplitude =
+          slice.reduce((sum, value) => sum + Math.abs(value - 128), 0) /
+          Math.max(1, slice.length) /
+          128;
+        const centerBias = 0.78 + ((index + 1) / halfCount) * 0.34;
+        return Math.max(0.16, amplitude * centerBias * 1.85);
       });
+
+      const nextLevels = [...mirroredLevels, ...mirroredLevels.slice().reverse()];
 
       setWaveformLevels(nextLevels);
       setRecordingMs(performance.now() - session.startedAt);
@@ -897,18 +936,30 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
 
       startWaveform(stream);
       setStatus("recording");
-      setNotice("Listening live. Stop when the question is complete.");
+      setNotice("Listening live. Release when the question is complete.");
 
       stopTimeoutRef.current = window.setTimeout(() => {
         void stopRecordingAndSubmit();
       }, MAX_RECORDING_MS);
+
+      if (shouldStopAfterStartRef.current || !recordPressActiveRef.current) {
+        shouldStopAfterStartRef.current = false;
+        await stopRecordingAndSubmit();
+      }
     } catch {
+      recordPressActiveRef.current = false;
+      shouldStopAfterStartRef.current = false;
+      recordReleaseHandledRef.current = true;
       setStatus("error");
       setNotice("Mic access failed. Type the question instead.");
     }
   }
 
   async function stopRecordingAndSubmit() {
+    recordPressActiveRef.current = false;
+    recordReleaseHandledRef.current = true;
+    shouldStopAfterStartRef.current = false;
+
     if (stopTimeoutRef.current) {
       window.clearTimeout(stopTimeoutRef.current);
       stopTimeoutRef.current = null;
@@ -932,13 +983,26 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
     await submitTextTurn(transcript, true);
   }
 
-  async function handleRecordToggle() {
+  async function handleRecordPressStart() {
+    if (remainingTurns <= 0 || isProcessingStatus(status) || status === "recording") return;
+    recordPressActiveRef.current = true;
+    shouldStopAfterStartRef.current = false;
+    recordReleaseHandledRef.current = false;
+    await startRecording();
+  }
+
+  async function handleRecordPressEnd() {
+    if (recordReleaseHandledRef.current) return;
+    if (!recordPressActiveRef.current && status !== "recording") return;
+    recordReleaseHandledRef.current = true;
+    recordPressActiveRef.current = false;
+
     if (status === "recording") {
       await stopRecordingAndSubmit();
       return;
     }
 
-    await startRecording();
+    shouldStopAfterStartRef.current = true;
   }
 
   const floatingLauncherLabel = isHero ? "Quick answers" : "Ask about the work";
@@ -972,7 +1036,8 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
             waveformLevels={status === "speaking" ? pulsingWaveform : waveformLevels}
             recordingMs={recordingMs}
             onSubmit={handleTextSubmit}
-            onRecordToggle={handleRecordToggle}
+            onRecordPressStart={handleRecordPressStart}
+            onRecordPressEnd={handleRecordPressEnd}
             onStopRecording={stopRecordingAndSubmit}
             onStarterPrompt={handleStarterPrompt}
             floating={false}
@@ -1005,7 +1070,8 @@ export function AssistantPanel({ variant = "floating" }: AssistantPanelProps) {
                 waveformLevels={status === "speaking" ? pulsingWaveform : waveformLevels}
                 recordingMs={recordingMs}
                 onSubmit={handleTextSubmit}
-                onRecordToggle={handleRecordToggle}
+                onRecordPressStart={handleRecordPressStart}
+                onRecordPressEnd={handleRecordPressEnd}
                 onStopRecording={stopRecordingAndSubmit}
                 onStarterPrompt={handleStarterPrompt}
                 onClose={() => setOpen(false)}
