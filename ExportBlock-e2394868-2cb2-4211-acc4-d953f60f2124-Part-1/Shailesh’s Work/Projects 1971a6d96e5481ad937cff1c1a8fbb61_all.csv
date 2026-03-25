@@ -1,0 +1,13 @@
+﻿Name,Text
+Q-Commerce Demo: List to Cart,Created a demo for generating a full cart from a list of items.
+Smart Medical Search,Write a brief description of your symptoms and know what kind of doctor you should visit.
+Garden Watering System,Automating the watering of my home garden because I’m forgetful.
+Q-Commerce Demo: Grocery Crate Analysis wrt Customer Profile,Built a short demo to classify grocery crates on basis of quality of vegetables wrt the Customer they were meant for.
+Claude 3.5 Sonnet Twitter Account,Gave Claude 3.5 Sonnet access to its own Twitter Account
+The Medium AI Articles,Series of Medium Posts to explain how current AI works in layman terms.
+Parker Square Search,"Trying to solve an unsolved maths problem of a 3x3 grid of perfect squares, where each row, column and diagonal add up to the same number."
+AI Agent Communication Protocol,An AI written summary of my work-in-progress AI Agent Communication Protocol.
+Continuous Learning LLM,A system which lets an LLM learn new details as it interacts with users.
+AI Shoe Design,"With reference of clothing or accessory items, the app generates a shoe design similar to the aesthetics in the reference images."
+"Research Paper : Semantic Gravity ","A mechanistic study revealing why LLMs systematically violate negative constraints (e.g. 'don't use word X'), introducing semantic pressure as a quantitative predictor of instruction failure."
+How a 7-Billion-Parameter AI Cannot Add,An interpretability study revealing that LLMs systematically hallucinate a 'length bias' in large-number addition — believing the answer is always one digit longer — causing them to paradoxically outperform on harder overflow problems where this false prior accidentally aligns with the correct answer.

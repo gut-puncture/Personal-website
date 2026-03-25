@@ -1,0 +1,148 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  color-scheme: dark;
+  --obsidian: #090507;
+  --charcoal-steel: #130a0e;
+  --graphite-blue: #1d0d13;
+  --graphite-blue-strong: #2a1119;
+  --iron-black: #0f0709;
+  --bone-white: #f5e8de;
+  --smoke-gray: #aa9798;
+  --smoke-gray-soft: #6e5b5d;
+  --ember-amber: #ff5a36;
+  --ember-amber-soft: rgba(255, 90, 54, 0.14);
+  --line: rgba(245, 232, 222, 0.12);
+  --line-strong: rgba(245, 232, 222, 0.24);
+}
+
+@theme inline {
+  --color-obsidian: var(--obsidian);
+  --color-charcoal-steel: var(--charcoal-steel);
+  --color-graphite-blue: var(--graphite-blue);
+  --color-graphite-blue-strong: var(--graphite-blue-strong);
+  --color-iron-black: var(--iron-black);
+  --color-bone-white: var(--bone-white);
+  --color-smoke-gray: var(--smoke-gray);
+  --color-smoke-gray-soft: var(--smoke-gray-soft);
+  --color-ember-amber: var(--ember-amber);
+  --color-ember-amber-soft: var(--ember-amber-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-structure: var(--font-structure);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top, rgba(139, 24, 34, 0.32), transparent 34%),
+    linear-gradient(180deg, #12070a 0%, #090507 38%, #090507 100%);
+  background-color: var(--obsidian);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--bone-white);
+  font-family: var(--font-body), sans-serif;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.font-structure {
+  font-family: var(--font-structure), sans-serif;
+}
+
+.edge-panel {
+  position: relative;
+}
+
+.edge-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+
+.cut-corner {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+
+::selection {
+  background: rgba(255, 90, 54, 0.24);
+}
+
+.prose {
+  --tw-prose-body: var(--bone-white);
+  --tw-prose-headings: var(--bone-white);
+  --tw-prose-lead: var(--smoke-gray);
+  --tw-prose-links: var(--bone-white);
+  --tw-prose-bold: var(--bone-white);
+  --tw-prose-counters: var(--smoke-gray);
+  --tw-prose-bullets: var(--smoke-gray);
+  --tw-prose-hr: var(--line);
+  --tw-prose-quotes: var(--bone-white);
+  --tw-prose-quote-borders: var(--ember-amber);
+  --tw-prose-captions: var(--smoke-gray);
+  --tw-prose-code: var(--bone-white);
+  --tw-prose-pre-code: var(--bone-white);
+  --tw-prose-pre-bg: rgba(18, 23, 32, 0.9);
+  --tw-prose-th-borders: var(--line-strong);
+  --tw-prose-td-borders: var(--line);
+  max-width: none;
+}
+
+.prose p,
+.prose li {
+  letter-spacing: -0.01em;
+}
+
+.prose img {
+  border-radius: 1rem;
+}
+
+.prose a {
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 0.22em;
+}
+
+.prose code::before,
+.prose code::after {
+  content: "";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "shailesh-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "prepare:content": "node scripts/prepare-content.mjs",
+    "predev": "npm run prepare:content",
+    "prebuild": "npm run prepare:content",
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "clsx": "^2.1.1",
+    "csv-parse": "^6.2.1",
+    "framer-motion": "^12.6.2",
+    "github-slugger": "^2.0.0",
+    "gray-matter": "^4.0.3",
+    "next": "^15.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "sarvamai": "^1.1.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^24.0.1",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5.8.3"
+  }
+}

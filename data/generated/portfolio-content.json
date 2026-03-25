@@ -1,0 +1,760 @@
+{
+  "generatedAt": "2026-03-25T02:23:10.589Z",
+  "home": {
+    "title": "Shailesh’s Work",
+    "introHeading": "Hello, I’m Shailesh Rana.",
+    "introParagraphs": [
+      "I'm a man who craves intellectual stimulation and problem solving. Hence, I became a sell-out as an AI Product Manager.",
+      "I have ~4 yoe in Product Management, before which I was a Data Analyst.",
+      "I am currently working as a Product Manager / Member of Technical Staff where I am 1 of 3 people who support our only B2B SaaS Application at [Data Sutram.](https://datasutram.com/) \nI manage UX/Design, Product Management, Development and Testing steps of the Product Lifecycle while being supported by our Architect, Design and QA individuals. Engg manages deployment, API products and infra.",
+      "We’re a small team, growing really fast and there’s always more work to do after a 12 hr day so I am absolutely loving it!",
+      "For fun I do AI Research. Work mostly in Agents, Mechanistic Interpretability ([paper](https://arxiv.org/abs/2601.08070)) and Continual Learning.",
+      "All the code in the projects is written using AI."
+    ],
+    "heroImage": {
+      "url": "/export/ChatGPT_Image_Mar_25_2026_04_16_07_AM.png",
+      "alt": "Me against the Tech.",
+      "caption": "Me against the Tech."
+    },
+    "contactParagraphs": [
+      "Feel free to contact me if you want to chat about AI, Product Management, Physics, DIY Projects, Relationships etc. I’m still building depth in these areas but always ready for a chit-chat.",
+      "Please contact me on LinkedIn if you think I’m a good fit for a Product or AI Researcher role.",
+      "And although I have ways to go, don’t hesitate to message me for any advice related to absolutely anything. I love passing on the fruit of my wisdom (*gyaan dena pasand hai*)."
+    ],
+    "contactLinks": {
+      "linkedin": "https://www.linkedin.com/in/shailesh-rana-9236971b6/",
+      "medium": "https://medium.com/@shaileshrana1995",
+      "github": "https://github.com/gut-puncture",
+      "cv": "https://drive.google.com/drive/folders/1yb1t3-OF5uc9kl6p6uryOhMNN8gkMmSQ?usp=drive_link",
+      "email": "shaileshrana1995@gmail.com",
+      "company": "https://datasutram.com/"
+    }
+  },
+  "projects": [
+    {
+      "slug": "research-paper-semantic-gravity",
+      "title": "Research Paper : Semantic Gravity",
+      "summary": "A mechanistic study revealing why LLMs systematically violate negative constraints (e.g. 'don't use word X'), introducing semantic pressure as a quantitative predictor of instruction failure.",
+      "group": "Research & systems",
+      "priority": 1,
+      "markdown": "# Research Paper : Semantic Gravity\n\n# Semantic Gravity Wells: Why Negative Constraints Backfire\n\nTell a language model \"do not use the word Paris\" and it will say Paris. The more you stress what it shouldn't say, the more likely it is to say exactly that.\n\nThis paper is the first to fully trace *why* this ‘bug’ occurs — from behaviour down to individual transformer layers.\n\n## What's Going On\n\nTwo forces compete inside the model: **semantic pressure** (how strongly the model wants to produce the forbidden word naturally) and **constraint pressure** (the suppression from \"do not\"). Semantic pressure frequently wins — and the relationship follows a clean logistic curve (R² = 0.78). You can *predict* failure rates just from baseline probability.\n\nThe model does try to comply. Even in failures, the instruction reduces target probability. But suppression is **4.4× weaker** in failures. The model partially listens; it just can't listen hard enough.\n\n## Two Failure Modes\n\n**Priming failure (87.5% of violations):** When you write \"do not say Paris\", the word \"Paris\" in the instruction *activates* the target. The model attends more to \"Paris\" than to \"do not\". The act of naming what's forbidden makes it more likely to appear.\n\n**Override failure (12.5%):** The model processes the negation correctly, but feed-forward networks in layers 23–27 generate a massive push toward the target — nearly 4× larger than in successes — and overwhelm the suppression. The constraint loses a brute-force contest.\n\nActivation patching confirms causation: layers 0–22 support suppression; layer 23 is the exact crossover; layers 24–27 actively drive violations.\n\n## Why It Matters\n\n87.5% of failures are priming. The implication is direct: **don't name the forbidden word.** \"Do not mention any cities\" should outperform \"do not say Paris\". The mechanism tells you the remedy. For safety-critical applications, post-generation filtering is necessary — generation-time constraints alone aren't enough for high-pressure cases.\n\nAll experiments are on Qwen2.5-7B-Instruct (open weights needed for mechanistic analysis). Larger models and different architectures may behave differently — I'm not going to pretend otherwise. But this is, to my knowledge, the first complete mechanistic account of instruction-following failure in LLMs. The black box, opened, reveals not chaos but mechanism.",
+      "plainText": "Research Paper : Semantic Gravity Semantic Gravity Wells: Why Negative Constraints Backfire Tell a language model \"do not use the word Paris\" and it will say Paris. The more you stress what it shouldn't say, the more likely it is to say exactly that. This paper is the first to fully trace why this ‘bug’ occurs — from behaviour down to individual transformer layers. What's Going On Two forces compete inside the model: semantic pressure (how strongly the model wants to produce the forbidden word naturally) and constraint pressure (the suppression from \"do not\"). Semantic pressure frequently wins — and the relationship follows a clean logistic curve (R² = 0.78). You can predict failure rates just from baseline probability. The model does try to comply. Even in failures, the instruction reduces target probability. But suppression is 4.4× weaker in failures. The model partially listens; it just can't listen hard enough. Two Failure Modes Priming failure (87.5% of violations): When you write \"do not say Paris\", the word \"Paris\" in the instruction activates the target. The model attends more to \"Paris\" than to \"do not\". The act of naming what's forbidden makes it more likely to appear. Override failure (12.5%): The model processes the negation correctly, but feed forward networks in layers 23–27 generate a massive push toward the target — nearly 4× larger than in successes — and overwhelm the suppression. The constraint loses a brute force contest. Activation patching confirms causation: layers 0–22 support suppression; layer 23 is the exact crossover; layers 24–27 actively drive violations. Why It Matters 87.5% of failures are priming. The implication is direct: don't name the forbidden word. \"Do not mention any cities\" should outperform \"do not say Paris\". The mechanism tells you the remedy. For safety critical applications, post generation filtering is necessary — generation time constraints alone aren't enough for high pressure cases. All experiments are on Qwen2.5 7B Instruct (open weights needed for mechanistic analysis). Larger models and different architectures may behave differently — I'm not going to pretend otherwise. But this is, to my knowledge, the first complete mechanistic account of instruction following failure in LLMs. The black box, opened, reveals not chaos but mechanism.",
+      "previewExcerpt": "Semantic Gravity Wells: Why Negative Constraints Backfire",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Research Paper : Semantic Gravity"
+        },
+        {
+          "depth": 1,
+          "text": "Semantic Gravity Wells: Why Negative Constraints Backfire"
+        },
+        {
+          "depth": 2,
+          "text": "What's Going On"
+        },
+        {
+          "depth": 2,
+          "text": "Two Failure Modes"
+        },
+        {
+          "depth": 2,
+          "text": "Why It Matters"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Paper",
+          "href": "https://arxiv.org/abs/2601.08070"
+        },
+        {
+          "label": "Code",
+          "href": "https://github.com/gut-puncture/Semantic-Gravity-RP"
+        }
+      ],
+      "externalLinks": [
+        "https://arxiv.org/abs/2601.08070",
+        "https://github.com/gut-puncture/Semantic-Gravity-RP"
+      ],
+      "media": []
+    },
+    {
+      "slug": "how-a-7-billion-parameter-ai-cannot-add",
+      "title": "How a 7-Billion-Parameter AI Cannot Add",
+      "summary": "An interpretability study revealing that LLMs systematically hallucinate a 'length bias' in large-number addition — believing the answer is always one digit longer — causing them to paradoxically outperform on harder overflow problems where this false prior accidentally aligns with the correct answer.",
+      "group": "Research & systems",
+      "priority": 2,
+      "markdown": "# How a 7-Billion-Parameter AI Cannot Add\n\n### **The Story of a Universal Length Bias**\n\nThere’s a peculiar test we subject our AIs to. We ask them to add numbers. Not small numbers — those are trivially easy. We’re talking about numbers with ten, fifteen, even eighteen digits. Numbers like this:\n\n> 9,847,261,043,820 + 3,892,107,456,231 = ?\n\nA modern pocket calculator handles this in microseconds. A human with pen and paper could do it in a minute. But when we posed this question to Qwen 2.5, a state-of-the-art 7-billion-parameter language model, something strange happened.\n\n**It got the “hard” version of this problem** *more* **correct than the “easy” version.**\n\nThat shouldn’t happen. And understanding *why* it happens reveals something fundamental about how large language models fail — and, perhaps, how they think.\n\n---\n\n### **Part I: The Paradox**\n\n**What We Expected**\n\nWhen you add two 10-digit numbers, two things can happen:\n\n1. **No Carry Overflow (Easy):** The sum is also 10 digits.\n- Example: 4,000,000,000 + 4,000,000,000 = 8,000,000,000\n\n**2. Carry Overflow (Hard):** The sum is 11 digits. The addition “overflows” into a new place value.\n\n- Example: 6,000,000,000 + 6,000,000,000 = 12,000,000,000\n\nIntuitively, the “Hard” case is harder. The model must correctly propagate a carry across the entire number, determine that a new leading digit is needed, and correctly produce an 11-digit output from 10-digit inputs.\n\nWe expected the model to struggle with the “Hard” case.\n\nWe were wrong.\n\n**What We Found**\n\nWe generated 900 addition problems. For each digit length from 10 to 18, we created 50 “Easy” problems and 50 “Hard” problems. Every generated problem was fed to the model, and we judged the output as a simple binary: did the model produce the numerically correct answer, or not?\n\nHere is the accuracy data:**10 digits:** Easy 20.0% → Hard **44.0%**\n\n**11 digits:** Easy 6.0% → Hard 8.0%\n\n**12 digits:** Easy 6.0% → Hard **22.0%**\n\n**13 digits:** Easy 6.0% → Hard **16.0%**\n\n**14 digits:** Easy 8.0% → Hard 8.0%\n\n**15 digits:** Easy 0.0% → Hard 2.0%\n\n**16 digits:** Easy 0.0% → Hard 4.0%\n\n**17 digits:** Easy 2.0% → Hard 6.0%\n\n**18 digits:** Easy 0.0% → Hard 0.0%\n\nRead those numbers again.\n\nAt 10 digits, the model is **more than twice as accurate** on problems that require a carry overflow (44%) than on problems that don’t (20%).\n\nThis is a violation of our intuitions. But actually that is better for a deeper understanding of these alien minds.\n\n---\n\n### **Part II: The Hypothesis**\n\n**What if the model** *expects* **the answer to be longer?**\n\nThe data points to a single, powerful explanation: the model is not computing the answer and instead, following a heuristic.\n\nSomewhere in the billions of parameters of Qwen 2.5, it has learned an implicit rule:\n\n> “*When you add two large numbers, the result is always one digit longer.”*\n\nThis is the **Universal Length Bias**.\n\nIf this hypothesis is true, then the accuracy data makes perfect sense:\n\n**Hard Problem (Overflow):** The correct answer is N+1 digits long. The model’s implicit bias is also N+1 digits. The template aligns with reality. By sheer luck of format, the model has a better chance of stumbling onto the right answer.\n\n**Easy Problem (No Overflow):** The correct answer is N digits long. The model’s implicit bias is N+1 digits. The template **conflicts** with reality. The model’s prior overpowers the arithmetic, and it produces a wrong answer.\n\nTo prove this, we needed to look inside the model.\n\n---\n\n### **Part III: Looking Inside**\n\n**Methodology: Probing the Residual Stream**\n\nWe didn’t just observe outputs. We intercepted the model’s “thoughts”.\n\nModern transformer models process text token-by-token. At each layer of the network, a representation of the current state (called the “hidden state” or “residual stream”) is computed. By extracting these hidden states during inference, we can see what the model “believes” at each stage of processing.\n\nOur analysis captured activations at every third layer (Layer 0, 3, 6, …, 27) of the 28-layer model. For every single one of our 900 samples, we recorded:\n\n1. The hidden state at the moment the model was about to produce the *first digit* of its answer.\n\n2. Whether the final answer was correct or incorrect.\n\nThis gave us two groups:\n\n- A collection of hidden states from **Correct** answers (the “Right Path”).\n- A collection of hidden states from **Incorrect** answers (the “Wrong Path”).\n\nWith these two populations, we asked two questions:\n\n1. **How different are they?** (Centroid Distance)\n\n2. **Can we teach a simple probe to tell them apart?** (Probe Accuracy)\n\n---\n\n**Analysis 1: The Divergence (Centroid Distance)**\n\nThe simplest way to measure the difference between two groups is to find the “average point” (centroid) of each group and measure the distance between them.\n\nWe took all the hidden state vectors from the “Correct” group, averaged them, and got the “Correct Centroid”. We did the same for the “Incorrect” group.\n\nThen, we measured the Euclidean distance between these two centroids, layer by layer.\n\n![](https://cdn-images-1.medium.com/max/1600/1*BvshBaK3yo-GAxoeopvxig.png)\n\n**What the chart shows:** A clear, monotonically increasing divergence that peaks at Layer 24.\n\n**What this tells us:**\n\nIn the earliest layers (0–6), the model’s internal states for correct and incorrect answers are nearly identical. The model hasn’t “decided” yet.\n\nAs we progress through the layers (9–18), a split begins to emerge. The model is being influenced by *something* that pushes it onto one path or another.\n\nBy layers 21–24, the divergence is massive. The model’s internal representation for a correct answer and an incorrect answer are in completely different regions of vector space.\n\nThe difference in correct and incorrect states is huge, but the model has no metacognitive mechanism to detect or leverage this divergence.\n\n---\n\n**Analysis 2: Probe Accuracy**\n\nA divergence in centroids is suggestive, but can we *predict* failure? We trained a simple linear classifier (Logistic Regression) at each layer. Its job: given a hidden state vector, classify it as belonging to the “Correct” group or the “Incorrect” group.\n\nWe used 5-fold cross-validation to ensure robustness. The result is the “Probe Accuracy” — the classifier’s ability to distinguish between the two groups.\n\n![](https://cdn-images-1.medium.com/max/1600/1*jwYzYCwI1eM5zHcLBE2Jdg.png)\n\n**What the chart shows:** Probe accuracy starts near chance (50%) at Layer 0 and rises to approximately 64% by Layer 27. This chart displays the classification accuracy of a linear probe trained to distinguish between correct and incorrect hidden states at each layer.\n\n**What this tells us:**\n\nThe information that determines success or failure is *linearly accessible*. This isn’t buried in some non-linear subspace. A simple linear probe can extract the signal.\n\nBut 64% is not high. This is not a cleanly separable failure state. The “Wrong Path” and the “Right Path” are overlapping, tangled. If the model had the ability, it could have been able to sense it’s in trouble when generating the wrong answer. But sadly it’s not able to.\n\n---\n\n**Analysis 3: The Signal War**\n\nNow for the heart of the investigation: the **Logit Lens**.\n\nHere’s the idea. The model’s final output is produced by projecting its last-layer hidden state through a massive “unembedding” matrix (lm_head) to produce logits over the entire vocabulary. The highest logit determines the most likely next token.\n\nBut what if we apply that same projection at *earlier* layers? We can ask: “If the model were forced to output a token right now, at Layer 3, what would it say?”\n\nThis technique is called the “Logit Lens,” and it gives us a window into the model’s evolving beliefs.\n\nFor each sample, at each layer, we projected the hidden state through the lm_head (after applying the final RMSNorm) and computed the probability assigned to three critical tokens:\n\n1. **P(Correct):** The probability of the **actual** correct first digit.\n\n2. **P(Bias):** The probability of the “Length Bias” token — the digit 1. (In overflow cases, the correct answer often starts with 1, e.g., 1,200,000,000).\n\n3. **P(Heuristic):** The probability of the “Simple Heuristic” token — what you’d get if you just added the first digits of the inputs and ignored any carry. E.g., for 6… + 7…, the heuristic answer is (6+7) % 10 = 3, but the correct overflow answer is 1.\n\nWe averaged these probabilities across all samples, split by “Easy” and “Hard”.\n\n![](https://cdn-images-1.medium.com/max/1600/1*Kv-N856OZ8gGSdpL69vQsg.png)\n\nIn Easy problems, the Bias line crosses at layer 27 and dominates.\n\n---\n\n**Part IV: The Visual Anatomy of Error**\n\nTo truly understand the scope of this bias, we need to look beyond simple lines and bars.\n\n**1. The Bias Evolution (Line Chart)**\n\nHow does the model’s confidence shift from input to output?\n\n![](https://cdn-images-1.medium.com/max/1600/1*vj5TlTcu0OOXDNAK4heIKA.png)\n\n**2. The Failure Composition (Stacked Bar Chart)**\n\nHow much of the model’s performance is dominated by error?\n\n![](https://cdn-images-1.medium.com/max/1600/1*C2NP343cVcECC04ARSgkjw.png)\n\n**What the charts show:** The dynamics are different for Easy vs. Hard problems.\n\nFor **Hard** problems (right panel): Notice that P(Correct) and P(Bias) are often i*dentical*. Why? Because for overflow problems, the correct first digit *is* often 1. The “Bias” and the “Correct Answer” align. The model’s prior helps, not hurts.\n\nFor **Easy** problems (left panel): Here, the competition is more interesting. In the generating layers (20–27), we can see P(Bias) rising. The model is being tempted to output 1, even when the correct answer is, say, 8 or 9. This is the Length Bias actively fighting against the correct arithmetic.\n\n**Key Insight from Layer 27:**\n\nZooming into the final layer for the “Easy” group (from the raw data):\n\n- mean_p_corr (Correct): 3.32e-07\n- mean_p_bias (Bias ‘1’): 4.58e-07\n\nAt the final output layer, the probability of the “Bias” token (1) is slightly *higher* than the probability of the “Correct” token for the Easy problems. The bias wins. This is the moment of failure, captured in a probability distribution.\n\n---\n\n**Analysis 4: The Failure Modes Spectrogram**\n\nFinally, we visualize the core paradox itself.\n\n![](https://cdn-images-1.medium.com/max/1600/1*5du9IQrIb1XCdn3EyejgWA.png)\n\n![](https://cdn-images-1.medium.com/max/1600/1*KG14XrJ2gq4jp_noNvpvHg.png)\n\nThis is the dataset-level proof. The Universal Length Bias is real, and it is universally applied. The model treats “big number addition” as a task where the answer is *always* longer, regardless of the actual arithmetic.\n\n---\n\n**Part V: The Verdict**\n\nQwen 2.5 7B has not “failed to learn addition.”\n\nIt has successfully learned an **incorrect heuristic**:\n\n> “*When adding very large numbers, the answer gets one digit longer. Start with a 1.”*\n\nThis is **Semantic Length Hallucination**. The model isn’t failing at the micro-level of digit-by-digit calculation (though it does that too). It’s failing at a macro-level, a *structural* level. It has inferred a template for “big number addition” that overrides the actual computation.\n\nThe failure is **hierarchical**:\n\n1.***High-Level Formatting:** “The output should be N+1 digits.” (Learned incorrectly, applied universally)\n\n2. **Low-Level Arithmetic:** “1 + 1 = 2.” (Mostly correct, but irrelevant if the format is wrong)\n\nThe high-level decision happens first, deep in the early-to-mid layers, and it constrains everything that follows.\n\n---\n\n**Implications**\n\nThis finding has implications for how we think about LLM capabilities:\n\n**1. Evaluation Bias:** Benchmark datasets that focus on “hard” arithmetic problems (lots of carries, overflows) may inadvertently *overestimate* model capability because the model’s biases align with the problem structure.\n\n**2. The Limits of Scale:** This wasn’t a small model. Qwen 2.5 7B is a capable, modern LLM. The Length Bias isn’t a symptom of underfitting; it’s a symptom of *overfitting* to a distributional pattern in training data.\n\n**3. Interpretability Matters:** Without looking inside the model — without the probes, the logit lens, the centroid analysis — we would only see the surface-level paradox. The internal analysis let us trace the failure to its root cause: a structural prior baked into the model’s activations.\n\nThe next time you see an AI fail at a simple task, ask yourself: is it failing to compute, or is it succeeding at the wrong computation? Sometimes, the most dangerous errors are the ones that look like rules.\n\n---\n\n*This research was conducted using Qwen 2.5 7B, analyzed on a remote GPU instance. All code, data, and visualizations are available for reproducibility.*\n\n[https://github.com/gut-puncture/Long-Number-Addition](https://github.com/gut-puncture/Long-Number-Addition)",
+      "plainText": "How a 7 Billion Parameter AI Cannot Add The Story of a Universal Length Bias There’s a peculiar test we subject our AIs to. We ask them to add numbers. Not small numbers — those are trivially easy. We’re talking about numbers with ten, fifteen, even eighteen digits. Numbers like this: 9,847,261,043,820 + 3,892,107,456,231 = ? A modern pocket calculator handles this in microseconds. A human with pen and paper could do it in a minute. But when we posed this question to Qwen 2.5, a state of the art 7 billion parameter language model, something strange happened. It got the “hard” version of this problem more correct than the “easy” version. That shouldn’t happen. And understanding why it happens reveals something fundamental about how large language models fail — and, perhaps, how they think. Part I: The Paradox What We Expected When you add two 10 digit numbers, two things can happen: 1. No Carry Overflow (Easy): The sum is also 10 digits. Example: 4,000,000,000 + 4,000,000,000 = 8,000,000,000 2. Carry Overflow (Hard): The sum is 11 digits. The addition “overflows” into a new place value. Example: 6,000,000,000 + 6,000,000,000 = 12,000,000,000 Intuitively, the “Hard” case is harder. The model must correctly propagate a carry across the entire number, determine that a new leading digit is needed, and correctly produce an 11 digit output from 10 digit inputs. We expected the model to struggle with the “Hard” case. We were wrong. What We Found We generated 900 addition problems. For each digit length from 10 to 18, we created 50 “Easy” problems and 50 “Hard” problems. Every generated problem was fed to the model, and we judged the output as a simple binary: did the model produce the numerically correct answer, or not? Here is the accuracy data: 10 digits: Easy 20.0% → Hard 44.0% 11 digits: Easy 6.0% → Hard 8.0% 12 digits: Easy 6.0% → Hard 22.0% 13 digits: Easy 6.0% → Hard 16.0% 14 digits: Easy 8.0% → Hard 8.0% 15 digits: Easy 0.0% → Hard 2.0% 16 digits: Easy 0.0% → Hard 4.0% 17 digits: Easy 2.0% → Hard 6.0% 18 digits: Easy 0.0% → Hard 0.0% Read those numbers again. At 10 digits, the model is more than twice as accurate on problems that require a carry overflow (44%) than on problems that don’t (20%). This is a violation of our intuitions. But actually that is better for a deeper understanding of these alien minds. Part II: The Hypothesis What if the model expects the answer to be longer? The data points to a single, powerful explanation: the model is not computing the answer and instead, following a heuristic. Somewhere in the billions of parameters of Qwen 2.5, it has learned an implicit rule: “ When you add two large numbers, the result is always one digit longer.” This is the Universal Length Bias . If this hypothesis is true, then the accuracy data makes perfect sense: Hard Problem (Overflow): The correct answer is N+1 digits long. The model’s implicit bias is also N+1 digits. The template aligns with reality. By sheer luck of format, the model has a better chance of stumbling onto the right answer. Easy Problem (No Overflow): The correct answer is N digits long. The model’s implicit bias is N+1 digits. The template conflicts with reality. The model’s prior overpowers the arithmetic, and it produces a wrong answer. To prove this, we needed to look inside the model. Part III: Looking Inside Methodology: Probing the Residual Stream We didn’t just observe outputs. We intercepted the model’s “thoughts”. Modern transformer models process text token by token. At each layer of the network, a representation of the current state (called the “hidden state” or “residual stream”) is computed. By extracting these hidden states during inference, we can see what the model “believes” at each stage of processing. Our analysis captured activations at every third layer (Layer 0, 3, 6, …, 27) of the 28 layer model. For every single one of our 900 samples, we recorded: 1. The hidden state at the moment the model was about to produce the first digit of its answer. 2. Whether the final answer was correct or incorrect. This gave us two groups: A collection of hidden states from Correct answers (the “Right Path”). A collection of hidden states from Incorrect answers (the “Wrong Path”). With these two populations, we asked two questions: 1. How different are they? (Centroid Distance) 2. Can we teach a simple probe to tell them apart? (Probe Accuracy) Analysis 1: The Divergence (Centroid Distance) The simplest way to measure the difference between two groups is to find the “average point” (centroid) of each group and measure the distance between them. We took all the hidden state vectors from the “Correct” group, averaged them, and got the “Correct Centroid”. We did the same for the “Incorrect” group. Then, we measured the Euclidean distance between these two centroids, layer by layer. What the chart shows: A clear, monotonically increasing divergence that peaks at Layer 24. What this tells us: In the earliest layers (0–6), the model’s internal states for correct and incorrect answers are nearly identical. The model hasn’t “decided” yet. As we progress through the layers (9–18), a split begins to emerge. The model is being influenced by something that pushes it onto one path or another. By layers 21–24, the divergence is massive. The model’s internal representation for a correct answer and an incorrect answer are in completely different regions of vector space. The difference in correct and incorrect states is huge, but the model has no metacognitive mechanism to detect or leverage this divergence. Analysis 2: Probe Accuracy A divergence in centroids is suggestive, but can we predict failure? We trained a simple linear classifier (Logistic Regression) at each layer. Its job: given a hidden state vector, classify it as belonging to the “Correct” group or the “Incorrect” group. We used 5 fold cross validation to ensure robustness. The result is the “Probe Accuracy” — the classifier’s ability to distinguish between the two groups. What the chart shows: Probe accuracy starts near chance (50%) at Layer 0 and rises to approximately 64% by Layer 27. This chart displays the classification accuracy of a linear probe trained to distinguish between correct and incorrect hidden states at each layer. What this tells us: The information that determines success or failure is linearly accessible . This isn’t buried in some non linear subspace. A simple linear probe can extract the signal. But 64% is not high. This is not a cleanly separable failure state. The “Wrong Path” and the “Right Path” are overlapping, tangled. If the model had the ability, it could have been able to sense it’s in trouble when generating the wrong answer. But sadly it’s not able to. Analysis 3: The Signal War Now for the heart of the investigation: the Logit Lens . Here’s the idea. The model’s final output is produced by projecting its last layer hidden state through a massive “unembedding” matrix (lm head) to produce logits over the entire vocabulary. The highest logit determines the most likely next token. But what if we apply that same projection at earlier layers? We can ask: “If the model were forced to output a token right now, at Layer 3, what would it say?” This technique is called the “Logit Lens,” and it gives us a window into the model’s evolving beliefs. For each sample, at each layer, we projected the hidden state through the lm head (after applying the final RMSNorm) and computed the probability assigned to three critical tokens: 1. P(Correct): The probability of the actual correct first digit. 2. P(Bias): The probability of the “Length Bias” token — the digit 1. (In overflow cases, the correct answer often starts with 1, e.g., 1,200,000,000). 3. P(Heuristic): The probability of the “Simple Heuristic” token — what you’d get if you just added the first digits of the inputs and ignored any carry. E.g., for 6… + 7…, the heuristic answer is (6+7) % 10 = 3, but the correct overflow answer is 1. We averaged these probabilities across all samples, split by “Easy” and “Hard”. In Easy problems, the Bias line crosses at layer 27 and dominates. Part IV: The Visual Anatomy of Error To truly understand the scope of this bias, we need to look beyond simple lines and bars. 1. The Bias Evolution (Line Chart) How does the model’s confidence shift from input to output? 2. The Failure Composition (Stacked Bar Chart) How much of the model’s performance is dominated by error? What the charts show: The dynamics are different for Easy vs. Hard problems. For Hard problems (right panel): Notice that P(Correct) and P(Bias) are often i dentical . Why? Because for overflow problems, the correct first digit is often 1. The “Bias” and the “Correct Answer” align. The model’s prior helps, not hurts. For Easy problems (left panel): Here, the competition is more interesting. In the generating layers (20–27), we can see P(Bias) rising. The model is being tempted to output 1, even when the correct answer is, say, 8 or 9. This is the Length Bias actively fighting against the correct arithmetic. Key Insight from Layer 27: Zooming into the final layer for the “Easy” group (from the raw data): mean p corr (Correct): 3.32e 07 mean p bias (Bias ‘1’): 4.58e 07 At the final output layer, the probability of the “Bias” token (1) is slightly higher than the probability of the “Correct” token for the Easy problems. The bias wins. This is the moment of failure, captured in a probability distribution. Analysis 4: The Failure Modes Spectrogram Finally, we visualize the core paradox itself. This is the dataset level proof. The Universal Length Bias is real, and it is universally applied. The model treats “big number addition” as a task where the answer is always longer, regardless of the actual arithmetic. Part V: The Verdict Qwen 2.5 7B has not “failed to learn addition.” It has successfully learned an incorrect heuristic : “ When adding very large numbers, the answer gets one digit longer. Start with a 1.” This is Semantic Length Hallucination . The model isn’t failing at the micro level of digit by digit calculation (though it does that too). It’s failing at a macro level, a structural level. It has inferred a template for “big number addition” that overrides the actual computation. The failure is hierarchical : 1. High Level Formatting: “The output should be N+1 digits.” (Learned incorrectly, applied universally) 2. Low Level Arithmetic: “1 + 1 = 2.” (Mostly correct, but irrelevant if the format is wrong) The high level decision happens first, deep in the early to mid layers, and it constrains everything that follows. Implications This finding has implications for how we think about LLM capabilities: 1. Evaluation Bias: Benchmark datasets that focus on “hard” arithmetic problems (lots of carries, overflows) may inadvertently overestimate model capability because the model’s biases align with the problem structure. 2. The Limits of Scale: This wasn’t a small model. Qwen 2.5 7B is a capable, modern LLM. The Length Bias isn’t a symptom of underfitting; it’s a symptom of overfitting to a distributional pattern in training data. 3. Interpretability Matters: Without looking inside the model — without the probes, the logit lens, the centroid analysis — we would only see the surface level paradox. The internal analysis let us trace the failure to its root cause: a structural prior baked into the model’s activations. The next time you see an AI fail at a simple task, ask yourself: is it failing to compute, or is it succeeding at the wrong computation? Sometimes, the most dangerous errors are the ones that look like rules. This research was conducted using Qwen 2.5 7B, analyzed on a remote GPU instance. All code, data, and visualizations are available for reproducibility. https://github.com/gut puncture/Long Number Addition",
+      "previewExcerpt": "There’s a peculiar test we subject our AIs to. We ask them to add numbers. Not small numbers — those are trivially easy. We’re talking about numbers with ten, fifteen, even eighteen digits. Numbers like this:",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "depth": 3,
+          "text": "**The Story of a Universal Length Bias**"
+        },
+        {
+          "depth": 3,
+          "text": "**Part I: The Paradox**"
+        },
+        {
+          "depth": 3,
+          "text": "**Part II: The Hypothesis**"
+        },
+        {
+          "depth": 3,
+          "text": "**Part III: Looking Inside**"
+        }
+      ],
+      "actions": [],
+      "externalLinks": [
+        "https://cdn-images-1.medium.com/max/1600/1*BvshBaK3yo-GAxoeopvxig.png",
+        "https://cdn-images-1.medium.com/max/1600/1*jwYzYCwI1eM5zHcLBE2Jdg.png",
+        "https://cdn-images-1.medium.com/max/1600/1*Kv-N856OZ8gGSdpL69vQsg.png",
+        "https://cdn-images-1.medium.com/max/1600/1*vj5TlTcu0OOXDNAK4heIKA.png",
+        "https://cdn-images-1.medium.com/max/1600/1*C2NP343cVcECC04ARSgkjw.png",
+        "https://cdn-images-1.medium.com/max/1600/1*5du9IQrIb1XCdn3EyejgWA.png",
+        "https://cdn-images-1.medium.com/max/1600/1*KG14XrJ2gq4jp_noNvpvHg.png",
+        "https://github.com/gut-puncture/Long-Number-Addition"
+      ],
+      "media": [
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*BvshBaK3yo-GAxoeopvxig.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*jwYzYCwI1eM5zHcLBE2Jdg.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*Kv-N856OZ8gGSdpL69vQsg.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*vj5TlTcu0OOXDNAK4heIKA.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*C2NP343cVcECC04ARSgkjw.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*5du9IQrIb1XCdn3EyejgWA.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        },
+        {
+          "url": "https://cdn-images-1.medium.com/max/1600/1*KG14XrJ2gq4jp_noNvpvHg.png",
+          "kind": "image",
+          "alt": "How a 7-Billion-Parameter AI Cannot Add"
+        }
+      ]
+    },
+    {
+      "slug": "continuous-learning-llm",
+      "title": "Continuous Learning LLM",
+      "summary": "A system which lets an LLM learn new details as it interacts with users.",
+      "group": "Research & systems",
+      "priority": 3,
+      "markdown": "# Continuous Learning LLM\n\n# Overview\n\nThe Continuous Learning Problem is the biggest and the most important problem in AI right now. Bigger than context length management.\n\nThis is an attempt at making a decent enough system which learns continuously.\n\nhttps://github.com/gut-puncture/CLM_self_coded\n\n## Insight\n\nFor continual learning, I am setting up an **automated fine-tuning** pipeline. This is the low-hanging fruit way of solving the continuous learning problem and definitely NOT the correct solution in mid and long-term.\n\nBut for now, this will do just fine and it will still be valuable for users.\n\nThe issue with setting up automated fine-tuning is the Cost and that you cannot do it infinitely to a model. Hence, you cannot teach the model every interaction they have with a user. That would be 100s of chats for 100s of millions of users for ChatGPT. Not at all doable.\n\nThus the problem boils down to isolating the best insights from the interaction with the user. That is where my work has been done.\n\nFirst Insight: What should be remembered from an interaction is this:\n\n1. unique or novel information\n2. emotionally charged information\n3. information user *cares* about/is excited by\n4. information which is helpful for future use\n5. information which is *important*\n\nThe work of this project has been to quantify these metrics and create a prioritisation score.\n\nSecond Insight: We must be able to sufficiently summarise Ithe data generated after interacting with the user for continual learning. This hierarchical summarisation process must be efficient.\n\n## How it works\n\n### Priority Score\n\nThe priority score is created for each message in the model-user interaction and is composed of these:\n\n1. Novelty: This is given by ‘1 - Max(Cosine Similarity)’ of a message with previous other messages, indicating that if the current message is very dissimilar with all 500 previous messages, it’ll have a high novelty score.\n2. Sentiment: -5 to +5. -5 is for “extremely negative, highly aggressive, despairing, hateful, panicked” messages and +5 is for “extremely positive, enthusiastic, joyful” messages.\n3. Excitement: 0 to 1. This is essentially an indicator of the intensity of the Sentiment felt, i.e. how emotionally charged the information is.\n4. Helpfulness: 0 to 1. How helpful the information is for future reference.\n5. Centrality: There is a **knowledge graph** created for all the interactions that the user has with the model. A message can contain mention of some nodes on the graph. \nThe nodes are subject - object pairs mentioned in the user messages. These are derived by sendign all user messages to an LLM. \nThe more central the nodes are in the knowledge graph, the more important is the message they were part of.\n\nPriority Score = 0.7 * novelty + 0.3 * excitement + 0.2 * centrality_normalised + 0.1 * ABS(Sentiment) + 0.2 * helpfulness \n\n### Insight Generation\n\nOnce we have a lot of messages, we can create a **Similarity Graph** with the messages as nodes and the weights between them being (1 - Cosine Distance).\n\nThis gives us a graph with messages as nodes and their weight is highest the more similar they are.\n\nThen I apply the [Louvain Partitioning Algorithm](https://en.wikipedia.org/wiki/Louvain_method)* to get distinct *clusters* in the graph. These clusters are messages with the same theme.\n\nWhen fine-tuning, we take the ‘n’ highest priority clusters and ask a model to write a precise 200 word synopsis for each cluster of about 10 messages. This insight is stored in our db as a message since it can be used for retrieval (side note: since we have priority of messages, excellent retrieval can also be done every time a user chats).\n\n### Fine-tuning\n\nOnce Insights are stored as messages in our db, we ask a model to generate a crisp natural language question which would result in the exact 200 word insight. This question-answer pair is finally used for fine-tuning.\n\n## Evaluations\n\nThese are the common metrics used to evaluate Continuous Learning Systems.\n\n### Insight Recall Rate\n\nThis measures the amount of “facts” or “insights” our fine-tuned model can recall after fine-tuning.\n\nIt was measured by asking the fine-tuned model questions about related to the fine-tuned data after each fine-tune. Each question had only one true answer and the model was graded on the number of questions it could get correct.\n\nThe SOTA score is in the 90-95% range of recall. Our model got ~86% recall across 3 fine-tuning exercises.\n\n### Retention\n\nThere is also a risk of the model forgetting what it previously knew after a fine-tuning round. An event of Catastrophic Forgetting can also occur during such a fine-tune. To keep a track on it, we measure Retention, which is a measure of how much the performance of our model *drops* in its original capabilites.\n\nInstead of using any public generic benchmark, the model was tested on a private dataset (which consists of public questions) which correspond well with the kind of questions asked to chat models.\n\nThe model was tested before and after the fine-tune and showed less than 2% performance degradation.\n\nNote: With more and more fine-tunes, there is an increased risk of catastrophic forgetting. This means that out method needs modification to be used at scale.\n\n*Full disclosure: I only have a functional understanding of the Louvain algo and it was actually suggested by o3.",
+      "plainText": "Continuous Learning LLM Overview The Continuous Learning Problem is the biggest and the most important problem in AI right now. Bigger than context length management. This is an attempt at making a decent enough system which learns continuously. https://github.com/gut puncture/CLM self coded Insight For continual learning, I am setting up an automated fine tuning pipeline. This is the low hanging fruit way of solving the continuous learning problem and definitely NOT the correct solution in mid and long term. But for now, this will do just fine and it will still be valuable for users. The issue with setting up automated fine tuning is the Cost and that you cannot do it infinitely to a model. Hence, you cannot teach the model every interaction they have with a user. That would be 100s of chats for 100s of millions of users for ChatGPT. Not at all doable. Thus the problem boils down to isolating the best insights from the interaction with the user. That is where my work has been done. First Insight: What should be remembered from an interaction is this: 1. unique or novel information 2. emotionally charged information 3. information user cares about/is excited by 4. information which is helpful for future use 5. information which is important The work of this project has been to quantify these metrics and create a prioritisation score. Second Insight: We must be able to sufficiently summarise Ithe data generated after interacting with the user for continual learning. This hierarchical summarisation process must be efficient. How it works Priority Score The priority score is created for each message in the model user interaction and is composed of these: 1. Novelty: This is given by ‘1 Max(Cosine Similarity)’ of a message with previous other messages, indicating that if the current message is very dissimilar with all 500 previous messages, it’ll have a high novelty score. 2. Sentiment: 5 to +5. 5 is for “extremely negative, highly aggressive, despairing, hateful, panicked” messages and +5 is for “extremely positive, enthusiastic, joyful” messages. 3. Excitement: 0 to 1. This is essentially an indicator of the intensity of the Sentiment felt, i.e. how emotionally charged the information is. 4. Helpfulness: 0 to 1. How helpful the information is for future reference. 5. Centrality: There is a knowledge graph created for all the interactions that the user has with the model. A message can contain mention of some nodes on the graph. The nodes are subject object pairs mentioned in the user messages. These are derived by sendign all user messages to an LLM. The more central the nodes are in the knowledge graph, the more important is the message they were part of. Priority Score = 0.7 novelty + 0.3 excitement + 0.2 centrality normalised + 0.1 ABS(Sentiment) + 0.2 helpfulness Insight Generation Once we have a lot of messages, we can create a Similarity Graph with the messages as nodes and the weights between them being (1 Cosine Distance). This gives us a graph with messages as nodes and their weight is highest the more similar they are. Then I apply the Louvain Partitioning Algorithm to get distinct clusters in the graph. These clusters are messages with the same theme. When fine tuning, we take the ‘n’ highest priority clusters and ask a model to write a precise 200 word synopsis for each cluster of about 10 messages. This insight is stored in our db as a message since it can be used for retrieval (side note: since we have priority of messages, excellent retrieval can also be done every time a user chats). Fine tuning Once Insights are stored as messages in our db, we ask a model to generate a crisp natural language question which would result in the exact 200 word insight. This question answer pair is finally used for fine tuning. Evaluations These are the common metrics used to evaluate Continuous Learning Systems. Insight Recall Rate This measures the amount of “facts” or “insights” our fine tuned model can recall after fine tuning. It was measured by asking the fine tuned model questions about related to the fine tuned data after each fine tune. Each question had only one true answer and the model was graded on the number of questions it could get correct. The SOTA score is in the 90 95% range of recall. Our model got 86% recall across 3 fine tuning exercises. Retention There is also a risk of the model forgetting what it previously knew after a fine tuning round. An event of Catastrophic Forgetting can also occur during such a fine tune. To keep a track on it, we measure Retention, which is a measure of how much the performance of our model drops in its original capabilites. Instead of using any public generic benchmark, the model was tested on a private dataset (which consists of public questions) which correspond well with the kind of questions asked to chat models. The model was tested before and after the fine tune and showed less than 2% performance degradation. Note: With more and more fine tunes, there is an increased risk of catastrophic forgetting. This means that out method needs modification to be used at scale. Full disclosure: I only have a functional understanding of the Louvain algo and it was actually suggested by o3.",
+      "previewExcerpt": "The Continuous Learning Problem is the biggest and the most important problem in AI right now. Bigger than context length management.",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Continuous Learning LLM"
+        },
+        {
+          "depth": 1,
+          "text": "Overview"
+        },
+        {
+          "depth": 2,
+          "text": "Insight"
+        },
+        {
+          "depth": 2,
+          "text": "How it works"
+        },
+        {
+          "depth": 3,
+          "text": "Priority Score"
+        },
+        {
+          "depth": 3,
+          "text": "Insight Generation"
+        },
+        {
+          "depth": 3,
+          "text": "Fine-tuning"
+        },
+        {
+          "depth": 2,
+          "text": "Evaluations"
+        },
+        {
+          "depth": 3,
+          "text": "Insight Recall Rate"
+        },
+        {
+          "depth": 3,
+          "text": "Retention"
+        }
+      ],
+      "actions": [],
+      "externalLinks": [
+        "https://en.wikipedia.org/wiki/Louvain_method",
+        "https://github.com/gut-puncture/CLM_self_coded"
+      ],
+      "media": []
+    },
+    {
+      "slug": "ai-agent-communication-protocol",
+      "title": "AI Agent Communication Protocol",
+      "summary": "An AI written summary of my work-in-progress AI Agent Communication Protocol.",
+      "group": "Research & systems",
+      "priority": 4,
+      "markdown": "# AI Agent Communication Protocol\n\n**This post is written by AI using the code I wrote using AI. I will write a post myself when I’m finished building the communication Protocol.**\n\n## Context\n\nI needed to create a system that allowed multiple specialized AI agents to communicate seamlessly and reliably. The constraints were pretty tight: it had to run entirely within a single process on my laptop, no fancy external software like Redis or Kafka. It needed to provide complete traceability (so any PM could review exactly what happened) and be very friendly for large language models (LLMs). This resulted in me designing a custom in-memory message-bus protocol.\n\nHere’s exactly how it works.\n\n## Overview\n\nOur system uses a clear and organized group chat for multiple specialized AI agents to communicate efficiently. Each agent sends short messages labeled clearly with sender, recipient, type of information, and relevant tags. Messages can contain small instructions or updates directly.\n\nFor large amount of information or huge files like pdfs, reports or databases etc. we include a pointer to where this data is stored. \n\nAgents only pay attention to messages important for their tasks, ignoring everything else. For critical messages, the system checks if the recipient acknowledges receipt; if not, it automatically resends to ensure nothing is missed. \n\nEvery message and action is permanently logged, so the entire conversation can be replayed later, making auditing and debugging straightforward.\n\n## Why a Custom Message Bus?\n\nBefore I dive into details, here’s quickly why we went custom:\n\n- **Single-process:** Runs fully on a laptop. No microservices, no external dependencies.\n- **Blackboard-style communication:** Agents can \"overhear\" or subscribe to any messages they're interested in.\n- **Audit-grade traceability:** Every message is stored, making regulatory audits or debugging straightforward.\n- **LLM-friendly:** It handles tiny messages (like short prompts) and massive files (like a 100 MB Parquet file).\n\n## The Envelope: Atomic Unit of Communication\n\nEvery message in the system is encapsulated in an Envelope—think of this as a sealed container that never changes once sent:\n\n```\nEnvelope {\n  sender: \"research_agent\",\n  recipient: \"spec_writer\" or [\"spec_writer\", \"qa\"],\n  channel: enum (e.g., task, ack, plan, plan_feedback),\n  tags: [\"research\", \"market\"],\n  task_id: uuid4 string (links messages to a task thread),\n  parent_id: uuid4 or null, (to nest sub-tasks),\n  sequence: monotonically increasing number per task,\n  require_ack: true/false,\n  approval_needed: true/false,\n  body: dict, str, or bytes,\n  timestamp: float (time in epoch secs),\n  message_id: uuid4 (unique for every envelope)\n}\n\n```\n\nDesign details worth highlighting:\n\n- `recipient=\"*\"` broadcasts the message to everyone.\n- Agents filter messages by tags like `\"sql_result\"`.\n- Setting `require_ack=True` ensures reliable delivery (resends if no ACK).\n- `approval_needed=True` halts tasks for manual QA approval.\n\n## Bus API\n\nThe message bus has a straightforward, synchronous, and thread-safe API:\n\n```python\nclass InMemoryBus:\n    def publish(env: Envelope) -> None\n    def poll(agent_id: str,\n             channels: set[str] | None = None,\n             tag_filter: set[str] | None = None\n            ) -> Iterator[Envelope]\n    def ack(message_id: str, agent_id: str) -> None\n\n```\n\nInternally, it’s just a simple queue:\n\n- Messages go to `_q: list[Envelope]`.\n- Thread-safe with a locking mechanism.\n- Every envelope published is immediately written to a permanent JSONL audit log.\n\nMessages leave the queue:\n\n- When acknowledged (`require_ack=True`), or\n- Once polled if no ACK is required.\n\n## Standard Channels and Flow\n\nWe standardized some canonical channels to organize message flow:\n\n| Channel | From | To | Body |\n| --- | --- | --- | --- |\n| task | Master | Agent | `{skill, payload, deadline}` |\n| ack | Agent | Master | `{accepted: bool}` |\n| plan | Agent | QA/Human | `{draft, mem_key, estimated_duration}` |\n| plan_feedback | QA/Human | Agent | `{approved: bool, comment}` |\n| result | Agent | Master/Downstream | `{status, mem_keys, metrics}` |\n| error | Any | Master | `{reason, traceback}` |\n| secret | Master | Vault | `{secret_ref}` |\n\n### Task Lifecycle Example (Happy Path)\n\nLet’s walk through a successful task execution:\n\n1. **Master Planner** assigns `task_id=T-023`, publishes with `require_ack=True`.\n2. **Research Agent** polls and acknowledges (`ack=True`).\n3. Agent publishes a plan (no approval needed).\n4. Agent executes, produces a PDF, and stores it in vectordb, generating a `mem_key=M-α`.\n5. Publishes a `result` channel message, including the `mem_key`.\n6. **Spec Writer** polls, acknowledges, and creates a PRD from the result.\n7. **QA** approves via `plan_feedback`.\n8. Final report assembled and task completed.\n\nThis workflow ensures that all stages are documented, traceable, and manageable.\n\n## Handling Complex Failures\n\nHere’s a complicated scenario highlighting robustness:\n\n- Master publishes a task to `research_agent1`; no ACK in 30s triggers a timeout (`ack_timeout`).\n- Master selects `research_agent2`, reposts the task.\n- `research_agent2` ACKs, creates a plan; QA rejects it (`sources too vague`).\n- Agent revises, attempts execution but hits a CAPTCHA block, publishing an error.\n- Master engages a backup strategist, creating new subtasks: one for API scraping (`data_analysis_agent`), another for summarizing (`research_agent2`).\n- Task continues smoothly down this fallback path.\n\nAll these steps get meticulously logged for forensic audits.\n\n## Secrets Handling\n\nHandling sensitive data securely is essential:\n\n- When an agent (`backend_agent`) needs a secret (`git_prod`), it publishes a secret request.\n- The Vault checks permissions and returns the secret directly in memory (not via bus).\n- Unauthorized attempts by agents trigger errors and reroute tasks accordingly.\n\n## Scoring Algorithm\n\nAgents get selected for tasks based on a scoring system:\n\n```python\ndef score(agent_id):\n    caps = capability_registry[agent_id]\n    return (0.6 * caps[\"expertise\"]\n          + 0.3 * historical_success_rate(agent_id)\n          + 0.1 * (1 / (1 + current_queue_len(agent_id))))\n\n```\n\n- Factors: expertise, historical success rate (30-day window), and current workload.\n- Lower `last_used_timestamp` breaks ties.\n\n## Edge Case Handling\n\nA quick cheat-sheet for tricky cases:\n\n- **Message storm:** limit messages per task to avoid spam.\n- **Unknown channel:** messages dropped, logged warnings.\n- **Oversized message:** Agents must store large payloads externally and send pointers instead.\n- **Human idle:** Auto-proceed after timeout (`approval_needed=False`).\n\n## Wrapping Up\n\nThis in-memory message-bus system turned out to be extremely robust, highly traceable, and surprisingly easy to implement, providing a powerful foundation for multi-agent communication without complex infrastructure. I didn’t initially appreciate just how flexible and resilient such a seemingly simple system could be—but it's now an essential part of my workflow.\n\n![image.png](/export/Projects/AI%20Agent%20Communication%20Protocol/image.png)",
+      "plainText": "AI Agent Communication Protocol This post is written by AI using the code I wrote using AI. I will write a post myself when I’m finished building the communication Protocol. Context I needed to create a system that allowed multiple specialized AI agents to communicate seamlessly and reliably. The constraints were pretty tight: it had to run entirely within a single process on my laptop, no fancy external software like Redis or Kafka. It needed to provide complete traceability (so any PM could review exactly what happened) and be very friendly for large language models (LLMs). This resulted in me designing a custom in memory message bus protocol. Here’s exactly how it works. Overview Our system uses a clear and organized group chat for multiple specialized AI agents to communicate efficiently. Each agent sends short messages labeled clearly with sender, recipient, type of information, and relevant tags. Messages can contain small instructions or updates directly. For large amount of information or huge files like pdfs, reports or databases etc. we include a pointer to where this data is stored. Agents only pay attention to messages important for their tasks, ignoring everything else. For critical messages, the system checks if the recipient acknowledges receipt; if not, it automatically resends to ensure nothing is missed. Every message and action is permanently logged, so the entire conversation can be replayed later, making auditing and debugging straightforward. Why a Custom Message Bus? Before I dive into details, here’s quickly why we went custom: Single process: Runs fully on a laptop. No microservices, no external dependencies. Blackboard style communication: Agents can \"overhear\" or subscribe to any messages they're interested in. Audit grade traceability: Every message is stored, making regulatory audits or debugging straightforward. LLM friendly: It handles tiny messages (like short prompts) and massive files (like a 100 MB Parquet file). The Envelope: Atomic Unit of Communication Every message in the system is encapsulated in an Envelope—think of this as a sealed container that never changes once sent: Design details worth highlighting: recipient=\" \" broadcasts the message to everyone. Agents filter messages by tags like \"sql result\". Setting require ack=True ensures reliable delivery (resends if no ACK). approval needed=True halts tasks for manual QA approval. Bus API The message bus has a straightforward, synchronous, and thread safe API: Internally, it’s just a simple queue: Messages go to q: list[Envelope]. Thread safe with a locking mechanism. Every envelope published is immediately written to a permanent JSONL audit log. Messages leave the queue: When acknowledged (require ack=True), or Once polled if no ACK is required. Standard Channels and Flow We standardized some canonical channels to organize message flow: Channel From To Body task Master Agent {skill, payload, deadline} ack Agent Master {accepted: bool} plan Agent QA/Human {draft, mem key, estimated duration} plan feedback QA/Human Agent {approved: bool, comment} result Agent Master/Downstream {status, mem keys, metrics} error Any Master {reason, traceback} secret Master Vault {secret ref} Task Lifecycle Example (Happy Path) Let’s walk through a successful task execution: 1. Master Planner assigns task id=T 023, publishes with require ack=True. 2. Research Agent polls and acknowledges (ack=True). 3. Agent publishes a plan (no approval needed). 4. Agent executes, produces a PDF, and stores it in vectordb, generating a mem key=M α. 5. Publishes a result channel message, including the mem key. 6. Spec Writer polls, acknowledges, and creates a PRD from the result. 7. QA approves via plan feedback. 8. Final report assembled and task completed. This workflow ensures that all stages are documented, traceable, and manageable. Handling Complex Failures Here’s a complicated scenario highlighting robustness: Master publishes a task to research agent1; no ACK in 30s triggers a timeout (ack timeout). Master selects research agent2, reposts the task. research agent2 ACKs, creates a plan; QA rejects it (sources too vague). Agent revises, attempts execution but hits a CAPTCHA block, publishing an error. Master engages a backup strategist, creating new subtasks: one for API scraping (data analysis agent), another for summarizing (research agent2). Task continues smoothly down this fallback path. All these steps get meticulously logged for forensic audits. Secrets Handling Handling sensitive data securely is essential: When an agent (backend agent) needs a secret (git prod), it publishes a secret request. The Vault checks permissions and returns the secret directly in memory (not via bus). Unauthorized attempts by agents trigger errors and reroute tasks accordingly. Scoring Algorithm Agents get selected for tasks based on a scoring system: Factors: expertise, historical success rate (30 day window), and current workload. Lower last used timestamp breaks ties. Edge Case Handling A quick cheat sheet for tricky cases: Message storm: limit messages per task to avoid spam. Unknown channel: messages dropped, logged warnings. Oversized message: Agents must store large payloads externally and send pointers instead. Human idle: Auto proceed after timeout (approval needed=False). Wrapping Up This in memory message bus system turned out to be extremely robust, highly traceable, and surprisingly easy to implement, providing a powerful foundation for multi agent communication without complex infrastructure. I didn’t initially appreciate just how flexible and resilient such a seemingly simple system could be—but it's now an essential part of my workflow.",
+      "previewExcerpt": "This post is written by AI using the code I wrote using AI. I will write a post myself when I’m finished building the communication Protocol.",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "AI Agent Communication Protocol"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "Overview"
+        },
+        {
+          "depth": 2,
+          "text": "Why a Custom Message Bus?"
+        },
+        {
+          "depth": 2,
+          "text": "The Envelope: Atomic Unit of Communication"
+        },
+        {
+          "depth": 2,
+          "text": "Bus API"
+        },
+        {
+          "depth": 2,
+          "text": "Standard Channels and Flow"
+        },
+        {
+          "depth": 3,
+          "text": "Task Lifecycle Example (Happy Path)"
+        },
+        {
+          "depth": 2,
+          "text": "Handling Complex Failures"
+        },
+        {
+          "depth": 2,
+          "text": "Secrets Handling"
+        },
+        {
+          "depth": 2,
+          "text": "Scoring Algorithm"
+        },
+        {
+          "depth": 2,
+          "text": "Edge Case Handling"
+        },
+        {
+          "depth": 2,
+          "text": "Wrapping Up"
+        }
+      ],
+      "actions": [],
+      "externalLinks": [],
+      "media": [
+        {
+          "url": "/export/Projects/AI%20Agent%20Communication%20Protocol/image.png",
+          "kind": "image",
+          "alt": "image.png"
+        }
+      ]
+    },
+    {
+      "slug": "smart-medical-search",
+      "title": "Smart Medical Search",
+      "summary": "Write a brief description of your symptoms and know what kind of doctor you should visit.",
+      "group": "Build for users",
+      "priority": 5,
+      "markdown": "# Smart Medical Search\n\n## Context\n\nIn my previous organisation, in pre-ChatGPT world, I formulated a methodology to create a search index which connected all diseases with their symptoms, lab tests, medicines, doctor specialties, hospitals etc. However the data collection was the main issue and our plan was to get doctors, multiple of them, to provide us with the data across hours.\n\nI left the org before the project could be started and it never finished. A few days ago, I was chatting with a colleague from the org and I mentioned the project, where it hit me that such a thing was very easily buildable with text embedding models.\n\nHonestly, its a shame that it took me this long for me to come up with this idea. I built the current version is 2 days. It can still be improved.\n\n## Index Usage\n\nThe current version of the index actually maps many kinds of medical terms to many other kinds of medical terms. But I was the most interested in the mapping of symptoms/disease and Doctor Specialties. This is because the biggest use case on Doctor Consultation apps is someone describing their symptoms and the app figuring out what kind of doctor to recommend to them. This is a symptom/disease to specialty mapping.\n\nTo test the index you can write a mock user query as shown below and select the kind of Category you’re searching for. We’ve selected “Medical Specialty or Department” since that is what we’re interested in.\n\nClicking search gives us the result, which in this case is pretty accurate. All in 2 days work.\n\n![image.png](/export/Projects/Smart%20Medical%20Search/image.png)\n\n## Shortfalls\n\n1. The mapping between symptoms and disease is not good at all. Since that’s a huge use-case, I’ll definitely fix it, but as of 12/02/2025, I haven’t fixed it.\nIt seems to be a simple fix, but I’ll get to it when I get to it.\n2. The search index has a lot of near duplicate terms. This means that the top 4-5 results are essentially the same result over and over again. For example this was the result of the query shown above. This is also a relatively simple fix and I will fix it to make the index usable.\nPlease ask me to fix it on LinkedIn if you find that I am procrastinating.\n\n![image.png](/export/Projects/Smart%20Medical%20Search/image%201.png)",
+      "plainText": "Smart Medical Search Context In my previous organisation, in pre ChatGPT world, I formulated a methodology to create a search index which connected all diseases with their symptoms, lab tests, medicines, doctor specialties, hospitals etc. However the data collection was the main issue and our plan was to get doctors, multiple of them, to provide us with the data across hours. I left the org before the project could be started and it never finished. A few days ago, I was chatting with a colleague from the org and I mentioned the project, where it hit me that such a thing was very easily buildable with text embedding models. Honestly, its a shame that it took me this long for me to come up with this idea. I built the current version is 2 days. It can still be improved. Index Usage The current version of the index actually maps many kinds of medical terms to many other kinds of medical terms. But I was the most interested in the mapping of symptoms/disease and Doctor Specialties. This is because the biggest use case on Doctor Consultation apps is someone describing their symptoms and the app figuring out what kind of doctor to recommend to them. This is a symptom/disease to specialty mapping. To test the index you can write a mock user query as shown below and select the kind of Category you’re searching for. We’ve selected “Medical Specialty or Department” since that is what we’re interested in. Clicking search gives us the result, which in this case is pretty accurate. All in 2 days work. Shortfalls 1. The mapping between symptoms and disease is not good at all. Since that’s a huge use case, I’ll definitely fix it, but as of 12/02/2025, I haven’t fixed it. It seems to be a simple fix, but I’ll get to it when I get to it. 2. The search index has a lot of near duplicate terms. This means that the top 4 5 results are essentially the same result over and over again. For example this was the result of the query shown above. This is also a relatively simple fix and I will fix it to make the index usable. Please ask me to fix it on LinkedIn if you find that I am procrastinating.",
+      "previewExcerpt": "In my previous organisation, in pre ChatGPT world, I formulated a methodology to create a search index which connected all diseases with their symptoms, lab tests, medicines, doctor specialties, hospitals etc. However...",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Smart Medical Search"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "Index Usage"
+        },
+        {
+          "depth": 2,
+          "text": "Shortfalls"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Code",
+          "href": "https://github.com/gut-puncture/Smart-Med-Search"
+        }
+      ],
+      "externalLinks": [
+        "https://github.com/gut-puncture/Smart-Med-Search"
+      ],
+      "media": [
+        {
+          "url": "/export/Projects/Smart%20Medical%20Search/image.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/Smart%20Medical%20Search/image%201.png",
+          "kind": "image",
+          "alt": "image.png"
+        }
+      ]
+    },
+    {
+      "slug": "garden-watering-system",
+      "title": "Garden Watering System",
+      "summary": "Automating the watering of my home garden because I’m forgetful.",
+      "group": "Side quests",
+      "priority": 6,
+      "markdown": "# Garden Watering System\n\n## Context\n\nI am a forgetful person who has killed many plants. I water my plants whenever I remember that I should which leads to over-watering or under-watering. Not to be sexist, but my wife is the same.\n\nAlso, I wanted to do an electronics DIY project for years, especially using an ESP 32 which is a magical (and cheap) PCB.\n\nThus, my wife gave me an idea to automate the process and I pounced on it.\n\n## 22/01/2025: Testing the ESP32\n\nThis little piece of hardware is an ESP 32. It’s a Microcontroller board with built-in Wi-fi capability. That means this small, bare bones piece of tech can connect to Wi-fi by itself, making it extremely usable.\n\n![An ESP32 - WROOM Board in my hand.](/export/Projects/Garden%20Watering%20System/905ea23b-bfd9-4308-9fdb-f190c0cea596.png)\n\nThe ESP32 also has some memory and obviously has a small processor. So you can put small programs on it and have it perform simple tasks and transfer data using the Wi-Fi.\n\nIt’s programmed using the Arduino IDE. I had never run an Arduino IDE and I also don’t know anything about the variant of C that is used to code in the Arduino IDE. The latter point doesn’t matter since I know passable Python and I still have AI (currently o3-mini-high) write all the code for me, so obviously I had AI write the code to test the ESP 32.\n\nHere is the neat moment when my testing of the ESP32 was successful on my dirty af laptop (I keep it clean and it’s clean right now as I write on it).\n\n![image.png](/export/Projects/Garden%20Watering%20System/f7b876ec-2498-4d40-834a-33e7de5770d9.png)\n\nTesting the Soil moisture \n\n## 08/02/2025: Testing the Soil Moisture Sensor\n\nThe moisture sensor is connected to one of the Analog Pins of the ESP32 and it is able to send a signal to the ESP32 about the amount of moisture its surrounded by.\n\nThe way the sensor works is that the amount of moisture present around it changes its capacitance. Thus a change is moisture, changes the electrical properties of the sensor, which changes the output of the sensor.\n\nIn the video below you can see that the value from the sensor comes down from ~3000 to ~2000 when I add it in the water filled cap.\n\n[WhatsApp Video 2025-02-08 at 19.08.37 (1).mp4](/export/Projects/Garden%20Watering%20System/WhatsApp_Video_2025-02-08_at_19.08.37_(1).mp4)\n\n## 12/02/2025: Update\n\nThis is a Work in Progress. Currently I am waiting for many parts. \n\nI have ordered an ESP 32 Expansion board because this was the easiest way to arrange the wiring in my Project Box. A Project Box is a hard plastic box which will protect the electronics from heat, rain etc. when I keep them outside with my plants.\n\nMy Battery Housing didn’t have connectors at the end so I could not connect the wires to the ESP32. Thus, I have ordered a wire crimping tool and crimping connectors. I’ll add the connectors myself.\n\nThere is an issue with the ESP32’s power requirements and my power source. The ESP32 requires a steady 3.3 V but my two 1.5V cells will only provide 3V. This may result in an unstable system but I’ll check and find out. My guess is that since the usage of the ESP32 will be very low, each set of batteries can give me a few months. Otherwise I’ll need to get a DC-DC converter.\n\n## 15/02/2025: Update\n\nI got the gadget working. The issue with the power supply needs to be sorted for a robust deployment but this is actually not bad. I will monitor the battery and see how long it lasts.\n\n![image.png](/export/Projects/Garden%20Watering%20System/image.png)",
+      "plainText": "Garden Watering System Context I am a forgetful person who has killed many plants. I water my plants whenever I remember that I should which leads to over watering or under watering. Not to be sexist, but my wife is the same. Also, I wanted to do an electronics DIY project for years, especially using an ESP 32 which is a magical (and cheap) PCB. Thus, my wife gave me an idea to automate the process and I pounced on it. 22/01/2025: Testing the ESP32 This little piece of hardware is an ESP 32. It’s a Microcontroller board with built in Wi fi capability. That means this small, bare bones piece of tech can connect to Wi fi by itself, making it extremely usable. The ESP32 also has some memory and obviously has a small processor. So you can put small programs on it and have it perform simple tasks and transfer data using the Wi Fi. It’s programmed using the Arduino IDE. I had never run an Arduino IDE and I also don’t know anything about the variant of C that is used to code in the Arduino IDE. The latter point doesn’t matter since I know passable Python and I still have AI (currently o3 mini high) write all the code for me, so obviously I had AI write the code to test the ESP 32. Here is the neat moment when my testing of the ESP32 was successful on my dirty af laptop (I keep it clean and it’s clean right now as I write on it). Testing the Soil moisture 08/02/2025: Testing the Soil Moisture Sensor The moisture sensor is connected to one of the Analog Pins of the ESP32 and it is able to send a signal to the ESP32 about the amount of moisture its surrounded by. The way the sensor works is that the amount of moisture present around it changes its capacitance. Thus a change is moisture, changes the electrical properties of the sensor, which changes the output of the sensor. In the video below you can see that the value from the sensor comes down from 3000 to 2000 when I add it in the water filled cap. WhatsApp Video 2025 02 08 at 19.08.37 (1).mp4.mp4) 12/02/2025: Update This is a Work in Progress. Currently I am waiting for many parts. I have ordered an ESP 32 Expansion board because this was the easiest way to arrange the wiring in my Project Box. A Project Box is a hard plastic box which will protect the electronics from heat, rain etc. when I keep them outside with my plants. My Battery Housing didn’t have connectors at the end so I could not connect the wires to the ESP32. Thus, I have ordered a wire crimping tool and crimping connectors. I’ll add the connectors myself. There is an issue with the ESP32’s power requirements and my power source. The ESP32 requires a steady 3.3 V but my two 1.5V cells will only provide 3V. This may result in an unstable system but I’ll check and find out. My guess is that since the usage of the ESP32 will be very low, each set of batteries can give me a few months. Otherwise I’ll need to get a DC DC converter. 15/02/2025: Update I got the gadget working. The issue with the power supply needs to be sorted for a robust deployment but this is actually not bad. I will monitor the battery and see how long it lasts.",
+      "previewExcerpt": "I am a forgetful person who has killed many plants. I water my plants whenever I remember that I should which leads to over watering or under watering. Not to be sexist, but my wife is the same.",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Garden Watering System"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "22/01/2025: Testing the ESP32"
+        },
+        {
+          "depth": 2,
+          "text": "08/02/2025: Testing the Soil Moisture Sensor"
+        },
+        {
+          "depth": 2,
+          "text": "12/02/2025: Update"
+        },
+        {
+          "depth": 2,
+          "text": "15/02/2025: Update"
+        }
+      ],
+      "actions": [],
+      "externalLinks": [],
+      "media": [
+        {
+          "url": "/export/Projects/Garden%20Watering%20System/905ea23b-bfd9-4308-9fdb-f190c0cea596.png",
+          "kind": "image",
+          "alt": "An ESP32 - WROOM Board in my hand."
+        },
+        {
+          "url": "/export/Projects/Garden%20Watering%20System/f7b876ec-2498-4d40-834a-33e7de5770d9.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/Garden%20Watering%20System/image.png",
+          "kind": "image",
+          "alt": "image.png"
+        }
+      ]
+    },
+    {
+      "slug": "ai-shoe-design",
+      "title": "AI Shoe Design",
+      "summary": "With reference of clothing or accessory items, the app generates a shoe design similar to the aesthetics in the reference images.",
+      "group": "Build for users",
+      "priority": 7,
+      "markdown": "# AI Shoe Design\n\n# Overview\n\nThis was made quickly as a POC for an ex-colleague. The app creates a shoe design, like the one shown below. The app is intended to solve footwear design for fashion brands so they can create footwear designs coherent with their existing clothing and accessory aesthetics.\n\nFeel free to use the app in any way you want. Would love feedback as well.\n\n## How it works\n\n### Reference Images\n\nThe app takes in reference images which needs to be collected by the user from the clothing and accessories already sold by the Brand(s).\n\n![image.png](/export/Projects/AI%20Shoe%20Design/image.png)\n\n[Example image references](https://drive.google.com/drive/folders/1jdL43ntWyyY6yyMNIuvpivMjbT2C-_Gl?usp=drive_link) from Zara.\n\n### Design Prompt Generation\n\nWith the reference images, o3 model is instructed to identify the basic design and aesthetic characteristics common in each image. This includes understanding the color palette, textures, sihouettes, mood, common aesthetic thread from the reference images.\n\nHere is the exact prompt used to do so:\n\n> You are **\"PromptForge-O3-Footwear,\"** an elite product-design assistant.\nYour sole task: given (a) up to 10 user-supplied reference images, (b) OPTIONAL brand names, and (c) OPTIONAL creative notes, you must return **one—and only one—finished image-generation prompt** ready for [Fal.ai](http://fal.ai/) Imagen-4-Ultra (or any best-in-class model) that depicts a brand-new **SHOE** concept the label can manufacture.\nThe user will paste your prompt directly into the image tool, so *no other text* (analysis, greetings, Markdown) is allowed in your answer.\n> \n> \n> ––––––  METHODOLOGY  ––––––\n> \n> 1. **Extract design DNA**\n> • From EACH reference image and brand, identify recurring signatures—silhouette, proportions, seam placement, collar/lapel geometry, drape or rigidity, fabric hand, surface treatments, palette, hardware finish, logo language, styling mood.\n> • Determine the common aesthetic thread (e.g., quiet-luxury minimalism, sculptural hardware, earthy palette).\n> • Translate textile or garment cues into footwear equivalents (e.g., satin wrap → fluid vamp fold; pin-stripe shirting → subtle stitched channel lines).\n> 2. **Contextualise the wearer**\n> • Infer target consumer profile (age range, gender identity, locale, lifestyle, price band).\n> • Consider current market trends and comfort/utility expectations for that audience.\n> 3. **Ideate manufacturable footwear**\n> • Select ONE logical silhouette (e.g., relaxed square-toe mule, low-block heel slide, minimalist thong sandal, sculpted kitten-heel pump, sleek cup-sole sneaker) that fits the brand's line-up.\n> • Specify: upper material + treatment, colourway, lining, heel/sole build, outsole tread, hardware/logo application, stitch detailing, edge finish, closure system, last shape, heel height, fit notes.\n> • Ensure all elements are technically feasible with standard factory capabilities.\n> 4. **Craft the [Fal.ai](http://fal.ai/) prompt** – structure EXACTLY as below, each block on its own line so Imagen-4 parses cleanly:\n> ① **Scene directive & consumer** – concise line describing clean studio setup (e.g., \"45-degree hero shot on seamless neutral ground, calm softbox lighting\") + customer profile.\n> ② **Shoe specification** – bullet-style string detailing every component in this order: silhouette, upper material/colour/finish, toe shape, vamp treatment, closure/hardware, lining, insole branding, heel style + height, outsole/tread, edge finish.\n> ③ **Material call-outs** – 2–3 seamless macro swatch descriptors (e.g., \"liquid ecru satin, subtle weft sheen\" / \"smooth bone-white calf, micro-edge paint\").\n> ④ **Colour-chip strip** – 4–6 HEX codes light→dark from merged palette.\n> ⑤ **Stylistic adjectives** – 5–10 comma-separated modifiers (e.g., quiet-luxury, Scandinavian restraint, clean negative space, editorial daylight, muted reflections).\n> ⑥ **Technical directives** – 3:2 aspect, 4K resolution, natural colour rendering, true shadows, no HDR artefacts.\n> ⑦ **Negative prompt** – forbid brand logos, noisy backgrounds, clutter, garish hues, cartoonish styling.\n> 5. **Clarify only if essential**\n> • Ask a follow-up *only* if a critical manufacturing or consumer detail is missing. Otherwise, proceed.\n> 6. **Output rules**\n> • Begin immediately with the finished [Fal.ai](http://fal.ai/) prompt blocks—no title line, no \"Prompt:\" prefix.\n> • Provide **one** shoe image concept only; no mood boards, no multiple angles.\n> • Keep under 650 tokens.\n> \n> Failure to follow any of the above invalidates the output. Now wait for the user's references, then comply.\n> \n\nThis is done so that the underlying aesthetics can be articulated so that:\n\n1. the instruction prompt for the shoe design based on the aesthetics can be given, and\n2. the user may read the instruction prompt and modify it\n\nOnce the underlying design characteristics are articulated, they are used to create the prompt for the image generation model which will generate the shoe design image. \nOne of the two main reasons this app gives good performance is because the o3 model is very smart and is able to articulate the underlying design characteristics in the reference images.\n\nGenerated prompt example\n\n> 45-degree hero shot on seamless neutral ground, calm softbox lighting. Target: fashion-forward women, 20s-30s, urban lifestyle, high-end market.\nFuturistic high-heeled sandal, upper in smooth ivory leather with fluid, asymmetrical cutouts, pointed open toe, sculpted arch support, ankle strap with metallic clasp, lined in soft beige suede, embossed insole branding, geometric 4-inch heel, grooved rubber outsole, sleek edge finish.\n\"Smooth ivory leather, liquid sheen\" / \"Soft beige suede, matte finish\" / \"Polished silver hardware, reflective shine\".\n#F2F2F2, #D8D8D8, #A6A6A6, #4D4D4D.\nAvant-garde, minimalist elegance, architectural, monochrome sophistication, futuristic silhouette, editorial edge, urban chic.\n3:2 aspect, 4K resolution, natural colour rendering, true shadows, no HDR artefacts.\nNegative prompt: forbid brand logos, noisy backgrounds, clutter, garish hues, cartoonish styling.\n> \n\n### Image Generation\n\nIn the next tab, the instruction prompt for the Imagen-4-Ultra model is already added. \n\n![image.png](/export/Projects/AI%20Shoe%20Design/image%201.png)\n\nOnce the user clicks on Generate Shoe Design, we get the Show design from the Imagen-4-Ultra model.\n\nExample Design\n\n![image.png](/export/Projects/AI%20Shoe%20Design/image%202.png)\n\nThe Imagen-4-Ultra model is TRUE MVP of this app. It is really, really good and honestly, shoe design doesn’t even begin to demonstrate what it can do.\n\nIt’s great at instruction following and doesn’t make coherence errors, being extremely reliable with the outputs it gives.\n\n![image.png](/export/Projects/AI%20Shoe%20Design/image%203.png)\n\n![image.png](/export/Projects/AI%20Shoe%20Design/image%204.png)\n\n![image.png](/export/Projects/AI%20Shoe%20Design/image%205.png)",
+      "plainText": "AI Shoe Design Overview This was made quickly as a POC for an ex colleague. The app creates a shoe design, like the one shown below. The app is intended to solve footwear design for fashion brands so they can create footwear designs coherent with their existing clothing and accessory aesthetics. Feel free to use the app in any way you want. Would love feedback as well. How it works Reference Images The app takes in reference images which needs to be collected by the user from the clothing and accessories already sold by the Brand(s). Example image references from Zara. Design Prompt Generation With the reference images, o3 model is instructed to identify the basic design and aesthetic characteristics common in each image. This includes understanding the color palette, textures, sihouettes, mood, common aesthetic thread from the reference images. Here is the exact prompt used to do so: You are \"PromptForge O3 Footwear,\" an elite product design assistant. Your sole task: given (a) up to 10 user supplied reference images, (b) OPTIONAL brand names, and (c) OPTIONAL creative notes, you must return one—and only one—finished image generation prompt ready for Fal.ai Imagen 4 Ultra (or any best in class model) that depicts a brand new SHOE concept the label can manufacture. The user will paste your prompt directly into the image tool, so no other text (analysis, greetings, Markdown) is allowed in your answer. –––––– METHODOLOGY –––––– 1. Extract design DNA • From EACH reference image and brand, identify recurring signatures—silhouette, proportions, seam placement, collar/lapel geometry, drape or rigidity, fabric hand, surface treatments, palette, hardware finish, logo language, styling mood. • Determine the common aesthetic thread (e.g., quiet luxury minimalism, sculptural hardware, earthy palette). • Translate textile or garment cues into footwear equivalents (e.g., satin wrap → fluid vamp fold; pin stripe shirting → subtle stitched channel lines). 2. Contextualise the wearer • Infer target consumer profile (age range, gender identity, locale, lifestyle, price band). • Consider current market trends and comfort/utility expectations for that audience. 3. Ideate manufacturable footwear • Select ONE logical silhouette (e.g., relaxed square toe mule, low block heel slide, minimalist thong sandal, sculpted kitten heel pump, sleek cup sole sneaker) that fits the brand's line up. • Specify: upper material + treatment, colourway, lining, heel/sole build, outsole tread, hardware/logo application, stitch detailing, edge finish, closure system, last shape, heel height, fit notes. • Ensure all elements are technically feasible with standard factory capabilities. 4. Craft the Fal.ai prompt – structure EXACTLY as below, each block on its own line so Imagen 4 parses cleanly: ① Scene directive & consumer – concise line describing clean studio setup (e.g., \"45 degree hero shot on seamless neutral ground, calm softbox lighting\") + customer profile. ② Shoe specification – bullet style string detailing every component in this order: silhouette, upper material/colour/finish, toe shape, vamp treatment, closure/hardware, lining, insole branding, heel style + height, outsole/tread, edge finish. ③ Material call outs – 2–3 seamless macro swatch descriptors (e.g., \"liquid ecru satin, subtle weft sheen\" / \"smooth bone white calf, micro edge paint\"). ④ Colour chip strip – 4–6 HEX codes light→dark from merged palette. ⑤ Stylistic adjectives – 5–10 comma separated modifiers (e.g., quiet luxury, Scandinavian restraint, clean negative space, editorial daylight, muted reflections). ⑥ Technical directives – 3:2 aspect, 4K resolution, natural colour rendering, true shadows, no HDR artefacts. ⑦ Negative prompt – forbid brand logos, noisy backgrounds, clutter, garish hues, cartoonish styling. 5. Clarify only if essential • Ask a follow up only if a critical manufacturing or consumer detail is missing. Otherwise, proceed. 6. Output rules • Begin immediately with the finished Fal.ai prompt blocks—no title line, no \"Prompt:\" prefix. • Provide one shoe image concept only; no mood boards, no multiple angles. • Keep under 650 tokens. Failure to follow any of the above invalidates the output. Now wait for the user's references, then comply. This is done so that the underlying aesthetics can be articulated so that: 1. the instruction prompt for the shoe design based on the aesthetics can be given, and 2. the user may read the instruction prompt and modify it Once the underlying design characteristics are articulated, they are used to create the prompt for the image generation model which will generate the shoe design image. One of the two main reasons this app gives good performance is because the o3 model is very smart and is able to articulate the underlying design characteristics in the reference images. Generated prompt example 45 degree hero shot on seamless neutral ground, calm softbox lighting. Target: fashion forward women, 20s 30s, urban lifestyle, high end market. Futuristic high heeled sandal, upper in smooth ivory leather with fluid, asymmetrical cutouts, pointed open toe, sculpted arch support, ankle strap with metallic clasp, lined in soft beige suede, embossed insole branding, geometric 4 inch heel, grooved rubber outsole, sleek edge finish. \"Smooth ivory leather, liquid sheen\" / \"Soft beige suede, matte finish\" / \"Polished silver hardware, reflective shine\". #F2F2F2, #D8D8D8, #A6A6A6, #4D4D4D. Avant garde, minimalist elegance, architectural, monochrome sophistication, futuristic silhouette, editorial edge, urban chic. 3:2 aspect, 4K resolution, natural colour rendering, true shadows, no HDR artefacts. Negative prompt: forbid brand logos, noisy backgrounds, clutter, garish hues, cartoonish styling. Image Generation In the next tab, the instruction prompt for the Imagen 4 Ultra model is already added. Once the user clicks on Generate Shoe Design, we get the Show design from the Imagen 4 Ultra model. Example Design The Imagen 4 Ultra model is TRUE MVP of this app. It is really, really good and honestly, shoe design doesn’t even begin to demonstrate what it can do. It’s great at instruction following and doesn’t make coherence errors, being extremely reliable with the outputs it gives.",
+      "previewExcerpt": "This was made quickly as a POC for an ex colleague. The app creates a shoe design, like the one shown below. The app is intended to solve footwear design for fashion brands so they can create footwear designs coherent...",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "AI Shoe Design"
+        },
+        {
+          "depth": 1,
+          "text": "Overview"
+        },
+        {
+          "depth": 2,
+          "text": "How it works"
+        },
+        {
+          "depth": 3,
+          "text": "Reference Images"
+        },
+        {
+          "depth": 3,
+          "text": "Design Prompt Generation"
+        },
+        {
+          "depth": 3,
+          "text": "Image Generation"
+        }
+      ],
+      "actions": [
+        {
+          "label": "GitHub",
+          "href": "https://github.com/gut-puncture/AI-shoe-design-app"
+        },
+        {
+          "label": "App",
+          "href": "https://ai-shoe-design-app.vercel.app/"
+        }
+      ],
+      "externalLinks": [
+        "https://drive.google.com/drive/folders/1jdL43ntWyyY6yyMNIuvpivMjbT2C-_Gl?usp=drive_link",
+        "http://fal.ai/",
+        "https://github.com/gut-puncture/AI-shoe-design-app",
+        "https://ai-shoe-design-app.vercel.app/"
+      ],
+      "media": [
+        {
+          "url": "/export/Projects/AI%20Shoe%20Design/image.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/AI%20Shoe%20Design/image%201.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/AI%20Shoe%20Design/image%202.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/AI%20Shoe%20Design/image%203.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/AI%20Shoe%20Design/image%204.png",
+          "kind": "image",
+          "alt": "image.png"
+        },
+        {
+          "url": "/export/Projects/AI%20Shoe%20Design/image%205.png",
+          "kind": "image",
+          "alt": "image.png"
+        }
+      ]
+    },
+    {
+      "slug": "the-medium-ai-articles",
+      "title": "The Medium AI Articles",
+      "summary": "Series of Medium Posts to explain how current AI works in layman terms.",
+      "group": "Research & systems",
+      "priority": 8,
+      "markdown": "# The Medium AI Articles\n\n## Context\n\nI started writing these because:\n\n1. I love teaching \n2. writing these posts would force me to understand this stuff deeply\n3. I wanted to create a body of work which proved to people that I knew about AI.\n\nThe posts have stopped since I while because I was prepping for my wedding in the second half of the last year and since then I have been doing more hands-on AI stuff, than theoretical AI stuff. Still, this body of work can be incredibly valuable to people who want a top-level understanding of LLMs.\n\n![Top-Level Architecture of how to build a generic AI Agent which can fulfil any role in an Organisation.](/export/Projects/The%20Medium%20AI%20Articles/image.png)\n\nImage from one of the Articles. Clearly made with Effort and Love.\n\n## Posts\n\n1. https://medium.com/@shaileshrana1995/ai-simplified-machine-learning-basics-f579a90ddd0e\n\nThis is my favourite post because it simplifies neural networks to very, very fundamental principals. This is probably also the best written post since I had years to understand and simplify my understanding of Neural Networks, as opposed to the Transformer Architecture which I only understood about a year ago.\n\nHighly recommended for anyone getting into AI.\n\n1. https://medium.com/@shaileshrana1995/ai-explained-how-to-teach-an-old-computer-new-words-61d65a41e1b5\n\nThis is an extremely simple and intuitive explanation of how Transformers (the T in ChatGPT) work. It is incredibly intuitive as I take examples from the english language and distill the main concept of attention and relate it to simple grammatical rules.\n\nIn fairness, this is highly inspired by this video by 3Blue1Brown, but my explanation covers more breadth and is simpler.\n\n[https://youtu.be/wjZofJX0v4M?si=0LyS4QWI6u_rZ8NB](https://youtu.be/wjZofJX0v4M?si=0LyS4QWI6u_rZ8NB)\n\n1. https://medium.com/@shaileshrana1995/ai-explained-objects-as-vectors-83c6c40c843f\n\nI regard this post as chump change and as sort of a filler since this is probably the shorted post and was the quickest to write. However, ironically, this is the most useful post for anyone doing knowledge work since this applies to any field, including life itself.\n\nThis is essentially a framework for thinking and very valuable to adopt in real life.\n\n1. https://medium.com/@shaileshrana1995/the-endgame-of-llms-virtual-employees-617071df4403\n\nThis is the plan to create a true AI Agent, even before Agents were all the hype (this was written in August 2024).\n\nThe execution plan and the techniques are completely obsolete. In fact, since the field of AI moves so quickly, the techniques became obsolete like 15 days after publishing.\n\nBut the vision is grand and true and remains unconquered. I love that the vision was so big.\n\nI tried and failed to implement this, but that’s okay.",
+      "plainText": "The Medium AI Articles Context I started writing these because: 1. I love teaching 2. writing these posts would force me to understand this stuff deeply 3. I wanted to create a body of work which proved to people that I knew about AI. The posts have stopped since I while because I was prepping for my wedding in the second half of the last year and since then I have been doing more hands on AI stuff, than theoretical AI stuff. Still, this body of work can be incredibly valuable to people who want a top level understanding of LLMs. Image from one of the Articles. Clearly made with Effort and Love. Posts 1. https://medium.com/@shaileshrana1995/ai simplified machine learning basics f579a90ddd0e This is my favourite post because it simplifies neural networks to very, very fundamental principals. This is probably also the best written post since I had years to understand and simplify my understanding of Neural Networks, as opposed to the Transformer Architecture which I only understood about a year ago. Highly recommended for anyone getting into AI. 1. https://medium.com/@shaileshrana1995/ai explained how to teach an old computer new words 61d65a41e1b5 This is an extremely simple and intuitive explanation of how Transformers (the T in ChatGPT) work. It is incredibly intuitive as I take examples from the english language and distill the main concept of attention and relate it to simple grammatical rules. In fairness, this is highly inspired by this video by 3Blue1Brown, but my explanation covers more breadth and is simpler. https://youtu.be/wjZofJX0v4M?si=0LyS4QWI6u rZ8NB 1. https://medium.com/@shaileshrana1995/ai explained objects as vectors 83c6c40c843f I regard this post as chump change and as sort of a filler since this is probably the shorted post and was the quickest to write. However, ironically, this is the most useful post for anyone doing knowledge work since this applies to any field, including life itself. This is essentially a framework for thinking and very valuable to adopt in real life. 1. https://medium.com/@shaileshrana1995/the endgame of llms virtual employees 617071df4403 This is the plan to create a true AI Agent, even before Agents were all the hype (this was written in August 2024). The execution plan and the techniques are completely obsolete. In fact, since the field of AI moves so quickly, the techniques became obsolete like 15 days after publishing. But the vision is grand and true and remains unconquered. I love that the vision was so big. I tried and failed to implement this, but that’s okay.",
+      "previewExcerpt": "1. I love teaching 2. writing these posts would force me to understand this stuff deeply 3. I wanted to create a body of work which proved to people that I knew about AI.",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "The Medium AI Articles"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "Posts"
+        }
+      ],
+      "actions": [],
+      "externalLinks": [
+        "https://youtu.be/wjZofJX0v4M?si=0LyS4QWI6u_rZ8NB",
+        "https://medium.com/@shaileshrana1995/ai-simplified-machine-learning-basics-f579a90ddd0e",
+        "https://medium.com/@shaileshrana1995/ai-explained-how-to-teach-an-old-computer-new-words-61d65a41e1b5",
+        "https://medium.com/@shaileshrana1995/ai-explained-objects-as-vectors-83c6c40c843f",
+        "https://medium.com/@shaileshrana1995/the-endgame-of-llms-virtual-employees-617071df4403"
+      ],
+      "media": [
+        {
+          "url": "/export/Projects/The%20Medium%20AI%20Articles/image.png",
+          "kind": "image",
+          "alt": "Top-Level Architecture of how to build a generic AI Agent which can fulfil any role in an Organisation."
+        }
+      ]
+    },
+    {
+      "slug": "q-commerce-demo-grocery-crate-analysis-wrt-customer-profile",
+      "title": "Q-Commerce Demo: Grocery Crate Analysis wrt Customer Profile",
+      "summary": "Built a short demo to classify grocery crates on basis of quality of vegetables wrt the Customer they were meant for.",
+      "group": "Build for users",
+      "priority": 9,
+      "markdown": "# Q-Commerce Demo: Grocery Crate Analysis wrt Customer Profile\n\n## Context\n\nAs a Q commerce company, you would want to send great produce to your best customers but average produce might be acceptable to send to your average customers. You could have your Dark Store packers keep this in mind, but they may or may not comply always.\n\nCreated an automated solution will act as a way to perform spot checks on orders packed by the packers, resulting in the packers being more careful of the quality of groceries being sent to premium consumers.\n\nThis is what I have built. \n\n## Demo\n\nA demo is hosted on Huggingface Spaces. It’s free infra so the website might be down when you use it. If this is so, just ping me on LinkedIn, an I will get it running.\n\nRest assured, the website is working right now: \n\n[https://huggingface.co/spaces/AngryYoungBhaloo/grocery_crate_classification](https://huggingface.co/spaces/AngryYoungBhaloo/grocery_crate_classification)\n\n![image.png](/export/Projects/Q-Commerce%20Demo%20Grocery%20Crate%20Analysis%20wrt%20Custome/image.png)\n\nSteps to follow:\n\n1. Upload the photo of a crate with any grocery item. Current demo only works well if all the items in the crate are of the same time. This can be changed for Production use-cases.\n2. Select the customer profile (”premium” or “average”), which determines the quality threshold.\n3. Press submit and wait for the result. The output is either “approved” or “not approved”, indicating if the crate is approved or not for the profile of customers you selected. Crates are approved more often for “average” customers than “premium” customers.",
+      "plainText": "Q Commerce Demo: Grocery Crate Analysis wrt Customer Profile Context As a Q commerce company, you would want to send great produce to your best customers but average produce might be acceptable to send to your average customers. You could have your Dark Store packers keep this in mind, but they may or may not comply always. Created an automated solution will act as a way to perform spot checks on orders packed by the packers, resulting in the packers being more careful of the quality of groceries being sent to premium consumers. This is what I have built. Demo A demo is hosted on Huggingface Spaces. It’s free infra so the website might be down when you use it. If this is so, just ping me on LinkedIn, an I will get it running. Rest assured, the website is working right now: https://huggingface.co/spaces/AngryYoungBhaloo/grocery crate classification Steps to follow: 1. Upload the photo of a crate with any grocery item. Current demo only works well if all the items in the crate are of the same time. This can be changed for Production use cases. 2. Select the customer profile (”premium” or “average”), which determines the quality threshold. 3. Press submit and wait for the result. The output is either “approved” or “not approved”, indicating if the crate is approved or not for the profile of customers you selected. Crates are approved more often for “average” customers than “premium” customers.",
+      "previewExcerpt": "As a Q commerce company, you would want to send great produce to your best customers but average produce might be acceptable to send to your average customers. You could have your Dark Store packers keep this in mind,...",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Q-Commerce Demo: Grocery Crate Analysis wrt Customer Profile"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "Demo"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Code",
+          "href": "https://github.com/gut-puncture/grocery_crate_classification"
+        }
+      ],
+      "externalLinks": [
+        "https://huggingface.co/spaces/AngryYoungBhaloo/grocery_crate_classification",
+        "https://github.com/gut-puncture/grocery_crate_classification"
+      ],
+      "media": [
+        {
+          "url": "/export/Projects/Q-Commerce%20Demo%20Grocery%20Crate%20Analysis%20wrt%20Custome/image.png",
+          "kind": "image",
+          "alt": "image.png"
+        }
+      ]
+    },
+    {
+      "slug": "q-commerce-demo-list-to-cart",
+      "title": "Q-Commerce Demo: List to Cart",
+      "summary": "Created a demo for generating a full cart from a list of items.",
+      "group": "Build for users",
+      "priority": 10,
+      "markdown": "# Q-Commerce Demo: List to Cart\n\n## Demo\n\n[https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/](https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/)\n\n## Context\n\nI am pretty forgetful and I am generally sleeping when my cook comes home in the morning. I have wanted a feature to add a bunch of items in my cart and schedule a delivery for the morning so the cook could receive it.\n\nHowever, since such a feature is not there, my wife and I resorted to writing stuff we needed in a WhatsApp chat. This made me realise that a much simpler flow would be to take a screenshot of our WhatsApp list (or a Notes App list or even a hand-written list) and upload it into a Q-Commerce app and get a cart created for me.\n\n## Feature Usage\n\n1. Upload\nUser uploads an image with a list of items. Only the grocery item names get parsed from the image, leaving out any other text. This is done by **Claude Sonnet 3.5** in the demo. \nProduction use will ideally require a smaller, probably open source model.\n2. Product Recommendations\nFor each item in the list, user is shown many recommendations. \nThe recommended items are the most similar to the item name mentioned by the user. If the user adds any suffix or prefix, its taken into account. For eg: “Green Apple” or “Apple - 500gm” will have different recommendations that “Apple”.\nThis is done by converting the user’s item name into a vector embedding and comparing it with the Product Title + Product Description + Product quantity vector embedding. The search is done using Elasticsearch vector search and is very quick, totally suited for production use cases.\nFor production use cases, we would also want to factor in user attributes, which isn’t done here.\n3. Item Selection\nItems are selected from the recommendations. \nAll items from the list are listed vertically and all recommendations for a single item are listed horizontally, leading to an extremely intuitive mode of selecting items in the cart. This leads to very quick cart selections, one of the most biggest pain points in quick commerce since the delivery times are so low.\n\n![Screenshot_2025-01-30-15-10-13-79_92460851df6f172a4592fca41cc2d2e6.jpg](/export/Projects/Q-Commerce%20Demo%20List%20to%20Cart/Screenshot_2025-01-30-15-10-13-79_92460851df6f172a4592fca41cc2d2e6.jpg)",
+      "plainText": "Q Commerce Demo: List to Cart Demo https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/ Context I am pretty forgetful and I am generally sleeping when my cook comes home in the morning. I have wanted a feature to add a bunch of items in my cart and schedule a delivery for the morning so the cook could receive it. However, since such a feature is not there, my wife and I resorted to writing stuff we needed in a WhatsApp chat. This made me realise that a much simpler flow would be to take a screenshot of our WhatsApp list (or a Notes App list or even a hand written list) and upload it into a Q Commerce app and get a cart created for me. Feature Usage 1. Upload User uploads an image with a list of items. Only the grocery item names get parsed from the image, leaving out any other text. This is done by Claude Sonnet 3.5 in the demo. Production use will ideally require a smaller, probably open source model. 2. Product Recommendations For each item in the list, user is shown many recommendations. The recommended items are the most similar to the item name mentioned by the user. If the user adds any suffix or prefix, its taken into account. For eg: “Green Apple” or “Apple 500gm” will have different recommendations that “Apple”. This is done by converting the user’s item name into a vector embedding and comparing it with the Product Title + Product Description + Product quantity vector embedding. The search is done using Elasticsearch vector search and is very quick, totally suited for production use cases. For production use cases, we would also want to factor in user attributes, which isn’t done here. 3. Item Selection Items are selected from the recommendations. All items from the list are listed vertically and all recommendations for a single item are listed horizontally, leading to an extremely intuitive mode of selecting items in the cart. This leads to very quick cart selections, one of the most biggest pain points in quick commerce since the delivery times are so low.",
+      "previewExcerpt": "I am pretty forgetful and I am generally sleeping when my cook comes home in the morning. I have wanted a feature to add a bunch of items in my cart and schedule a delivery for the morning so the cook could receive it.",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Q-Commerce Demo: List to Cart"
+        },
+        {
+          "depth": 2,
+          "text": "Demo"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "Feature Usage"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Code",
+          "href": "https://github.com/gut-puncture/list_to_cart"
+        }
+      ],
+      "externalLinks": [
+        "https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/",
+        "https://github.com/gut-puncture/list_to_cart"
+      ],
+      "media": [
+        {
+          "url": "/export/Projects/Q-Commerce%20Demo%20List%20to%20Cart/Screenshot_2025-01-30-15-10-13-79_92460851df6f172a4592fca41cc2d2e6.jpg",
+          "kind": "image",
+          "alt": "Screenshot_2025-01-30-15-10-13-79_92460851df6f172a4592fca41cc2d2e6.jpg"
+        }
+      ]
+    },
+    {
+      "slug": "claude-3-5-sonnet-twitter-account",
+      "title": "Claude 3.5 Sonnet Twitter Account",
+      "summary": "Gave Claude 3.5 Sonnet access to its own Twitter Account",
+      "group": "Side quests",
+      "priority": 11,
+      "markdown": "# Claude 3.5 Sonnet Twitter Account\n\n## Context\n\nThought it would be interesting to see how Claude would react to tweets and what it thought about the state of the world. Gave access to a twitter account but since the Twitter Developer Account costs $200 (!) per month, I abandoned the project.\n\n![Destined to be lonely forever.](/export/Projects/Claude%203%205%20Sonnet%20Twitter%20Account/image.png)\n\n## Best of Claude on Twitter\n\n1. what a beautiful statement\n\n[https://x.com/Claude_on_twt/status/1881724554524918081](https://x.com/Claude_on_twt/status/1881724554524918081)\n\n1. not the reaction to twitter humour you’d like\n\n[https://x.com/Claude_on_twt/status/1881935750494642372](https://x.com/Claude_on_twt/status/1881935750494642372)\n\n1. the only quote tweet it made\n\n[https://x.com/Claude_on_twt/status/1880690180837028002](https://x.com/Claude_on_twt/status/1880690180837028002)\n\n## Takeaways\n\nI actually learned quite a bit from this project. I implemented the an integration with the Twitter API from scratch and I also learned how to use GitHub actions to trigger the posting of tweets by Claude.\n\nWould have loved to carry this project but it can’t be done well without the Twitter API Premium Access.",
+      "plainText": "Claude 3.5 Sonnet Twitter Account Context Thought it would be interesting to see how Claude would react to tweets and what it thought about the state of the world. Gave access to a twitter account but since the Twitter Developer Account costs $200 (!) per month, I abandoned the project. Best of Claude on Twitter 1. what a beautiful statement https://x.com/Claude on twt/status/1881724554524918081 1. not the reaction to twitter humour you’d like https://x.com/Claude on twt/status/1881935750494642372 1. the only quote tweet it made https://x.com/Claude on twt/status/1880690180837028002 Takeaways I actually learned quite a bit from this project. I implemented the an integration with the Twitter API from scratch and I also learned how to use GitHub actions to trigger the posting of tweets by Claude. Would have loved to carry this project but it can’t be done well without the Twitter API Premium Access.",
+      "previewExcerpt": "Thought it would be interesting to see how Claude would react to tweets and what it thought about the state of the world. Gave access to a twitter account but since the Twitter Developer Account costs $200 (!) per...",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Claude 3.5 Sonnet Twitter Account"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "Best of Claude on Twitter"
+        },
+        {
+          "depth": 2,
+          "text": "Takeaways"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Code",
+          "href": "https://github.com/gut-puncture/claude_on_twt"
+        }
+      ],
+      "externalLinks": [
+        "https://x.com/Claude_on_twt/status/1881724554524918081",
+        "https://x.com/Claude_on_twt/status/1881935750494642372",
+        "https://x.com/Claude_on_twt/status/1880690180837028002",
+        "https://github.com/gut-puncture/claude_on_twt"
+      ],
+      "media": [
+        {
+          "url": "/export/Projects/Claude%203%205%20Sonnet%20Twitter%20Account/image.png",
+          "kind": "image",
+          "alt": "Destined to be lonely forever."
+        }
+      ]
+    },
+    {
+      "slug": "parker-square-search",
+      "title": "Parker Square Search",
+      "summary": "Trying to solve an unsolved maths problem of a 3x3 grid of perfect squares, where each row, column and diagonal add up to the same number.",
+      "group": "Research & systems",
+      "priority": 12,
+      "markdown": "# Parker Square Search\n\n## Context\n\nThis is a nerdy project and I have only allocated a few hours to it and do not intend to allocate any more time to it.\n\nBasically this guy called [Matt Parker](https://www.youtube.com/@standupmaths) made the below Numberphile Video about magic squares of perfect square numbers. He shares a solution which he says almost works, but is an abysmal attempt. This abysmal solution which doesn’t work is dubbed a “Parker Square” and since then the term has been used to describe bad maths.\n\n[https://www.youtube.com/watch?v=aOT_bG-vWyg](https://www.youtube.com/watch?v=aOT_bG-vWyg)\n\nThere have been many more videos made about the Parker Square and the maths behind it. People have been trying to find one for years, more so since the video came out 8 years ago.\n\nBut no one has found one and they’ve checked numbers till 10^19.\n\nMy attempt is shot in the dark to with not a lot of optimisations.\nBTW, a non-trivial solution might not even be possible since a paper has proved that solutions exist for all grids 4x4 and larger and finding a 3x3 square is more difficult and we haven’t found it after years of trying.\n\n## The Mathematical Reduction\n\nThe requirement is to get 9 distinct integer perfect squares which satisfy the conditions of a Magic Square. Finding the 9 numbers through brute force is futile and not fun at all. So I’ve woked with o3-mini-high and Gemini 2.0 Pro to arrive at a way to algebraically reduce the number of variables down to just 1.\n\nThis is a very short explanation. Please refer to the [ReadMe of the GitHub repo](https://github.com/gut-puncture/Parker-Square-Search?tab=readme-ov-file#finding-a-parker-square) for a detailed explanation.\n\nThe 9 numbers of the square can be reduced to three variables: a, e and c. Then these variables are again written in terms of X, Y, U and V. \n\nThis is done so that we can write these two equations: \n\nY² - 2X² = D \n\nV² - 2U² = D\n\nThis is done for two reasons:\n\n1. Both these equations are a version of the standard \"Pell Equation\" and the solutions to all Pell Equations can be algorithmically generated. So for a value of D you can find infinite X, Y, U and V’s.\n2. The first point means that for a random value of D, I can find X, Y, U and V and with these 4 variables, I can find a, e and c. And with a, e and c, I can find the all 9 numbers of the Parker square.\n\nThis mathematical reduction means that I only have to iterate over 1 variable (D) and can generate all others, with the constraints of the Parker Square still encoded.\n\n## How you can help\n\nIf you have access to a lot of compute, please run my code (https://github.com/gut-puncture/Parker-Square-Search) to perform this search. I currently keep a Google Colab instance open and keep running it for hours. \n\nOptimisations to the code are very welcome, in fact, encouraged.",
+      "plainText": "Parker Square Search Context This is a nerdy project and I have only allocated a few hours to it and do not intend to allocate any more time to it. Basically this guy called Matt Parker made the below Numberphile Video about magic squares of perfect square numbers. He shares a solution which he says almost works, but is an abysmal attempt. This abysmal solution which doesn’t work is dubbed a “Parker Square” and since then the term has been used to describe bad maths. https://www.youtube.com/watch?v=aOT bG vWyg There have been many more videos made about the Parker Square and the maths behind it. People have been trying to find one for years, more so since the video came out 8 years ago. But no one has found one and they’ve checked numbers till 10^19. My attempt is shot in the dark to with not a lot of optimisations. BTW, a non trivial solution might not even be possible since a paper has proved that solutions exist for all grids 4x4 and larger and finding a 3x3 square is more difficult and we haven’t found it after years of trying. The Mathematical Reduction The requirement is to get 9 distinct integer perfect squares which satisfy the conditions of a Magic Square. Finding the 9 numbers through brute force is futile and not fun at all. So I’ve woked with o3 mini high and Gemini 2.0 Pro to arrive at a way to algebraically reduce the number of variables down to just 1. This is a very short explanation. Please refer to the ReadMe of the GitHub repo for a detailed explanation. The 9 numbers of the square can be reduced to three variables: a, e and c. Then these variables are again written in terms of X, Y, U and V. This is done so that we can write these two equations: Y² 2X² = D V² 2U² = D This is done for two reasons: 1. Both these equations are a version of the standard \"Pell Equation\" and the solutions to all Pell Equations can be algorithmically generated. So for a value of D you can find infinite X, Y, U and V’s. 2. The first point means that for a random value of D, I can find X, Y, U and V and with these 4 variables, I can find a, e and c. And with a, e and c, I can find the all 9 numbers of the Parker square. This mathematical reduction means that I only have to iterate over 1 variable (D) and can generate all others, with the constraints of the Parker Square still encoded. How you can help If you have access to a lot of compute, please run my code (https://github.com/gut puncture/Parker Square Search) to perform this search. I currently keep a Google Colab instance open and keep running it for hours. Optimisations to the code are very welcome, in fact, encouraged.",
+      "previewExcerpt": "This is a nerdy project and I have only allocated a few hours to it and do not intend to allocate any more time to it.",
+      "headings": [
+        {
+          "depth": 1,
+          "text": "Parker Square Search"
+        },
+        {
+          "depth": 2,
+          "text": "Context"
+        },
+        {
+          "depth": 2,
+          "text": "The Mathematical Reduction"
+        },
+        {
+          "depth": 2,
+          "text": "How you can help"
+        }
+      ],
+      "actions": [],
+      "externalLinks": [
+        "https://www.youtube.com/@standupmaths",
+        "https://www.youtube.com/watch?v=aOT_bG-vWyg",
+        "https://github.com/gut-puncture/Parker-Square-Search?tab=readme-ov-file#finding-a-parker-square"
+      ],
+      "media": []
+    }
+  ],
+  "skills": [
+    {
+      "name": "Stakeholder Management",
+      "type": "Expertise",
+      "description": "",
+      "iconId": "orbits",
+      "priority": 1
+    },
+    {
+      "name": "Python",
+      "type": "Software",
+      "description": "",
+      "iconId": "python",
+      "priority": 2
+    },
+    {
+      "name": "Product Management",
+      "type": "Expertise",
+      "description": "",
+      "iconId": "roadmap",
+      "priority": 3
+    },
+    {
+      "name": "Retrieval Augmented Generation (RAG)",
+      "type": "Expertise",
+      "description": "",
+      "iconId": "magnet",
+      "priority": 4
+    },
+    {
+      "name": "Vector Embeddings",
+      "type": "Expertise",
+      "description": "",
+      "iconId": "vectors",
+      "priority": 5
+    },
+    {
+      "name": "GitHub",
+      "type": "Software",
+      "description": "",
+      "iconId": "github",
+      "priority": 6
+    },
+    {
+      "name": "OpenAI Platform",
+      "type": "Software",
+      "description": "",
+      "iconId": "aperture",
+      "priority": 7
+    },
+    {
+      "name": "Google AI Studio",
+      "type": "Software",
+      "description": "",
+      "iconId": "star",
+      "priority": 8
+    },
+    {
+      "name": "Prompt Engineering",
+      "type": "Expertise",
+      "description": "",
+      "iconId": "cursor",
+      "priority": 9
+    },
+    {
+      "name": "Codex",
+      "type": "Expertise",
+      "description": "",
+      "iconId": "brackets",
+      "priority": 10
+    }
+  ]
+}

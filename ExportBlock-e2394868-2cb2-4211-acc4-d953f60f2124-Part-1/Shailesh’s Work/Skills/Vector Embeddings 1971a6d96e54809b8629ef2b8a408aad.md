@@ -1,0 +1,3 @@
+# Vector Embeddings
+
+Type: Expertise
