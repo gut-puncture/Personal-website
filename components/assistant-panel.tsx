@@ -4,27 +4,43 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getAudioExtension, normalizeAudioMimeType } from "@/lib/audio";
+import {
+  createConversationId,
+  createEmptyConversationState,
+  normalizeConversationState
+} from "@/lib/assistant-state";
 import type {
+  AssistantConfidenceBand,
+  AssistantCurrentPageContext,
+  AssistantDecision,
   AssistantHistoryItem,
   AssistantTurnOrigin,
-  WorkingMemory
+  ConversationState,
+  VerifierVerdict
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type AssistantResponse = {
+  conversationId: string;
   transcript?: string;
   replyText: string;
   spokenText?: string;
   sources: string[];
+  usedEvidenceIds?: string[];
   selectedFactIds?: string[];
+  decision: AssistantDecision;
+  confidenceBand: AssistantConfidenceBand;
+  verifierVerdict: VerifierVerdict;
   modelUsed?: string;
-  nextWorkingMemory?: WorkingMemory;
+  nextConversationState?: ConversationState;
+  nextWorkingMemory?: ConversationState;
   remainingTurns: number;
   limitReached: boolean;
   errorCode?: string;
 };
 
 type TranscriptionResponse = {
+  conversationId?: string;
   transcript?: string;
   remainingTurns: number;
   limitReached: boolean;
@@ -81,11 +97,12 @@ type WaveformSession = {
 };
 
 type PersistedAssistantState = {
+  conversationId: string;
+  conversationState: ConversationState;
   history: AssistantHistoryItem[];
   draft: string;
   remainingTurns: number;
   open: boolean;
-  workingMemory: WorkingMemory;
   updatedAt: number;
 };
 
@@ -97,7 +114,7 @@ type LastAudioState = {
 const MAX_RECORDING_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 60_000;
 const DEFAULT_TURNS = 6;
-const ASSISTANT_STORAGE_KEY = "portfolio-assistant-state-v5";
+const ASSISTANT_STORAGE_KEY = "portfolio-assistant-state-v6";
 const ASSISTANT_STORAGE_TTL_MS = 6 * 60 * 60 * 1000;
 const WAVEFORM_POINT_COUNT = 72;
 const defaultWaveform = Array.from({ length: WAVEFORM_POINT_COUNT }, () => 0);
@@ -454,6 +471,7 @@ function AssistantSurface({
   onRecordPressEnd,
   onReplayAudio,
   onStarterPrompt,
+  onNewConversation,
   onClose,
   floating,
   hasReplayAudio
@@ -476,6 +494,7 @@ function AssistantSurface({
   ) => Promise<void>;
   onReplayAudio: () => Promise<void>;
   onStarterPrompt: (prompt: string) => Promise<void>;
+  onNewConversation: () => void;
   onClose?: () => void;
   floating: boolean;
   hasReplayAudio: boolean;
@@ -486,6 +505,9 @@ function AssistantSurface({
     ["transcribing", "grounding", "composing", "preparing_voice", "ready", "speaking"].includes(
       status
     );
+  const showConversationActions =
+    (history.length > 0 || draft.trim() || remainingTurns < DEFAULT_TURNS) &&
+    !isProcessingStatus(status);
   const busy = isProcessingStatus(status);
   const recordingActive = status === "arming" || status === "recording";
 
@@ -493,42 +515,67 @@ function AssistantSurface({
     <section
       id={!floating ? "assistant" : undefined}
       className={cn(
-        "edge-panel cut-corner overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.995))]",
+        "edge-panel cut-corner flex h-full flex-col overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.995))]",
         floating && "shadow-[0_24px_80px_rgba(0,0,0,0.48)] backdrop-blur"
       )}
     >
-      <div className="border-b border-line px-4 py-4 md:px-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-smoke-gray">
+      <div className="shrink-0 border-b border-line bg-[rgba(12,5,7,0.98)] px-4 py-4 md:px-5">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="font-structure text-[10px] uppercase tracking-[0.24em] text-smoke-gray">
               Voice agent
             </p>
+
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {showConversationActions ? (
+                <button
+                  type="button"
+                  onClick={onNewConversation}
+                  className="font-structure inline-flex h-8 items-center rounded-full border border-line bg-[rgba(18,8,10,0.92)] px-3 text-[9px] uppercase tracking-[0.16em] text-smoke-gray transition-colors hover:border-line-strong hover:text-bone-white"
+                >
+                  New conversation
+                </button>
+              ) : null}
+
+              {onClose ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="font-structure inline-flex h-8 items-center rounded-full border border-line bg-[rgba(18,8,10,0.92)] px-3 text-[9px] uppercase tracking-[0.16em] text-smoke-gray transition-colors hover:border-line-strong hover:text-bone-white"
+                >
+                  Close
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <h2
               className={cn(
                 "text-bone-white",
-                floating ? "text-xl font-medium leading-tight" : "text-[1.9rem] font-medium leading-[1.02]"
+                floating
+                  ? "max-w-[17rem] text-[1.15rem] font-medium leading-[1.08] sm:max-w-md sm:text-xl"
+                  : "max-w-lg text-[1.9rem] font-medium leading-[1.02]"
               )}
             >
               Ask about projects, background, or role fit.
             </h2>
-            <p className="max-w-md text-sm leading-7 text-smoke-gray">
+            <p
+              className={cn(
+                "text-sm text-smoke-gray",
+                floating
+                  ? "max-w-[16rem] leading-6 sm:max-w-md sm:leading-7"
+                  : "max-w-md leading-7"
+              )}
+            >
               Speak or type for grounded context from the portfolio and CV.
             </p>
           </div>
-
-          {onClose ? (
-            <button
-              type="button"
-              onClick={onClose}
-              className="font-structure text-[11px] uppercase tracking-[0.22em] text-smoke-gray transition-colors hover:text-bone-white"
-            >
-              Close
-            </button>
-          ) : null}
         </div>
       </div>
 
-      <div className="space-y-4 px-4 py-4 md:px-5 md:py-5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-5 md:py-5">
+        <div className="space-y-4">
         {showPrompts ? (
           <div className="space-y-3">
             {starterPrompts.map((prompt) => (
@@ -642,6 +689,7 @@ function AssistantSurface({
           </span>
           <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
         </div>
+        </div>
       </div>
     </section>
   );
@@ -663,13 +711,20 @@ export function AssistantPanel({
   const [pendingUserText, setPendingUserText] = useState<string | null>(null);
   const [waveformSamples, setWaveformSamples] = useState<number[]>(defaultWaveform);
   const [recordingMs, setRecordingMs] = useState(0);
-  const [workingMemory, setWorkingMemory] = useState<WorkingMemory>({});
+  const [conversationId, setConversationId] = useState("");
+  const [conversationState, setConversationState] = useState<ConversationState>(
+    createEmptyConversationState(contextProjectSlug ? "project" : undefined)
+  );
   const [lastAudioState, setLastAudioState] = useState<LastAudioState>(null);
 
   const stopTimeoutRef = useRef<number | null>(null);
   const stageTimeoutsRef = useRef<number[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const historyRef = useRef<AssistantHistoryItem[]>([]);
+  const conversationIdRef = useRef("");
+  const conversationStateRef = useRef<ConversationState>(
+    createEmptyConversationState(contextProjectSlug ? "project" : undefined)
+  );
   const recorderSessionRef = useRef<RecorderSession | null>(null);
   const waveformSessionRef = useRef<WaveformSession | null>(null);
   const recordPressActiveRef = useRef(false);
@@ -688,6 +743,14 @@ export function AssistantPanel({
   }, [history]);
 
   useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
+  useEffect(() => {
+    conversationStateRef.current = conversationState;
+  }, [conversationState]);
+
+  useEffect(() => {
     setHydrated(true);
   }, []);
 
@@ -703,30 +766,45 @@ export function AssistantPanel({
         return;
       }
 
+      const restoredConversationId = parsed.conversationId || createConversationId();
       setHistory(parsed.history ?? []);
       setDraft(parsed.draft ?? "");
       setRemainingTurns(parsed.remainingTurns ?? DEFAULT_TURNS);
       setOpen(Boolean(parsed.open));
-      setWorkingMemory(parsed.workingMemory ?? {});
+      setConversationId(restoredConversationId);
+      setConversationState(
+        normalizeConversationState(
+          parsed.conversationState,
+          contextProjectSlug ? "project" : undefined
+        )
+      );
     } catch {
       window.sessionStorage.removeItem(ASSISTANT_STORAGE_KEY);
     }
-  }, [hydrated]);
+  }, [contextProjectSlug, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (conversationId) return;
+    setConversationId(createConversationId());
+  }, [conversationId, hydrated]);
 
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return;
+    if (!conversationId) return;
 
     const snapshot: PersistedAssistantState = {
+      conversationId,
+      conversationState,
       history,
       draft,
       remainingTurns,
       open,
-      workingMemory,
       updatedAt: Date.now()
     };
 
     window.sessionStorage.setItem(ASSISTANT_STORAGE_KEY, JSON.stringify(snapshot));
-  }, [draft, history, hydrated, open, remainingTurns, workingMemory]);
+  }, [conversationId, conversationState, draft, history, hydrated, open, remainingTurns]);
 
   useEffect(() => {
     return () => {
@@ -795,11 +873,36 @@ export function AssistantPanel({
     };
   }, [status]);
 
+  function buildCurrentPageContext(
+    projectSlug?: string | null
+  ): AssistantCurrentPageContext | undefined {
+    if (!projectSlug) return undefined;
+    return {
+      projectSlug,
+      pathname: `/projects/${projectSlug}`
+    };
+  }
+
   function clearStageTimers() {
     for (const timeoutId of stageTimeoutsRef.current) {
       window.clearTimeout(timeoutId);
     }
     stageTimeoutsRef.current = [];
+  }
+
+  function resetConversation() {
+    clearStageTimers();
+    clearAudioPlayback();
+    setLastAudioState(null);
+    historyRef.current = [];
+    setHistory([]);
+    setDraft("");
+    setNotice(null);
+    setPendingUserText(null);
+    setStatus("idle");
+    setRemainingTurns(DEFAULT_TURNS);
+    setConversationId(createConversationId());
+    setConversationState(createEmptyConversationState(contextProjectSlug ? "project" : undefined));
   }
 
   function scheduleAnswerStages() {
@@ -918,13 +1021,18 @@ export function AssistantPanel({
           payload instanceof FormData
             ? (() => {
                 payload.set("history", JSON.stringify(historyRef.current));
-                payload.set("workingMemory", JSON.stringify(workingMemory));
+                payload.set("conversationId", conversationIdRef.current);
+                payload.set(
+                  "conversationState",
+                  JSON.stringify(conversationStateRef.current)
+                );
                 return payload;
               })()
             : JSON.stringify({
                 ...payload,
                 history: historyRef.current,
-                workingMemory
+                conversationId: conversationIdRef.current,
+                conversationState: conversationStateRef.current
               }),
         headers:
           payload instanceof FormData
@@ -962,7 +1070,9 @@ export function AssistantPanel({
       const { response, data } = await fetchAssistantResponse({
         mode: "answer",
         transcript: text,
-        contextProjectSlug: contextProjectSlugForTurn ?? undefined,
+        currentPageContext: buildCurrentPageContext(
+          contextProjectSlugForTurn ?? contextProjectSlug ?? undefined
+        ),
         turnOrigin
       });
 
@@ -978,6 +1088,15 @@ export function AssistantPanel({
         historyRef.current = nextHistory;
         setHistory(nextHistory);
         setRemainingTurns(assistantData.remainingTurns ?? remainingTurns);
+        if (assistantData.conversationId) {
+          setConversationId(assistantData.conversationId);
+        }
+        setConversationState(
+          normalizeConversationState(
+            assistantData.nextConversationState ?? assistantData.nextWorkingMemory,
+            turnOrigin
+          )
+        );
         setLastAudioState(null);
 
         if (assistantData.limitReached || response.status === 429) {
@@ -994,7 +1113,13 @@ export function AssistantPanel({
       clearStageTimers();
       const assistantData = data as AssistantResponse;
       setRemainingTurns(assistantData.remainingTurns);
-      setWorkingMemory(assistantData.nextWorkingMemory ?? {});
+      setConversationId(assistantData.conversationId);
+      setConversationState(
+        normalizeConversationState(
+          assistantData.nextConversationState ?? assistantData.nextWorkingMemory,
+          turnOrigin
+        )
+      );
       setNotice(null);
 
       const nextHistory: AssistantHistoryItem[] = [...historyRef.current];
@@ -1340,91 +1465,99 @@ export function AssistantPanel({
             onRecordPressEnd={handleRecordPressEnd}
             onReplayAudio={handleReplayAudio}
             onStarterPrompt={handleStarterPrompt}
+            onNewConversation={resetConversation}
             floating={false}
             hasReplayAudio={Boolean(lastAudioState)}
           />
         </div>
       ) : null}
 
-      <div
-        className={cn(
-          isHero
-            ? "fixed inset-x-4 z-50 lg:hidden"
-            : "fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[24rem]",
-          isHero && "bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
-        )}
-      >
-        <AnimatePresence initial={false}>
-          {open ? (
-            <motion.section
-              key="panel"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 24 }}
-              className={cn(isHero && "overflow-y-auto")}
-              style={
-                isHero
-                  ? {
-                      maxHeight: "calc(100svh - env(safe-area-inset-bottom, 0px) - 2rem)"
-                    }
-                  : undefined
-              }
-            >
-              <AssistantSurface
-                history={history}
-                status={status}
-                remainingTurns={remainingTurns}
-                draft={draft}
-                setDraft={setDraft}
-                notice={notice}
-                pendingUserText={pendingUserText}
-                waveformSamples={status === "speaking" ? speakingWaveform : waveformSamples}
-                recordingMs={recordingMs}
-                onSubmit={handleTextSubmit}
-                onRecordPressStart={handleRecordPressStart}
-                onRecordPressEnd={handleRecordPressEnd}
-                onReplayAudio={handleReplayAudio}
-                onStarterPrompt={handleStarterPrompt}
-                onClose={() => setOpen(false)}
-                floating
-                hasReplayAudio={Boolean(lastAudioState)}
-              />
-            </motion.section>
-          ) : showClosedTrigger ? (
-            <motion.button
-              key="trigger"
-              type="button"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 24 }}
-              onClick={() => setOpen(true)}
-              className={cn(
-                "ml-auto flex w-full items-center gap-3 border border-line bg-[rgba(16,9,10,0.94)] px-4 py-3 text-left shadow-[0_16px_60px_rgba(0,0,0,0.42)] backdrop-blur transition-colors hover:border-line-strong",
-                isHero && "mx-auto max-w-none"
-              )}
-            >
-              <span
+      {hydrated ? (
+        <div
+          className={cn(
+            isHero
+              ? "fixed inset-x-4 z-50 lg:hidden"
+              : "fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] max-w-[22rem] sm:max-w-[24rem]",
+            isHero && "bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
+          )}
+        >
+          <AnimatePresence initial={false}>
+            {open ? (
+              <motion.section
+                key="panel"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
                 className={cn(
-                  "mt-1 inline-flex h-2 w-2 shrink-0 bg-ember-amber",
-                  (status === "recording" || status === "speaking") && "animate-pulse"
+                  "overflow-hidden",
+                  isHero ? "max-h-[calc(100svh-2rem)]" : "max-h-[calc(100svh-2rem)]"
                 )}
-              />
-              <span className="min-w-0">
-                <span className="font-structure block text-[11px] uppercase tracking-[0.26em] text-smoke-gray">
-                  {floatingLauncherEyebrow}
+                style={
+                  isHero
+                    ? {
+                        maxHeight: "calc(100svh - env(safe-area-inset-bottom, 0px) - 2rem)"
+                      }
+                    : {
+                        maxHeight: "calc(100svh - 2rem)"
+                      }
+                }
+              >
+                <AssistantSurface
+                  history={history}
+                  status={status}
+                  remainingTurns={remainingTurns}
+                  draft={draft}
+                  setDraft={setDraft}
+                  notice={notice}
+                  pendingUserText={pendingUserText}
+                  waveformSamples={status === "speaking" ? speakingWaveform : waveformSamples}
+                  recordingMs={recordingMs}
+                  onSubmit={handleTextSubmit}
+                  onRecordPressStart={handleRecordPressStart}
+                  onRecordPressEnd={handleRecordPressEnd}
+                  onReplayAudio={handleReplayAudio}
+                  onStarterPrompt={handleStarterPrompt}
+                  onNewConversation={resetConversation}
+                  onClose={() => setOpen(false)}
+                  floating
+                  hasReplayAudio={Boolean(lastAudioState)}
+                />
+              </motion.section>
+            ) : showClosedTrigger ? (
+              <motion.button
+                key="trigger"
+                type="button"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
+                onClick={() => setOpen(true)}
+                className={cn(
+                  "ml-auto flex w-full items-center gap-3 border border-line bg-[rgba(16,9,10,0.94)] px-4 py-3 text-left shadow-[0_16px_60px_rgba(0,0,0,0.42)] backdrop-blur transition-colors hover:border-line-strong",
+                  isHero && "mx-auto max-w-none"
+                )}
+              >
+                <span
+                  className={cn(
+                    "mt-1 inline-flex h-2 w-2 shrink-0 bg-ember-amber",
+                    (status === "recording" || status === "speaking") && "animate-pulse"
+                  )}
+                />
+                <span className="min-w-0">
+                  <span className="font-structure block text-[11px] uppercase tracking-[0.26em] text-smoke-gray">
+                    {floatingLauncherEyebrow}
+                  </span>
+                  <span className="mt-1 block text-sm text-bone-white">
+                    {floatingLauncherTitle}
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-smoke-gray">
+                    {floatingLauncherSubline}
+                  </span>
                 </span>
-                <span className="mt-1 block text-sm text-bone-white">
-                  {floatingLauncherTitle}
-                </span>
-                <span className="mt-1 block text-xs leading-5 text-smoke-gray">
-                  {floatingLauncherSubline}
-                </span>
-              </span>
-            </motion.button>
-          ) : null
-          }
-        </AnimatePresence>
-      </div>
+              </motion.button>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      ) : null}
     </>
   );
 }

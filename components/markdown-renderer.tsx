@@ -99,12 +99,12 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
   const preparedMarkdown = collapseImageRuns(markdown);
 
   return (
-    <div className="prose prose-invert prose-lg max-w-none">
+    <div className="prose prose-invert prose-lg max-w-none min-w-0 break-words [overflow-wrap:anywhere]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="font-display text-4xl tracking-tight text-bone-white md:text-5xl">
+            <h1 className="font-display text-4xl leading-[0.96] tracking-tight text-bone-white break-words [overflow-wrap:anywhere] md:text-5xl">
               {children}
             </h1>
           ),
@@ -113,7 +113,7 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
             return (
               <h2
                 id={slugifyHeading(text)}
-                className="scroll-mt-24 border-t border-line pt-8 text-2xl font-medium tracking-tight text-bone-white md:text-3xl"
+                className="scroll-mt-24 border-t border-line pt-8 text-2xl font-medium tracking-tight text-bone-white break-words [overflow-wrap:anywhere] md:text-3xl"
               >
                 {children}
               </h2>
@@ -124,7 +124,7 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
             return (
               <h3
                 id={slugifyHeading(text)}
-                className="scroll-mt-24 text-xl font-medium tracking-tight text-bone-white md:text-2xl"
+                className="scroll-mt-24 text-xl font-medium tracking-tight text-bone-white break-words [overflow-wrap:anywhere] md:text-2xl"
               >
                 {children}
               </h3>
@@ -134,7 +134,7 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
             href.startsWith("/") ? (
               <Link
                 href={href}
-                className="font-medium text-bone-white underline decoration-current underline-offset-4"
+                className="font-medium text-bone-white underline decoration-current underline-offset-4 break-words [overflow-wrap:anywhere]"
               >
                 {children}
               </Link>
@@ -143,7 +143,7 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
                 href={href}
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium text-bone-white underline decoration-current underline-offset-4"
+                className="font-medium text-bone-white underline decoration-current underline-offset-4 break-words [overflow-wrap:anywhere]"
               >
                 {children}
               </a>

@@ -46,8 +46,8 @@ export default async function ProjectPage({
   return (
     <main className="mx-auto max-w-[88rem] px-6 py-8 pb-32 md:px-10 md:py-10 md:pb-40">
       <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="space-y-8">
-          <div className="space-y-8 rounded-[1.5rem] border border-line bg-charcoal-steel/70 p-6 md:p-8">
+        <div className="min-w-0 space-y-8">
+          <div className="min-w-0 space-y-8 overflow-hidden rounded-[1.5rem] border border-line bg-charcoal-steel/70 p-6 md:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
               <Link
                 href={backHref}
@@ -77,7 +77,7 @@ export default async function ProjectPage({
               </div>
             ) : null}
 
-            <article className="space-y-8">
+            <article className="min-w-0 space-y-8">
               <MarkdownRenderer markdown={project.markdown} />
             </article>
           </div>
@@ -111,7 +111,7 @@ export default async function ProjectPage({
           </div>
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-8 lg:self-start">
           {project.headings.some((heading) => heading.depth >= 2) ? (
             <section className="rounded-[1.25rem] border border-line bg-charcoal-steel/70 p-5">
               <p className="text-[11px] uppercase tracking-[0.28em] text-smoke-gray">

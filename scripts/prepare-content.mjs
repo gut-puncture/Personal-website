@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { parse } from "csv-parse/sync";
+import { buildAssistantArtifacts } from "./lib/assistant-artifacts.mjs";
 
 const projectRoot = process.cwd();
 const exportRoot = path.join(
@@ -11,6 +12,7 @@ const exportRoot = path.join(
 const workRoot = path.join(exportRoot, "Shailesh’s Work");
 const outputDir = path.join(projectRoot, "data", "generated");
 const publicDir = path.join(projectRoot, "public", "export");
+const assistantFactsSeedPath = path.join(projectRoot, "data", "assistant-facts.json");
 
 const projectGroups = {
   "Q-Commerce Demo: List to Cart": "Build for users",
@@ -532,9 +534,20 @@ async function build() {
     skills
   };
 
+  const assistantSeed = JSON.parse(await fs.readFile(assistantFactsSeedPath, "utf8"));
+  const { assistantCorpus, assistantEvalCases } = buildAssistantArtifacts(content, assistantSeed);
+
   await fs.writeFile(
     path.join(outputDir, "portfolio-content.json"),
     JSON.stringify(content, null, 2)
+  );
+  await fs.writeFile(
+    path.join(outputDir, "assistant-corpus.json"),
+    JSON.stringify(assistantCorpus, null, 2)
+  );
+  await fs.writeFile(
+    path.join(outputDir, "assistant-eval.v2.json"),
+    JSON.stringify(assistantEvalCases, null, 2)
   );
 }
 

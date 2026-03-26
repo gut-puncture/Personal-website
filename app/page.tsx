@@ -66,9 +66,6 @@ export default async function Home() {
                 <a href="#selected-work" className="transition-colors hover:text-bone-white">
                   Work
                 </a>
-                <a href="#projects" className="transition-colors hover:text-bone-white">
-                  More work
-                </a>
                 <a href="#contact" className="transition-colors hover:text-bone-white">
                   Contact
                 </a>
@@ -159,7 +156,7 @@ export default async function Home() {
 
       <div className="mx-auto max-w-[96rem] space-y-24 px-6 py-14 md:px-10 md:py-20 xl:px-14">
         <section id="selected-work" className="space-y-8">
-          <div className="flex flex-col gap-4 border-b border-line pb-4 md:flex-row md:items-end md:justify-between">
+          <div className="border-b border-line pb-4">
             <div className="space-y-2">
               <p className="section-kicker">Selected work</p>
               <p className="max-w-2xl text-base leading-7 text-smoke-gray md:text-[1.02rem]">
@@ -167,13 +164,6 @@ export default async function Home() {
                 execution.
               </p>
             </div>
-            <a
-              href="#projects"
-              className="font-structure inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] text-smoke-gray transition-colors hover:text-bone-white"
-            >
-              More work
-              <span aria-hidden="true">/</span>
-            </a>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.9fr)]">
@@ -242,7 +232,7 @@ export default async function Home() {
 
         <section id="projects" className="space-y-8">
           <div className="border-b border-line pb-4">
-            <p className="section-kicker">More work</p>
+            <p className="section-kicker">Archive</p>
           </div>
 
           <ProjectBrowser projects={archiveProjects} />

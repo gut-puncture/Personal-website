@@ -2,10 +2,25 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
-const evalsPath = path.join(root, "data", "assistant-eval.json");
+const generatedEvalsPath = path.join(root, "data", "generated", "assistant-eval.v2.json");
+const legacyEvalsPath = path.join(root, "data", "assistant-eval.json");
 
 function includesCaseInsensitive(text, needle) {
   return text.toLowerCase().includes(needle.toLowerCase());
+}
+
+async function loadEvalCases() {
+  try {
+    return JSON.parse(await fs.readFile(generatedEvalsPath, "utf8"));
+  } catch {
+    return JSON.parse(await fs.readFile(legacyEvalsPath, "utf8"));
+  }
+}
+
+function decisionMatches(expectedDecision, actualDecision) {
+  if (!expectedDecision) return true;
+  const allowed = Array.isArray(expectedDecision) ? expectedDecision : [expectedDecision];
+  return allowed.includes(actualDecision);
 }
 
 async function main() {
@@ -15,7 +30,18 @@ async function main() {
   }
 
   const baseUrl = process.env.ASSISTANT_EVAL_BASE_URL || "http://localhost:3000";
-  const evalCases = JSON.parse(await fs.readFile(evalsPath, "utf8"));
+  const filter = process.env.ASSISTANT_EVAL_FILTER?.toLowerCase().trim();
+  const limit = Number(process.env.ASSISTANT_EVAL_LIMIT ?? "0");
+  let evalCases = await loadEvalCases();
+  if (filter) {
+    evalCases = evalCases.filter((evalCase) => {
+      const haystack = `${evalCase.id} ${evalCase.question}`.toLowerCase();
+      return haystack.includes(filter);
+    });
+  }
+  if (Number.isFinite(limit) && limit > 0) {
+    evalCases = evalCases.slice(0, limit);
+  }
   const failures = [];
   const modelCounts = new Map();
 
@@ -31,8 +57,9 @@ async function main() {
       body: JSON.stringify({
         text: evalCase.question,
         history: evalCase.history ?? [],
-        workingMemory: evalCase.workingMemory,
-        contextProjectSlug: evalCase.contextProjectSlug,
+        conversationId: evalCase.conversationId ?? `eval-${evalCase.id}`,
+        conversationState: evalCase.conversationState,
+        currentPageContext: evalCase.currentPageContext,
         turnOrigin: evalCase.turnOrigin
       })
     });
@@ -41,8 +68,10 @@ async function main() {
     const data = await response.json();
     const replyText = String(data.replyText ?? "");
     const spokenText = String(data.spokenText ?? "");
-    const selectedFactIds = Array.isArray(data.selectedFactIds) ? data.selectedFactIds : [];
     const modelUsed = String(data.modelUsed ?? "");
+    const decision = String(data.decision ?? "");
+    const verifierVerdict = String(data.verifierVerdict ?? "");
+    const usedEvidenceIds = Array.isArray(data.usedEvidenceIds) ? data.usedEvidenceIds : [];
     const targetText = evalCase.checkSpokenText ? spokenText : replyText;
     const reasons = [];
 
@@ -54,9 +83,17 @@ async function main() {
       reasons.push(`HTTP ${response.status}`);
     }
 
-    for (const required of evalCase.requiredAll ?? []) {
-      if (!includesCaseInsensitive(targetText, required)) {
-        reasons.push(`missing required phrase: ${required}`);
+    if (!decisionMatches(evalCase.expectedDecision, decision)) {
+      reasons.push(
+        `expected decision ${JSON.stringify(evalCase.expectedDecision)}, got ${decision || "none"}`
+      );
+    }
+
+    if (evalCase.requiredAll?.length) {
+      for (const required of evalCase.requiredAll) {
+        if (!includesCaseInsensitive(targetText, required)) {
+          reasons.push(`missing required phrase: ${required}`);
+        }
       }
     }
 
@@ -69,34 +106,35 @@ async function main() {
       }
     }
 
-    for (const forbidden of evalCase.forbiddenAny ?? []) {
-      const forbiddenMatch = evalCase.checkSpokenText
-        ? includesCaseInsensitive(targetText, forbidden)
-        : includesCaseInsensitive(replyText, forbidden) ||
-          includesCaseInsensitive(spokenText, forbidden);
-      if (forbiddenMatch) {
-        reasons.push(`contains forbidden phrase: ${forbidden}`);
+    if (evalCase.forbiddenAny?.length) {
+      for (const forbidden of evalCase.forbiddenAny) {
+        const forbiddenMatch = evalCase.checkSpokenText
+          ? includesCaseInsensitive(targetText, forbidden)
+          : includesCaseInsensitive(replyText, forbidden) ||
+            includesCaseInsensitive(spokenText, forbidden);
+        if (forbiddenMatch) {
+          reasons.push(`contains forbidden phrase: ${forbidden}`);
+        }
+      }
+    }
+
+    if (evalCase.requiredEvidenceAny?.length) {
+      const hasEvidence = evalCase.requiredEvidenceAny.some((requiredId) =>
+        usedEvidenceIds.includes(requiredId)
+      );
+      if (!hasEvidence) {
+        reasons.push(
+          `missing required evidence id from set: ${evalCase.requiredEvidenceAny.join(", ")}`
+        );
       }
     }
 
     if (evalCase.maxCharacters && replyText.length > evalCase.maxCharacters) {
-      reasons.push(
-        `reply too long: ${replyText.length} chars > ${evalCase.maxCharacters}`
-      );
+      reasons.push(`reply too long: ${replyText.length} chars > ${evalCase.maxCharacters}`);
     }
 
-    for (const factId of evalCase.requiredFactIds ?? []) {
-      if (!selectedFactIds.includes(factId)) {
-        reasons.push(`missing required fact id: ${factId}`);
-      }
-    }
-
-    if (evalCase.expectedModelUsed && modelUsed !== evalCase.expectedModelUsed) {
-      reasons.push(`expected modelUsed=${evalCase.expectedModelUsed}, got ${modelUsed || "none"}`);
-    }
-
-    if (evalCase.allowedModels?.length && !evalCase.allowedModels.includes(modelUsed)) {
-      reasons.push(`modelUsed ${modelUsed || "none"} not in allowed set: ${evalCase.allowedModels.join(", ")}`);
+    if (decision === "answer" && verifierVerdict !== "pass") {
+      reasons.push(`answer returned with verifierVerdict=${verifierVerdict}`);
     }
 
     if (includesCaseInsensitive(spokenText, "http") || includesCaseInsensitive(spokenText, "www.")) {
@@ -108,7 +146,15 @@ async function main() {
     }
 
     if (reasons.length) {
-      failures.push({ id: evalCase.id, latencyMs, reasons, replyText, spokenText });
+      failures.push({
+        id: evalCase.id,
+        latencyMs,
+        reasons,
+        decision,
+        verifierVerdict,
+        replyText,
+        usedEvidenceIds
+      });
       console.log(`FAIL ${evalCase.id} (${latencyMs} ms)`);
       for (const reason of reasons) {
         console.log(`  - ${reason}`);

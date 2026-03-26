@@ -72,6 +72,14 @@ export type AssistantHistoryItem = {
   content: string;
 };
 
+export type AssistantDecision = "answer" | "clarify" | "abstain";
+
+export type AssistantConfidenceBand = "low" | "medium" | "high";
+
+export type AssistantRiskBand = "low" | "medium" | "high";
+
+export type VerifierVerdict = "pass" | "retry" | "clarify" | "abstain";
+
 export type AssistantFactCertainty = "explicit" | "derived";
 
 export type AssistantFactCategory =
@@ -137,15 +145,30 @@ export type QuestionShape =
   | "compare"
   | "project"
   | "follow_up"
+  | "rewrite"
   | "edge_case";
 
-export type WorkingMemory = {
-  lastQuestionType?: QuestionShape;
-  lastEntity?: string | null;
-  lastProjectSlug?: string | null;
+export type AssistantCurrentPageContext = {
+  projectSlug?: string | null;
+  pathname?: string | null;
+  sectionId?: string | null;
+};
+
+export type ConversationState = {
+  lastResolvedEntities: string[];
+  lastProjectSlugs: string[];
+  lastEvidenceIds: string[];
+  pendingSlots: string[];
+  lastDecision?: AssistantDecision | null;
+  lastVerifierVerdict?: VerifierVerdict | null;
+  lastQuestionType?: QuestionShape | null;
   lastAnswerSummary?: string | null;
+  lastUserQuestion?: string | null;
+  lastAssistantAnswer?: string | null;
   turnOrigin?: AssistantTurnOrigin | null;
 };
+
+export type WorkingMemory = ConversationState;
 
 export type TurnStage =
   | "listening"
@@ -160,3 +183,137 @@ export type EscalationReason =
   | "open_ended_summary"
   | "nuanced_project_explanation"
   | "broad_background_synthesis";
+
+export type AssistantAnswerType =
+  | "identity"
+  | "contact"
+  | "fact"
+  | "project_summary"
+  | "project_deep_dive"
+  | "comparison"
+  | "background"
+  | "recruiter_synthesis"
+  | "rewrite"
+  | "clarification"
+  | "abstention"
+  | "policy";
+
+export type CanonicalProjectBrief = {
+  slug: string;
+  title: string;
+  group: ProjectGroup;
+  summary: string;
+  whyItMatters: string;
+  aliases: string[];
+  source: string;
+};
+
+export type EvidenceKind =
+  | "fact"
+  | "timeline"
+  | "profile"
+  | "project"
+  | "project_section"
+  | "project_excerpt";
+
+export type EvidenceChunk = {
+  id: string;
+  kind: EvidenceKind;
+  label: string;
+  text: string;
+  source: string;
+  sourceHref?: string;
+  projectSlug?: string;
+  company?: string;
+  heading?: string;
+  keywords: string[];
+  entityTags: string[];
+  order: number;
+};
+
+export type RawFallbackExcerpt = {
+  id: string;
+  parentEvidenceId: string;
+  label: string;
+  text: string;
+  source: string;
+  sourceHref?: string;
+  projectSlug?: string;
+  keywords: string[];
+  entityTags: string[];
+  order: number;
+};
+
+export type AssistantCorpus = {
+  generatedAt: string;
+  globalDossier: string;
+  dossierSections: {
+    identity: string;
+    background: string;
+    roleFit: string;
+    answerStyle: string;
+    projectBriefs: CanonicalProjectBrief[];
+  };
+  facts: AssistantFact[];
+  timeline: ExperienceTimelineItem[];
+  projectAliases: Record<string, string[]>;
+  evidenceChunks: EvidenceChunk[];
+  rawFallbackExcerpts: RawFallbackExcerpt[];
+};
+
+export type PlannerResult = {
+  decision: AssistantDecision;
+  rationale: string;
+  questionType: QuestionShape;
+  domain: "portfolio" | "out_of_domain";
+  risk: AssistantRiskBand;
+  resolvedEntities: string[];
+  candidateProjectSlugs: string[];
+  slots: string[];
+  retrievalQuery: string;
+  needsFallbackEvidence: boolean;
+  needsStrongModel: boolean;
+  clarificationQuestion?: string | null;
+};
+
+export type AnswerDraft = {
+  decision: AssistantDecision;
+  answer: string;
+  usedEvidenceIds: string[];
+  answerType: AssistantAnswerType;
+  confidenceBand: AssistantConfidenceBand;
+  reason: string;
+};
+
+export type VerifierResult = {
+  verdict: VerifierVerdict;
+  relevant: boolean;
+  grounded: boolean;
+  complete: boolean;
+  overreach: boolean;
+  reason: string;
+  missingSlots: string[];
+  needsMoreEvidence: boolean;
+};
+
+export type AssistantTurnResponse = {
+  conversationId: string;
+  transcript?: string;
+  replyText: string;
+  spokenText?: string;
+  sources: string[];
+  usedEvidenceIds: string[];
+  selectedFactIds: string[];
+  decision: AssistantDecision;
+  confidenceBand: AssistantConfidenceBand;
+  verifierVerdict: VerifierVerdict;
+  modelUsed?: string;
+  plannerDecision?: AssistantDecision;
+  plannerRisk?: AssistantRiskBand;
+  escalationUsed?: boolean;
+  nextConversationState: ConversationState;
+  nextWorkingMemory?: ConversationState;
+  remainingTurns: number;
+  limitReached: boolean;
+  errorCode?: string;
+};

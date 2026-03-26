@@ -239,7 +239,7 @@ This is **Semantic Length Hallucination**. The model isn’t failing at the micr
 
 The failure is **hierarchical**:
 
-1.***High-Level Formatting:** “The output should be N+1 digits.” (Learned incorrectly, applied universally)
+1. **High-Level Formatting:** “The output should be N+1 digits.” (Learned incorrectly, applied universally)
 
 2. **Low-Level Arithmetic:** “1 + 1 = 2.” (Mostly correct, but irrelevant if the format is wrong)
 
