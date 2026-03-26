@@ -10,23 +10,23 @@ export function SkillLedger({
   groups: Record<SkillEntry["type"], SkillEntry[]>;
 }) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       {groupOrder
         .map((group) => [group, groups[group] ?? []] as const)
         .filter(([, items]) => items.length > 0)
         .map(([group, items]) => (
-          <section key={group} className="space-y-4">
-            <div className="border-b border-line pb-3">
+          <section key={group} className="space-y-5">
+            <div className="border-t border-line pt-4">
               <p className="font-structure text-[10px] uppercase tracking-[0.34em] text-smoke-gray">
                 {group}
               </p>
             </div>
 
-            <div className="grid gap-x-8 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-x-10 gap-y-4 md:grid-cols-2 xl:grid-cols-3">
               {items.map((skill) => (
                 <div
                   key={skill.name}
-                  className="group flex items-center gap-4 border-b border-line/70 py-4"
+                  className="group flex items-center gap-4 border-t border-white/7 pt-4"
                 >
                   <SkillGlyph
                     id={skill.iconId}

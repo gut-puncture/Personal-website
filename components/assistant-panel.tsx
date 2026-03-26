@@ -41,6 +41,7 @@ type SpeakResponse = {
 type AssistantPanelProps = {
   variant?: "hero" | "floating";
   contextProjectSlug?: string;
+  showClosedTrigger?: boolean;
 };
 
 type OpenEventDetail = {
@@ -648,7 +649,8 @@ function AssistantSurface({
 
 export function AssistantPanel({
   variant = "floating",
-  contextProjectSlug
+  contextProjectSlug,
+  showClosedTrigger = true
 }: AssistantPanelProps) {
   const isHero = variant === "hero";
   const [hydrated, setHydrated] = useState(false);
@@ -1388,7 +1390,7 @@ export function AssistantPanel({
                 hasReplayAudio={Boolean(lastAudioState)}
               />
             </motion.section>
-          ) : (
+          ) : showClosedTrigger ? (
             <motion.button
               key="trigger"
               type="button"
@@ -1419,7 +1421,8 @@ export function AssistantPanel({
                 </span>
               </span>
             </motion.button>
-          )}
+          ) : null
+          }
         </AnimatePresence>
       </div>
     </>

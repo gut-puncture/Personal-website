@@ -23,9 +23,7 @@ const SESSION_LIMIT = Number(process.env.ASSISTANT_SESSION_LIMIT ?? "6");
 type SupportedSarvamModel =
   | "sarvam-m"
   | "sarvam-30b"
-  | "sarvam-30b-16k"
-  | "sarvam-105b"
-  | "sarvam-105b-32k";
+  | "sarvam-105b";
 
 type SupportedReasoningEffort = "low" | "medium" | "high";
 
@@ -182,17 +180,36 @@ async function synthesizeSpeech(text: string) {
 }
 
 function getFastModel() {
-  return (process.env.SARVAM_CHAT_MODEL_FAST ?? "sarvam-30b-16k") as SupportedSarvamModel;
+  return normalizeSarvamModel(process.env.SARVAM_CHAT_MODEL_FAST, "sarvam-30b");
 }
 
 function getStrongModel() {
-  return (process.env.SARVAM_CHAT_MODEL_STRONG ??
-    process.env.SARVAM_CHAT_MODEL ??
-    "sarvam-105b-32k") as SupportedSarvamModel;
+  return normalizeSarvamModel(
+    process.env.SARVAM_CHAT_MODEL_STRONG ?? process.env.SARVAM_CHAT_MODEL,
+    "sarvam-105b"
+  );
 }
 
 function getReasoningEffort() {
   return (process.env.SARVAM_REASONING_EFFORT ?? "medium") as SupportedReasoningEffort;
+}
+
+function normalizeSarvamModel(
+  value: string | undefined,
+  fallback: SupportedSarvamModel
+): SupportedSarvamModel {
+  switch (value) {
+    case "sarvam-m":
+    case "sarvam-30b":
+    case "sarvam-105b":
+      return value;
+    case "sarvam-30b-16k":
+      return "sarvam-30b";
+    case "sarvam-105b-32k":
+      return "sarvam-105b";
+    default:
+      return fallback;
+  }
 }
 
 export async function POST(request: Request) {

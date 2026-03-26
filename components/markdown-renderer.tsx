@@ -149,7 +149,15 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
               </a>
             ),
           img: ({ src = "", alt = "" }) => (
-            <img src={src} alt={alt} className="w-full rounded-[1rem] border border-line" />
+            <span className="not-prose my-6 block">
+              <span className="mx-auto block max-w-[46rem] overflow-hidden rounded-[1rem] border border-line bg-[rgba(10,4,5,0.72)] p-2 md:p-3">
+                <img
+                  src={src}
+                  alt={alt}
+                  className="mx-auto block max-h-[18rem] w-auto max-w-full rounded-[0.8rem] object-contain md:max-h-[22rem] xl:max-h-[24rem]"
+                />
+              </span>
+            </span>
           ),
           code: ({ className, children }) => (
             <code
@@ -168,14 +176,14 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
             </pre>
           ),
           table: ({ children }) => (
-            <div className="overflow-x-auto rounded-[1rem] border border-line">
+            <div className="overflow-x-auto rounded-[1rem] border border-line bg-[rgba(10,4,5,0.36)]">
               <table className="w-full border-collapse">{children}</table>
             </div>
           ),
           thead: ({ children }) =>
             hasVisibleContent(children) ? <thead>{children}</thead> : null,
           th: ({ children }) => <th className="px-4 py-3 text-left">{children}</th>,
-          td: ({ children }) => <td className="align-top px-3 py-3">{children}</td>
+          td: ({ children }) => <td className="align-top px-3 py-3 md:px-4">{children}</td>
         }}
       >
         {preparedMarkdown}

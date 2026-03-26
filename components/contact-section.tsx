@@ -18,16 +18,13 @@ export function ContactSection({
   ];
 
   return (
-    <section
-      id="contact"
-      className="edge-panel cut-corner border border-line bg-[linear-gradient(180deg,rgba(17,7,9,0.94),rgba(10,4,5,0.98))] px-6 py-8 md:px-10 md:py-10"
-    >
+    <section id="contact" className="border-t border-line pt-8 md:pt-10">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-5">
           <p className="font-structure text-[11px] uppercase tracking-[0.32em] text-smoke-gray">
             Contact
           </p>
-          <div className="max-w-3xl space-y-4 text-base leading-8 text-smoke-gray">
+          <div className="max-w-3xl space-y-4 text-base leading-8 text-smoke-gray md:text-[1.05rem]">
             {home.contactParagraphs.map((paragraph) => (
               <InlineMarkdown key={paragraph} content={paragraph} />
             ))}
@@ -46,7 +43,7 @@ export function ContactSection({
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between border-b border-line py-3 text-sm text-bone-white transition-colors hover:border-ember-amber/45 hover:text-ember-amber"
+                  className="flex items-center justify-between border-t border-line py-3 text-sm text-bone-white transition-colors hover:border-ember-amber/45 hover:text-ember-amber"
                 >
                   <span>{link.label}</span>
                   <span aria-hidden="true">/</span>
@@ -66,7 +63,7 @@ export function ContactSection({
                   href={link.href}
                   target={link.href.startsWith("mailto:") ? undefined : "_blank"}
                   rel={link.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                  className="flex items-center justify-between border-b border-line py-3 text-sm text-smoke-gray transition-colors hover:border-white/18 hover:text-bone-white"
+                  className="flex items-center justify-between border-t border-line py-3 text-sm text-smoke-gray transition-colors hover:border-white/18 hover:text-bone-white"
                 >
                   <span>{link.label}</span>
                   <span aria-hidden="true">/</span>

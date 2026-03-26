@@ -301,27 +301,33 @@ function getFlagshipBrief(projectSlug: string) {
   return flagshipProjectKnowledge.find((project) => project.slug === projectSlug);
 }
 
+function getProjectMatchScore(project: ProjectEntry, normalizedQuery: string) {
+  return getProjectAliases(project).reduce((best, alias) => {
+    if (!alias || !normalizedQuery.includes(alias)) return best;
+    const exactBonus = normalizedQuery === alias ? 10_000 : 0;
+    return Math.max(best, alias.length + exactBonus);
+  }, 0);
+}
+
 function findProjectByQuery(query: string, content: PortfolioContent) {
   const normalized = normalizeForMatch(query);
-  return content.projects.find((project) =>
-    getProjectAliases(project).some((alias) => normalized.includes(alias))
-  );
+  return content.projects.reduce<ProjectEntry | undefined>((bestProject, project) => {
+    const bestScore = bestProject ? getProjectMatchScore(bestProject, normalized) : 0;
+    const nextScore = getProjectMatchScore(project, normalized);
+    return nextScore > bestScore ? project : bestProject;
+  }, undefined);
 }
 
 function findProjectsByQuery(query: string, content: PortfolioContent) {
   const normalized = normalizeForMatch(query);
-  const seen = new Set<string>();
-
-  return content.projects.filter((project) => {
-    if (seen.has(project.slug)) return false;
-    const matches = getProjectAliases(project).some(
-      (alias) => alias.length >= 4 && normalized.includes(alias)
-    );
-    if (matches) {
-      seen.add(project.slug);
-    }
-    return matches;
-  });
+  return content.projects
+    .map((project) => ({
+      project,
+      score: getProjectMatchScore(project, normalized)
+    }))
+    .filter(({ score }) => score >= 4)
+    .sort((left, right) => right.score - left.score)
+    .map(({ project }) => project);
 }
 
 function isReferentialQuery(normalizedQuery: string) {

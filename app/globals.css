@@ -12,6 +12,7 @@
   --smoke-gray: #b19d9d;
   --smoke-gray-soft: #755c5f;
   --ember-amber: #ff4323;
+  --ember-amber-bright: #ff5b3d;
   --ember-amber-soft: rgba(255, 67, 35, 0.14);
   --line: rgba(245, 232, 222, 0.12);
   --line-strong: rgba(245, 232, 222, 0.24);
@@ -27,12 +28,12 @@
   --color-smoke-gray: var(--smoke-gray);
   --color-smoke-gray-soft: var(--smoke-gray-soft);
   --color-ember-amber: var(--ember-amber);
+  --color-ember-amber-bright: var(--ember-amber-bright);
   --color-ember-amber-soft: var(--ember-amber-soft);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
-  --font-structure: var(--font-structure);
 }
 
 * {
@@ -41,8 +42,9 @@
 
 html {
   background:
-    radial-gradient(circle at top, rgba(207, 29, 29, 0.34), transparent 34%),
-    linear-gradient(180deg, #120405 0%, #070203 38%, #070203 100%);
+    radial-gradient(circle at 78% 12%, rgba(255, 67, 35, 0.28), transparent 18rem),
+    radial-gradient(circle at top, rgba(207, 29, 29, 0.24), transparent 34%),
+    linear-gradient(180deg, #140405 0%, #070203 38%, #070203 100%);
   background-color: var(--obsidian);
   scroll-behavior: smooth;
 }
@@ -51,8 +53,14 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, rgba(255, 67, 35, 0.04), transparent 12rem),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 88px),
+    linear-gradient(180deg, rgba(255, 67, 35, 0.05), transparent 12rem),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.012) 0,
+      rgba(255, 255, 255, 0.012) 1px,
+      transparent 1px,
+      transparent 112px
+    ),
     transparent;
   color: var(--bone-white);
   font-family: var(--font-body), sans-serif;
@@ -72,7 +80,27 @@ textarea {
 }
 
 .font-structure {
-  font-family: var(--font-structure), sans-serif;
+  font-family: var(--font-body), sans-serif;
+}
+
+.hero-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 232, 222, 0.48);
+  text-shadow: none;
+}
+
+.hero-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--smoke-gray);
+}
+
+.section-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--smoke-gray);
 }
 
 .edge-panel {
@@ -146,6 +174,12 @@ textarea {
 .prose code::before,
 .prose code::after {
   content: "";
+}
+
+@media (min-width: 768px) {
+  .hero-outline {
+    -webkit-text-stroke: 1.45px rgba(245, 232, 222, 0.46);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
