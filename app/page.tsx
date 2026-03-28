@@ -5,10 +5,11 @@ import { AssistantPanel } from "@/components/assistant-panel";
 import { ContactSection } from "@/components/contact-section";
 import { ProjectBrowser } from "@/components/project-browser";
 import { SkillLedger } from "@/components/skill-ledger";
-import { getPortfolioContent, getSkillsByType } from "@/lib/content";
+import { getPortfolioContent } from "@/lib/content";
+import type { SkillEntry } from "@/lib/types";
 
 export default async function Home() {
-  const [content, skillGroups] = await Promise.all([getPortfolioContent(), getSkillsByType()]);
+  const content = await getPortfolioContent();
   const heroImageUrl = "/hero-machine-final.png";
   const heroImageAlt = "A lone figure facing a machine city beneath a red moon.";
   const orderedProjects = [...content.projects].sort((a, b) => a.priority - b.priority);
@@ -40,6 +41,37 @@ export default async function Home() {
     }
   ];
 
+  const featuredSkills: SkillEntry[] = [
+    {
+      name: "Product Management",
+      type: "Expertise",
+      description: "",
+      iconId: "product-management",
+      priority: 1
+    },
+    {
+      name: "Retrieval Augmented Generation (RAG)",
+      type: "Expertise",
+      description: "",
+      iconId: "rag-system",
+      priority: 2
+    },
+    {
+      name: "Agentic Engineering",
+      type: "Expertise",
+      description: "",
+      iconId: "agentic-engineering",
+      priority: 3
+    },
+    {
+      name: "Mechanistic Interpretability",
+      type: "Expertise",
+      description: "",
+      iconId: "mechanistic-interpretability",
+      priority: 4
+    }
+  ];
+
   return (
     <main className="relative overflow-x-clip bg-obsidian pb-24 md:pb-32">
       <section className="relative min-h-[100svh] overflow-hidden border-b border-line">
@@ -47,7 +79,7 @@ export default async function Home() {
           <img
             src={heroImageUrl}
             alt={heroImageAlt}
-            className="h-full w-full object-cover object-[72%_center] md:object-[75%_center]"
+            className="h-full w-full object-cover object-[72%_center] brightness-[1.16] contrast-[1.03] saturate-[1.05] md:object-[75%_center]"
           />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,1,2,0.98)_0%,rgba(8,2,3,0.84)_28%,rgba(10,3,4,0.58)_48%,rgba(7,2,3,0.74)_100%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,1,2,0.55)_0%,rgba(7,2,3,0.14)_28%,rgba(7,2,3,0.72)_100%)]" />
@@ -258,12 +290,8 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="skills" className="space-y-8">
-          <div className="border-b border-line pb-4">
-            <p className="section-kicker">Skills</p>
-          </div>
-
-          <SkillLedger groups={skillGroups} />
+        <section id="skills">
+          <SkillLedger items={featuredSkills} />
         </section>
 
         <ContactSection home={content.home} />
