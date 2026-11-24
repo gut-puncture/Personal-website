@@ -52,12 +52,23 @@ export function MarkdownRenderer({ markdown }: { markdown: string }) {
             ),
           // An image alone in a paragraph becomes a figure; a video uses the same syntax.
           p: ({ children, node }) => {
-            const onlyChild =
-              node?.children.length === 1 && node.children[0].type === "element"
-                ? node.children[0]
-                : null;
-            if (onlyChild?.tagName === "img") {
-              return <figure className="not-prose my-8">{children}</figure>;
+            const elements = (node?.children ?? []).filter(
+              (child) => !(child.type === "text" && !child.value.trim())
+            );
+            const first = elements[0];
+            if (first?.type === "element" && first.tagName === "img") {
+              // Image, optionally followed by an italic caption on the next line.
+              return (
+                <figure className="not-prose my-8 [&_em]:mt-3 [&_em]:block [&_em]:max-w-[44rem] [&_em]:text-sm [&_em]:not-italic [&_em]:leading-6 [&_em]:text-smoke-gray">
+                  {children}
+                </figure>
+              );
+            }
+            if (elements.length === 1 && first?.type === "element" && first.tagName === "em") {
+              // A paragraph that is only italic text is a caption for the figure above it.
+              return (
+                <p className="-mt-4 text-sm leading-6 text-smoke-gray [&_em]:not-italic">{children}</p>
+              );
             }
             return <p>{children}</p>;
           },
