@@ -1,77 +1,48 @@
-import type { PortfolioContent } from "@/lib/types";
 import { InlineMarkdown } from "@/components/inline-markdown";
+import type { Profile } from "@/lib/types";
 
-export function ContactSection({
-  home
-}: {
-  home: PortfolioContent["home"];
-}) {
-  const primaryLinks = [
-    { label: "LinkedIn", href: home.contactLinks.linkedin },
-    { label: "CV", href: home.contactLinks.cv }
-  ];
-
-  const secondaryLinks = [
-    { label: "Email", href: `mailto:${home.contactLinks.email}` },
-    { label: "GitHub", href: home.contactLinks.github },
-    { label: "Medium", href: home.contactLinks.medium }
+export function ContactSection({ profile }: { profile: Profile }) {
+  const links = [
+    { label: "LinkedIn", href: profile.links.linkedin, primary: true },
+    { label: "CV", href: profile.links.cv, primary: true },
+    { label: "Email", href: `mailto:${profile.links.email}`, primary: false },
+    { label: "GitHub", href: profile.links.github, primary: false },
+    { label: "Medium", href: profile.links.medium, primary: false }
   ];
 
   return (
-    <section id="contact" className="border-t border-line pt-8 md:pt-10">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="space-y-5">
-          <p className="font-structure text-[11px] uppercase tracking-[0.32em] text-smoke-gray">
-            Contact
-          </p>
-          <div className="max-w-3xl space-y-4 text-base leading-8 text-smoke-gray md:text-[1.05rem]">
-            {home.contactParagraphs.map((paragraph) => (
-              <InlineMarkdown key={paragraph} content={paragraph} />
-            ))}
-          </div>
+    <section id="contact" className="space-y-8">
+      <div className="section-head">
+        <h2 className="kicker">Contact</h2>
+      </div>
+
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-16">
+        <div className="max-w-[40rem] space-y-4 text-base leading-7 text-bone-white/88">
+          {profile.contactParagraphs.map((paragraph) => (
+            <InlineMarkdown key={paragraph} content={paragraph} />
+          ))}
         </div>
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <p className="font-structure text-xs uppercase tracking-[0.24em] text-smoke-gray">
-              Primary
-            </p>
-            <div className="space-y-2">
-              {primaryLinks.map((link) => (
+        <ul>
+          {links.map((link) => {
+            const external = !link.href.startsWith("mailto:");
+            return (
+              <li key={link.label}>
                 <a
-                  key={link.label}
                   href={link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between border-t border-line py-3 text-sm text-bone-white transition-colors hover:border-ember-amber/45 hover:text-ember-amber"
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noreferrer" : undefined}
+                  className={`flex items-center justify-between border-t border-line py-3.5 text-base transition-colors hover:border-ember-amber/50 hover:text-ember-amber-bright ${
+                    link.primary ? "text-bone-white" : "text-smoke-gray"
+                  }`}
                 >
                   <span>{link.label}</span>
-                  <span aria-hidden="true">/</span>
+                  <span aria-hidden="true">{external ? "↗" : "→"}</span>
                 </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="font-structure text-xs uppercase tracking-[0.24em] text-smoke-gray">
-              Secondary
-            </p>
-            <div className="space-y-2">
-              {secondaryLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target={link.href.startsWith("mailto:") ? undefined : "_blank"}
-                  rel={link.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                  className="flex items-center justify-between border-t border-line py-3 text-sm text-smoke-gray transition-colors hover:border-white/18 hover:text-bone-white"
-                >
-                  <span>{link.label}</span>
-                  <span aria-hidden="true">/</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </section>
   );

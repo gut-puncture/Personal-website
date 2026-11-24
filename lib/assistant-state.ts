@@ -8,46 +8,22 @@ export function createEmptyConversationState(
   turnOrigin?: AssistantTurnOrigin
 ): ConversationState {
   return {
-    lastResolvedEntities: [],
-    lastProjectSlugs: [],
-    lastEvidenceIds: [],
-    pendingSlots: [],
-    lastDecision: null,
-    lastVerifierVerdict: null,
-    lastQuestionType: null,
-    lastAnswerSummary: null,
-    lastUserQuestion: null,
-    lastAssistantAnswer: null,
+    focusProjectSlugs: [],
     turnOrigin: turnOrigin ?? null
   };
 }
 
+/** Accepts whatever the browser sent back, including state saved by an older version. */
 export function normalizeConversationState(
-  state?: ConversationState,
+  state?: Partial<ConversationState> | null,
   turnOrigin?: AssistantTurnOrigin
 ): ConversationState {
-  const initial = createEmptyConversationState(turnOrigin);
-  if (!state) return initial;
+  const slugs = Array.isArray(state?.focusProjectSlugs)
+    ? state.focusProjectSlugs.filter((slug): slug is string => typeof slug === "string" && Boolean(slug))
+    : [];
 
   return {
-    lastResolvedEntities: Array.isArray(state.lastResolvedEntities)
-      ? [...new Set(state.lastResolvedEntities.filter(Boolean))]
-      : [],
-    lastProjectSlugs: Array.isArray(state.lastProjectSlugs)
-      ? [...new Set(state.lastProjectSlugs.filter(Boolean))]
-      : [],
-    lastEvidenceIds: Array.isArray(state.lastEvidenceIds)
-      ? [...new Set(state.lastEvidenceIds.filter(Boolean))]
-      : [],
-    pendingSlots: Array.isArray(state.pendingSlots)
-      ? [...new Set(state.pendingSlots.filter(Boolean))]
-      : [],
-    lastDecision: state.lastDecision ?? null,
-    lastVerifierVerdict: state.lastVerifierVerdict ?? null,
-    lastQuestionType: state.lastQuestionType ?? null,
-    lastAnswerSummary: state.lastAnswerSummary ?? null,
-    lastUserQuestion: state.lastUserQuestion ?? null,
-    lastAssistantAnswer: state.lastAssistantAnswer ?? null,
-    turnOrigin: state.turnOrigin ?? turnOrigin ?? null
+    focusProjectSlugs: [...new Set(slugs)].slice(0, 3),
+    turnOrigin: state?.turnOrigin ?? turnOrigin ?? null
   };
 }

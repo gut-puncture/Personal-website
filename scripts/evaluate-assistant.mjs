@@ -1,185 +1,106 @@
+// Asks the running site's voice agent every question in data/assistant-eval.json and
+// checks each answer. Needs the dev server running with SARVAM_API_KEY set.
+//   npm run dev            (one terminal)
+//   npm run eval:assistant (another)
+// Optional: ASSISTANT_EVAL_FILTER=wisdom to run matching cases only.
+
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const root = process.cwd();
-const generatedEvalsPath = path.join(root, "data", "generated", "assistant-eval.v2.json");
-const legacyEvalsPath = path.join(root, "data", "assistant-eval.json");
+const baseUrl = process.env.ASSISTANT_EVAL_BASE_URL || "http://localhost:3000";
+const filter = process.env.ASSISTANT_EVAL_FILTER?.toLowerCase().trim();
 
-function includesCaseInsensitive(text, needle) {
-  return text.toLowerCase().includes(needle.toLowerCase());
-}
+const includes = (text, needle) => text.toLowerCase().includes(needle.toLowerCase());
 
-async function loadEvalCases() {
-  try {
-    return JSON.parse(await fs.readFile(generatedEvalsPath, "utf8"));
-  } catch {
-    return JSON.parse(await fs.readFile(legacyEvalsPath, "utf8"));
+function check(evalCase, data, status) {
+  const reply = String(data.replyText ?? "");
+  const spoken = String(data.spokenText ?? "");
+  const reasons = [];
+
+  if (status !== 200) reasons.push(`HTTP ${status} (${data.errorCode ?? "no error code"})`);
+  if (!reply) reasons.push("empty answer");
+
+  for (const required of evalCase.requiredAll ?? []) {
+    if (!includes(reply, required)) reasons.push(`missing: ${required}`);
   }
-}
+  if (evalCase.requiredAny?.length && !evalCase.requiredAny.some((item) => includes(reply, item))) {
+    reasons.push(`none of: ${evalCase.requiredAny.join(" | ")}`);
+  }
+  if (evalCase.requiredAnyTwo?.length && !evalCase.requiredAnyTwo.some((item) => includes(reply, item))) {
+    reasons.push(`none of: ${evalCase.requiredAnyTwo.join(" | ")}`);
+  }
+  for (const forbidden of evalCase.forbiddenAny ?? []) {
+    if (includes(reply, forbidden)) reasons.push(`contains: ${forbidden}`);
+  }
+  if (evalCase.forbidDigits && /\d/.test(reply)) reasons.push("contains a figure it cannot know");
+  if (evalCase.maxWords && reply.split(/\s+/).length > evalCase.maxWords) {
+    reasons.push(`${reply.split(/\s+/).length} words; limit ${evalCase.maxWords}`);
+  }
+  if (/[*#_`]|https?:\/\//.test(reply)) reasons.push("contains markdown or a web address");
+  if (/https?:\/\/|[*#`]/.test(spoken)) reasons.push("spoken text contains markdown or a web address");
+  if (evalCase.expectSource && !(data.sources ?? []).some((source) => source.href === evalCase.expectSource)) {
+    reasons.push(`no link to ${evalCase.expectSource}`);
+  }
+  if (data.corrected) reasons.push("note: the grounding check had to correct this answer");
 
-function decisionMatches(expectedDecision, actualDecision) {
-  if (!expectedDecision) return true;
-  const allowed = Array.isArray(expectedDecision) ? expectedDecision : [expectedDecision];
-  return allowed.includes(actualDecision);
+  return reasons;
 }
 
 async function main() {
-  if (!process.env.SARVAM_API_KEY) {
-    console.error("SARVAM_API_KEY is required to run the live assistant evals.");
-    process.exit(1);
-  }
+  let cases = JSON.parse(
+    await fs.readFile(path.join(process.cwd(), "data", "assistant-eval.json"), "utf8")
+  );
+  if (filter) cases = cases.filter((item) => `${item.id} ${item.question}`.toLowerCase().includes(filter));
 
-  const baseUrl = process.env.ASSISTANT_EVAL_BASE_URL || "http://localhost:3000";
-  const filter = process.env.ASSISTANT_EVAL_FILTER?.toLowerCase().trim();
-  const limit = Number(process.env.ASSISTANT_EVAL_LIMIT ?? "0");
-  let evalCases = await loadEvalCases();
-  if (filter) {
-    evalCases = evalCases.filter((evalCase) => {
-      const haystack = `${evalCase.id} ${evalCase.question}`.toLowerCase();
-      return haystack.includes(filter);
-    });
-  }
-  if (Number.isFinite(limit) && limit > 0) {
-    evalCases = evalCases.slice(0, limit);
-  }
-  const failures = [];
-  const modelCounts = new Map();
+  console.log(`Asking ${cases.length} questions at ${baseUrl}\n`);
+  const latencies = [];
+  let failed = 0;
 
-  console.log(`Running ${evalCases.length} assistant evals against ${baseUrl}`);
-
-  for (const evalCase of evalCases) {
+  for (const evalCase of cases) {
     const startedAt = Date.now();
-    const response = await fetch(`${baseUrl}/api/assistant/turn`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        text: evalCase.question,
-        history: evalCase.history ?? [],
-        conversationId: evalCase.conversationId ?? `eval-${evalCase.id}`,
-        conversationState: evalCase.conversationState,
-        currentPageContext: evalCase.currentPageContext,
-        turnOrigin: evalCase.turnOrigin
-      })
-    });
-
-    const latencyMs = Date.now() - startedAt;
-    const data = await response.json();
-    const replyText = String(data.replyText ?? "");
-    const spokenText = String(data.spokenText ?? "");
-    const modelUsed = String(data.modelUsed ?? "");
-    const decision = String(data.decision ?? "");
-    const verifierVerdict = String(data.verifierVerdict ?? "");
-    const usedEvidenceIds = Array.isArray(data.usedEvidenceIds) ? data.usedEvidenceIds : [];
-    const targetText = evalCase.checkSpokenText ? spokenText : replyText;
-    const reasons = [];
-
-    if (modelUsed) {
-      modelCounts.set(modelUsed, (modelCounts.get(modelUsed) ?? 0) + 1);
-    }
-
-    if (!response.ok) {
-      reasons.push(`HTTP ${response.status}`);
-    }
-
-    if (!decisionMatches(evalCase.expectedDecision, decision)) {
-      reasons.push(
-        `expected decision ${JSON.stringify(evalCase.expectedDecision)}, got ${decision || "none"}`
-      );
-    }
-
-    if (evalCase.requiredAll?.length) {
-      for (const required of evalCase.requiredAll) {
-        if (!includesCaseInsensitive(targetText, required)) {
-          reasons.push(`missing required phrase: ${required}`);
-        }
-      }
-    }
-
-    if (evalCase.requiredAny?.length) {
-      const hasOne = evalCase.requiredAny.some((required) =>
-        includesCaseInsensitive(targetText, required)
-      );
-      if (!hasOne) {
-        reasons.push(`missing any-of phrases: ${evalCase.requiredAny.join(" | ")}`);
-      }
-    }
-
-    if (evalCase.forbiddenAny?.length) {
-      for (const forbidden of evalCase.forbiddenAny) {
-        const forbiddenMatch = evalCase.checkSpokenText
-          ? includesCaseInsensitive(targetText, forbidden)
-          : includesCaseInsensitive(replyText, forbidden) ||
-            includesCaseInsensitive(spokenText, forbidden);
-        if (forbiddenMatch) {
-          reasons.push(`contains forbidden phrase: ${forbidden}`);
-        }
-      }
-    }
-
-    if (evalCase.requiredEvidenceAny?.length) {
-      const hasEvidence = evalCase.requiredEvidenceAny.some((requiredId) =>
-        usedEvidenceIds.includes(requiredId)
-      );
-      if (!hasEvidence) {
-        reasons.push(
-          `missing required evidence id from set: ${evalCase.requiredEvidenceAny.join(", ")}`
-        );
-      }
-    }
-
-    if (evalCase.maxCharacters && replyText.length > evalCase.maxCharacters) {
-      reasons.push(`reply too long: ${replyText.length} chars > ${evalCase.maxCharacters}`);
-    }
-
-    if (decision === "answer" && verifierVerdict !== "pass") {
-      reasons.push(`answer returned with verifierVerdict=${verifierVerdict}`);
-    }
-
-    if (includesCaseInsensitive(spokenText, "http") || includesCaseInsensitive(spokenText, "www.")) {
-      reasons.push("spokenText contains a raw URL");
-    }
-
-    if (includesCaseInsensitive(spokenText, "**")) {
-      reasons.push("spokenText still contains markdown emphasis");
-    }
-
-    if (reasons.length) {
-      failures.push({
-        id: evalCase.id,
-        latencyMs,
-        reasons,
-        decision,
-        verifierVerdict,
-        replyText,
-        usedEvidenceIds
+    let status = 0;
+    let data = {};
+    try {
+      const response = await fetch(`${baseUrl}/api/assistant/turn`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": `eval-${evalCase.id}` },
+        body: JSON.stringify({
+          text: evalCase.question,
+          history: evalCase.history ?? [],
+          conversationId: `eval-${evalCase.id}`,
+          currentPageContext: evalCase.currentPageContext
+        })
       });
-      console.log(`FAIL ${evalCase.id} (${latencyMs} ms)`);
-      for (const reason of reasons) {
-        console.log(`  - ${reason}`);
-      }
-    } else {
-      console.log(`PASS ${evalCase.id} (${latencyMs} ms)`);
+      status = response.status;
+      data = await response.json();
+    } catch (error) {
+      data = { replyText: "", errorCode: String(error) };
+    }
+    const seconds = (Date.now() - startedAt) / 1000;
+    latencies.push(seconds);
+
+    const reasons = check(evalCase, data, status);
+    const problems = reasons.filter((reason) => !reason.startsWith("note:"));
+    if (problems.length) failed += 1;
+
+    console.log(`${problems.length ? "FAIL" : "ok  "} ${evalCase.id}  (${seconds.toFixed(1)} s, ${data.modelUsed ?? "?"})`);
+    console.log(`     Q: ${evalCase.question}`);
+    console.log(`     A: ${data.replyText ?? ""}`);
+    for (const reason of reasons) console.log(`     - ${reason}`);
+    console.log("");
+
+    if (data.errorCode === "not_configured") {
+      console.error("The site has no SARVAM_API_KEY. Add it to .env.local and restart the dev server.");
+      process.exit(1);
     }
   }
 
-  if (failures.length) {
-    console.error(`\n${failures.length} eval(s) failed.`);
-    process.exit(1);
-  }
-
-  if (modelCounts.size) {
-    console.log("\nModel usage:");
-    for (const [model, count] of [...modelCounts.entries()].sort((a, b) => b[1] - a[1])) {
-      console.log(`- ${model}: ${count}`);
-    }
-  }
-
-  console.log("\nAll assistant evals passed.");
+  const sorted = [...latencies].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+  console.log(
+    `${cases.length - failed} of ${cases.length} passed. Median answer time ${median.toFixed(1)} s, slowest ${(sorted.at(-1) ?? 0).toFixed(1)} s.`
+  );
+  process.exit(failed ? 1 : 0);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main();

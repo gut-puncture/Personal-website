@@ -1,3 +1,0 @@
-# OpenAI Platform
-
-Type: Software

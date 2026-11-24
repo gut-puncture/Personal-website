@@ -10,13 +10,11 @@ import {
   normalizeConversationState
 } from "@/lib/assistant-state";
 import type {
-  AssistantConfidenceBand,
   AssistantCurrentPageContext,
-  AssistantDecision,
   AssistantHistoryItem,
+  AssistantSource,
   AssistantTurnOrigin,
-  ConversationState,
-  VerifierVerdict
+  ConversationState
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -25,15 +23,9 @@ type AssistantResponse = {
   transcript?: string;
   replyText: string;
   spokenText?: string;
-  sources: string[];
-  usedEvidenceIds?: string[];
-  selectedFactIds?: string[];
-  decision: AssistantDecision;
-  confidenceBand: AssistantConfidenceBand;
-  verifierVerdict: VerifierVerdict;
+  sources?: AssistantSource[];
   modelUsed?: string;
   nextConversationState?: ConversationState;
-  nextWorkingMemory?: ConversationState;
   remainingTurns: number;
   limitReached: boolean;
   errorCode?: string;
@@ -54,10 +46,15 @@ type SpeakResponse = {
   spokenText?: string;
 };
 
+/** One line of the conversation as shown in the panel. Answers may carry page links. */
+type ThreadItem = AssistantHistoryItem & { sources?: AssistantSource[] };
+
 type AssistantPanelProps = {
   variant?: "hero" | "floating";
   contextProjectSlug?: string;
   showClosedTrigger?: boolean;
+  /** Extra classes for the closed launcher, e.g. to hide it where the page has its own button. */
+  triggerClassName?: string;
 };
 
 type OpenEventDetail = {
@@ -113,16 +110,22 @@ type LastAudioState = {
 
 const MAX_RECORDING_MS = 25_000;
 const REQUEST_TIMEOUT_MS = 60_000;
-const DEFAULT_TURNS = 6;
-const ASSISTANT_STORAGE_KEY = "portfolio-assistant-state-v6";
+const DEFAULT_TURNS = 10;
+const ASSISTANT_STORAGE_KEY = "portfolio-assistant-state-v7";
 const ASSISTANT_STORAGE_TTL_MS = 6 * 60 * 60 * 1000;
 const WAVEFORM_POINT_COUNT = 72;
 const defaultWaveform = Array.from({ length: WAVEFORM_POINT_COUNT }, () => 0);
 
-const starterPrompts = [
-  "What kind of role is Shailesh a fit for?",
-  "Which projects best show product management and AI skills?",
-  "What is his educational and work background?"
+const homeStarterPrompts = [
+  "What did the consciousness paper actually find?",
+  "Which of his papers is the strongest, and why?",
+  "What kind of role is he a fit for?"
+];
+
+const projectStarterPrompts = [
+  "Explain this project in plain words.",
+  "What are its limits?",
+  "How does it compare with his other work?"
 ];
 
 const recordingMimeCandidates = [
@@ -145,6 +148,11 @@ function getRecordingMimeType() {
   );
 }
 
+/** The server needs only who said what. */
+function toServerHistory(items: ThreadItem[]): AssistantHistoryItem[] {
+  return items.map(({ role, content }) => ({ role, content }));
+}
+
 function dispatchAssistantEvent(detail?: OpenEventDetail) {
   window.dispatchEvent(
     new CustomEvent("portfolio-assistant:open", {
@@ -165,54 +173,52 @@ function formatRecordingTime(ms: number) {
 function getStatusLabel(status: AssistantStatus) {
   switch (status) {
     case "arming":
-      return "Allow mic access";
+      return "Waiting for the mic";
     case "recording":
       return "Listening";
     case "transcribing":
-      return "Transcribing";
+      return "Writing down your question";
     case "grounding":
-      return "Selecting context";
     case "composing":
-      return "Writing answer";
+      return "Thinking";
     case "preparing_voice":
-      return "Preparing voice";
+      return "Preparing the voice";
     case "ready":
-      return "Ready";
+      return "Answered";
     case "speaking":
       return "Speaking";
     case "limit_reached":
       return "Limit reached";
     case "error":
-      return "Retry needed";
+      return "That didn't work";
     default:
-      return "Idle";
+      return "Ready";
   }
 }
 
 function getStatusDescription(status: AssistantStatus) {
   switch (status) {
     case "arming":
-      return "Preparing the mic.";
+      return "Allow the mic when your browser asks.";
     case "recording":
-      return "Recording live audio from the mic.";
+      return "Release the button when you are done.";
     case "transcribing":
-      return "Turning the recording into a clean question.";
+      return "Turning the recording into text.";
     case "grounding":
-      return "Selecting the smallest reliable context pack.";
     case "composing":
-      return "Writing the answer.";
+      return "Reading the work and writing the answer.";
     case "preparing_voice":
       return "Turning the answer into speech.";
     case "ready":
-      return "Answer ready.";
+      return "Ask a follow-up any time.";
     case "speaking":
-      return "Reading the answer out loud.";
+      return "Reading the answer aloud.";
     case "limit_reached":
-      return "Start a new conversation later.";
+      return "Start a new conversation to continue.";
     case "error":
-      return "Something slipped. Retry or use text.";
+      return "Ask again, or type the question.";
     default:
-      return "Speak or type for grounded context.";
+      return "Hold to talk, or type.";
   }
 }
 
@@ -294,12 +300,12 @@ function RecordingStrip({
     <div className="space-y-3 border border-line bg-[linear-gradient(180deg,rgba(14,6,8,0.94),rgba(8,3,4,0.98))] px-4 py-4">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <p className="font-structure text-[11px] uppercase tracking-[0.3em] text-ember-amber">
+          <p className="kicker text-ember-amber-bright">
             {label}
           </p>
           <p className="text-sm leading-6 text-smoke-gray">{helper}</p>
         </div>
-        <p className="font-structure text-sm uppercase tracking-[0.22em] text-bone-white">
+        <p className="kicker text-bone-white">
           {formatRecordingTime(elapsedMs)}
         </p>
       </div>
@@ -319,7 +325,7 @@ function StatusRail({
   const steps = [
     {
       key: "transcribing",
-      label: "Transcript",
+      label: "Heard",
       active: status === "transcribing",
       complete:
         transcriptVisible ||
@@ -330,7 +336,7 @@ function StatusRail({
     },
     {
       key: "grounding",
-      label: "Context",
+      label: "Reading",
       active: status === "grounding",
       complete: status === "composing" || status === "ready" || status === "speaking"
     },
@@ -350,7 +356,7 @@ function StatusRail({
 
   return (
     <div className="space-y-3 border border-line bg-charcoal-steel/60 px-4 py-4">
-      <div className="font-structure flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
+      <div className="kicker flex items-center justify-between gap-4">
         <span>{getStatusLabel(status)}</span>
         <span className="text-right">{getStatusDescription(status)}</span>
       </div>
@@ -365,7 +371,7 @@ function StatusRail({
             />
             <p
               className={cn(
-                "font-structure text-[10px] uppercase tracking-[0.24em] transition-colors",
+                "kicker tracking-[0.2em] transition-colors",
                 step.active
                   ? "text-bone-white"
                   : step.complete
@@ -382,58 +388,73 @@ function StatusRail({
   );
 }
 
-function LatestTurn({
+function Thread({
   history,
   pendingUserText,
-  hideAssistant = false,
   canReplayAudio = false,
   onReplayAudio
 }: {
-  history: AssistantHistoryItem[];
+  history: ThreadItem[];
   pendingUserText: string | null;
-  hideAssistant?: boolean;
   canReplayAudio?: boolean;
   onReplayAudio?: () => Promise<void> | void;
 }) {
-  const latestUserMessage = [...history].reverse().find((item) => item.role === "user");
-  const latestAssistantMessage = [...history].reverse().find(
-    (item) => item.role === "assistant"
-  );
+  const endRef = useRef<HTMLDivElement | null>(null);
 
-  const userText = pendingUserText ?? latestUserMessage?.content;
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "nearest" });
+  }, [history.length, pendingUserText]);
 
-  if (!userText && !latestAssistantMessage) return null;
+  if (!history.length && !pendingUserText) return null;
+
+  const lastAssistantIndex = history.map((item) => item.role).lastIndexOf("assistant");
 
   return (
-    <div className="space-y-3">
-      {userText ? (
-        <div className="border border-line bg-[rgba(18,8,10,0.88)] px-4 py-4">
-          <p className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
-            {pendingUserText ? "Transcript" : "Question"}
-          </p>
-          <p className="mt-2 text-sm leading-7 text-bone-white">{userText}</p>
+    <div className="space-y-3" aria-live="polite">
+      {history.map((item, index) =>
+        item.role === "user" ? (
+          <div key={index} className="border-l border-line-strong pl-4">
+            <p className="kicker">You asked</p>
+            <p className="mt-1 text-sm leading-6 text-bone-white/85">{item.content}</p>
+          </div>
+        ) : (
+          <div key={index} className="border border-line bg-charcoal-steel/80 px-4 py-4">
+            <div className="flex items-start justify-between gap-4">
+              <p className="kicker">Answer</p>
+              {index === lastAssistantIndex && canReplayAudio && onReplayAudio ? (
+                <button
+                  type="button"
+                  onClick={() => void onReplayAudio()}
+                  className="kicker transition-colors hover:text-bone-white"
+                >
+                  Play answer
+                </button>
+              ) : null}
+            </div>
+            <p className="mt-2 text-[0.9375rem] leading-7 text-bone-white">{item.content}</p>
+            {item.sources?.length ? (
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-line pt-3">
+                {item.sources.map((source) => (
+                  <li key={source.href}>
+                    <a href={source.href} className="text-link text-sm">
+                      {source.label} →
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        )
+      )}
+
+      {pendingUserText ? (
+        <div className="border-l border-ember-amber pl-4">
+          <p className="kicker">You asked</p>
+          <p className="mt-1 text-sm leading-6 text-bone-white/85">{pendingUserText}</p>
         </div>
       ) : null}
 
-      {latestAssistantMessage && !hideAssistant ? (
-        <div className="border border-line bg-charcoal-steel/76 px-4 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <p className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
-              Answer
-            </p>
-            {canReplayAudio && onReplayAudio ? (
-              <button
-                type="button"
-                onClick={() => void onReplayAudio()}
-                className="font-structure text-[10px] uppercase tracking-[0.22em] text-smoke-gray transition-colors hover:text-bone-white"
-              >
-                Play answer
-              </button>
-            ) : null}
-          </div>
-          <p className="mt-2 text-sm leading-7 text-bone-white">{latestAssistantMessage.content}</p>
-        </div>
-      ) : null}
+      <div ref={endRef} />
     </div>
   );
 }
@@ -441,14 +462,14 @@ function LatestTurn({
 function getRecordButtonLabel(status: AssistantStatus) {
   switch (status) {
     case "arming":
-      return "Allow mic access...";
+      return "Allow the mic";
     case "recording":
       return "Release to send";
     case "transcribing":
     case "grounding":
     case "composing":
     case "preparing_voice":
-      return "Working...";
+      return "Working";
     case "limit_reached":
       return "Limit reached";
     default:
@@ -474,9 +495,10 @@ function AssistantSurface({
   onNewConversation,
   onClose,
   floating,
-  hasReplayAudio
+  hasReplayAudio,
+  starterPrompts
 }: {
-  history: AssistantHistoryItem[];
+  history: ThreadItem[];
   status: AssistantStatus;
   remainingTurns: number;
   draft: string;
@@ -498,6 +520,7 @@ function AssistantSurface({
   onClose?: () => void;
   floating: boolean;
   hasReplayAudio: boolean;
+  starterPrompts: string[];
 }) {
   const showPrompts = history.length === 0 && !pendingUserText && status === "idle";
   const showStatusRail =
@@ -515,23 +538,21 @@ function AssistantSurface({
     <section
       id={!floating ? "assistant" : undefined}
       className={cn(
-        "edge-panel cut-corner flex h-full flex-col overflow-hidden border border-line bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.995))]",
+        "flex h-full flex-col overflow-hidden border border-line-strong bg-[linear-gradient(180deg,rgba(15,6,8,0.98),rgba(7,3,4,0.995))]",
         floating && "shadow-[0_24px_80px_rgba(0,0,0,0.48)] backdrop-blur"
       )}
     >
       <div className="shrink-0 border-b border-line bg-[rgba(12,5,7,0.98)] px-4 py-4 md:px-5">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="font-structure text-[10px] uppercase tracking-[0.24em] text-smoke-gray">
-              Voice agent
-            </p>
+            <p className="kicker">Voice agent</p>
 
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
               {showConversationActions ? (
                 <button
                   type="button"
                   onClick={onNewConversation}
-                  className="font-structure inline-flex h-8 items-center rounded-full border border-line bg-[rgba(18,8,10,0.92)] px-3 text-[9px] uppercase tracking-[0.16em] text-smoke-gray transition-colors hover:border-line-strong hover:text-bone-white"
+                  className="kicker border border-line px-3 py-2 tracking-[0.18em] transition-colors hover:border-line-strong hover:text-bone-white"
                 >
                   New conversation
                 </button>
@@ -541,7 +562,7 @@ function AssistantSurface({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="font-structure inline-flex h-8 items-center rounded-full border border-line bg-[rgba(18,8,10,0.92)] px-3 text-[9px] uppercase tracking-[0.16em] text-smoke-gray transition-colors hover:border-line-strong hover:text-bone-white"
+                  className="kicker border border-line px-3 py-2 tracking-[0.18em] transition-colors hover:border-line-strong hover:text-bone-white"
                 >
                   Close
                 </button>
@@ -558,7 +579,7 @@ function AssistantSurface({
                   : "max-w-lg text-[1.9rem] font-medium leading-[1.02]"
               )}
             >
-              Ask about projects, background, or role fit.
+              Ask about the research, the builds, or his background.
             </h2>
             <p
               className={cn(
@@ -568,7 +589,7 @@ function AssistantSurface({
                   : "max-w-md leading-7"
               )}
             >
-              Speak or type for grounded context from the portfolio and CV.
+              Hold the button and speak, or type. It answers from the work on this site and says so when it does not know.
             </p>
           </div>
         </div>
@@ -583,7 +604,7 @@ function AssistantSurface({
                 key={prompt}
                 type="button"
                 onClick={() => void onStarterPrompt(prompt)}
-                className="font-structure cut-corner flex w-full items-center justify-between border border-line px-4 py-3 text-left text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_44%)]"
+                className="flex w-full items-center justify-between gap-4 border border-line px-4 py-3 text-left text-sm leading-6 text-bone-white transition-colors hover:border-ember-amber/50 hover:bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_44%)]"
               >
                 <span>{prompt}</span>
                 <span aria-hidden="true" className="text-ember-amber">
@@ -593,12 +614,9 @@ function AssistantSurface({
             ))}
           </div>
         ) : (
-          <LatestTurn
+          <Thread
             history={history}
             pendingUserText={pendingUserText}
-            hideAssistant={Boolean(
-              pendingUserText && ["transcribing", "grounding", "composing"].includes(status)
-            )}
             canReplayAudio={hasReplayAudio}
             onReplayAudio={onReplayAudio}
           />
@@ -612,8 +630,10 @@ function AssistantSurface({
           <StatusRail status={status} transcriptVisible={Boolean(pendingUserText)} />
         ) : null}
 
-        <div className="font-structure flex items-center justify-between text-[11px] uppercase tracking-[0.24em] text-smoke-gray">
-          <span>{remainingTurns} turns left</span>
+        <div className="kicker flex items-center justify-between gap-4">
+          <span>
+            {remainingTurns} {remainingTurns === 1 ? "question" : "questions"} left
+          </span>
           <span
             className={cn(
               recordingActive && "text-ember-amber",
@@ -631,7 +651,14 @@ function AssistantSurface({
           <textarea
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="Ask about projects, skills, background, or role fit"
+            placeholder="Type a question"
+            aria-label="Your question"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }}
             rows={floating ? 3 : 4}
             disabled={recordingActive || status === "limit_reached"}
             className="w-full resize-none border border-line bg-charcoal-steel px-4 py-3 text-sm text-bone-white outline-none transition-colors placeholder:text-smoke-gray focus:border-ember-amber/70 disabled:cursor-not-allowed disabled:opacity-65"
@@ -661,14 +688,8 @@ function AssistantSurface({
                 status === "limit_reached"
               }
               className={cn(
-                "font-structure cut-corner border px-4 py-3 text-sm uppercase tracking-[0.08em] transition-colors",
-                !floating && "md:w-full",
-                recordingActive
-                  ? "border-ember-amber bg-ember-amber-soft text-bone-white"
-                  : "border-line text-smoke-gray hover:border-ember-amber/60 hover:text-bone-white",
-                (busy && !recordingActive) || status === "limit_reached"
-                  ? "cursor-not-allowed opacity-50"
-                  : undefined
+                "btn flex-1 touch-none select-none",
+                recordingActive && "border-ember-amber bg-ember-amber-soft text-bone-white"
               )}
             >
               {getRecordButtonLabel(status)}
@@ -676,7 +697,7 @@ function AssistantSurface({
             <button
               type="submit"
               disabled={!draft.trim() || busy || status === "limit_reached"}
-              className="font-structure cut-corner bg-ember-amber px-5 py-3 text-sm uppercase tracking-[0.08em] text-bone-white transition-colors hover:bg-[#ff5b3d] disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn btn-primary"
             >
               Send
             </button>
@@ -684,9 +705,7 @@ function AssistantSurface({
         </form>
 
         <div className="flex items-center justify-between border-t border-line pt-4">
-          <span className="font-structure text-[10px] uppercase tracking-[0.28em] text-smoke-gray">
-            Powered by Sarvam AI
-          </span>
+          <span className="kicker">Powered by Sarvam AI</span>
           <img src="/sarvam-logo-white.svg" alt="Sarvam AI" className="h-5 w-auto opacity-90" />
         </div>
         </div>
@@ -698,12 +717,13 @@ function AssistantSurface({
 export function AssistantPanel({
   variant = "floating",
   contextProjectSlug,
-  showClosedTrigger = true
+  showClosedTrigger = true,
+  triggerClassName
 }: AssistantPanelProps) {
   const isHero = variant === "hero";
   const [hydrated, setHydrated] = useState(false);
   const [open, setOpen] = useState(false);
-  const [history, setHistory] = useState<AssistantHistoryItem[]>([]);
+  const [history, setHistory] = useState<ThreadItem[]>([]);
   const [status, setStatus] = useState<AssistantStatus>("idle");
   const [draft, setDraft] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
@@ -720,7 +740,7 @@ export function AssistantPanel({
   const stopTimeoutRef = useRef<number | null>(null);
   const stageTimeoutsRef = useRef<number[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const historyRef = useRef<AssistantHistoryItem[]>([]);
+  const historyRef = useRef<ThreadItem[]>([]);
   const conversationIdRef = useRef("");
   const conversationStateRef = useRef<ConversationState>(
     createEmptyConversationState(contextProjectSlug ? "project" : undefined)
@@ -733,10 +753,9 @@ export function AssistantPanel({
   const activePointerIdRef = useRef<number | null>(null);
 
   const floatingLauncherEyebrow = "Voice agent";
-  const floatingLauncherTitle = isHero ? "Talk to the voice agent" : "Talk about this project";
-  const floatingLauncherSubline = isHero
-    ? "Get project and background context fast."
-    : "Get project context without leaving the page.";
+  const floatingLauncherTitle = contextProjectSlug ? "Ask about this project" : "Ask about the work";
+  const floatingLauncherSubline = "Speak or type. It has read every page here.";
+  const starterPrompts = contextProjectSlug ? projectStarterPrompts : homeStarterPrompts;
 
   useEffect(() => {
     historyRef.current = history;
@@ -854,7 +873,7 @@ export function AssistantPanel({
       if (status === "arming") {
         recordPressActiveRef.current = false;
         setStatus("idle");
-        setNotice("Mic is ready. Hold again to talk.");
+        setNotice("The mic is ready. Hold the button to talk.");
       }
     }
 
@@ -977,7 +996,7 @@ export function AssistantPanel({
       setNotice(null);
     } catch {
       setStatus("ready");
-      setNotice("Answer is ready. Tap play answer to hear it out loud.");
+      setNotice("Tap “Play answer” to hear it.");
     }
   }
 
@@ -1020,7 +1039,7 @@ export function AssistantPanel({
         body:
           payload instanceof FormData
             ? (() => {
-                payload.set("history", JSON.stringify(historyRef.current));
+                payload.set("history", JSON.stringify(toServerHistory(historyRef.current)));
                 payload.set("conversationId", conversationIdRef.current);
                 payload.set(
                   "conversationState",
@@ -1030,7 +1049,7 @@ export function AssistantPanel({
               })()
             : JSON.stringify({
                 ...payload,
-                history: historyRef.current,
+                history: toServerHistory(historyRef.current),
                 conversationId: conversationIdRef.current,
                 conversationState: conversationStateRef.current
               }),
@@ -1063,7 +1082,7 @@ export function AssistantPanel({
     setLastAudioState(null);
     setPendingUserText(text);
     setStatus("grounding");
-    setNotice("Selecting the strongest context for the question.");
+    setNotice(null);
     scheduleAnswerStages();
 
     try {
@@ -1080,7 +1099,7 @@ export function AssistantPanel({
         clearStageTimers();
         const assistantData = data as AssistantResponse;
         setPendingUserText(null);
-        const nextHistory: AssistantHistoryItem[] = [
+        const nextHistory: ThreadItem[] = [
           ...historyRef.current,
           { role: "user", content: text },
           { role: "assistant", content: assistantData.replyText || "Something went wrong." }
@@ -1093,7 +1112,7 @@ export function AssistantPanel({
         }
         setConversationState(
           normalizeConversationState(
-            assistantData.nextConversationState ?? assistantData.nextWorkingMemory,
+            assistantData.nextConversationState,
             turnOrigin
           )
         );
@@ -1101,12 +1120,12 @@ export function AssistantPanel({
 
         if (assistantData.limitReached || response.status === 429) {
           setStatus("limit_reached");
-          setNotice("This conversation has reached its limit. Start again later.");
+          setNotice("This conversation has reached its limit. Start a new conversation to continue.");
           return;
         }
 
         setStatus("error");
-        setNotice("The assistant hit a snag. Retry, or ask the same thing as text.");
+        setNotice(null);
         return;
       }
 
@@ -1116,16 +1135,20 @@ export function AssistantPanel({
       setConversationId(assistantData.conversationId);
       setConversationState(
         normalizeConversationState(
-          assistantData.nextConversationState ?? assistantData.nextWorkingMemory,
+          assistantData.nextConversationState,
           turnOrigin
         )
       );
       setNotice(null);
 
-      const nextHistory: AssistantHistoryItem[] = [...historyRef.current];
+      const nextHistory: ThreadItem[] = [...historyRef.current];
       const userText = assistantData.transcript ?? text;
       nextHistory.push({ role: "user", content: userText });
-      nextHistory.push({ role: "assistant", content: assistantData.replyText });
+      nextHistory.push({
+        role: "assistant",
+        content: assistantData.replyText,
+        sources: assistantData.sources ?? []
+      });
 
       historyRef.current = nextHistory;
       setHistory(nextHistory);
@@ -1133,13 +1156,13 @@ export function AssistantPanel({
 
       if (assistantData.limitReached) {
         setStatus("limit_reached");
-        setNotice("This conversation has reached its limit. Start again later.");
+        setNotice("This conversation has reached its limit. Start a new conversation to continue.");
         return;
       }
 
       if (shouldAutoSpeak && assistantData.spokenText) {
         setStatus("preparing_voice");
-        setNotice("Preparing the voice answer.");
+        setNotice(null);
 
         try {
           const audioState = await requestSpeech(assistantData.spokenText);
@@ -1147,7 +1170,7 @@ export function AssistantPanel({
           await playAudioFromState(audioState);
         } catch {
           setStatus("ready");
-          setNotice("Answer is ready. Tap play answer to hear it out loud.");
+          setNotice("Tap “Play answer” to hear it.");
         }
       } else {
         setStatus("ready");
@@ -1158,19 +1181,19 @@ export function AssistantPanel({
       setStatus("error");
       setNotice(
         aborted
-          ? "That took too long. Try again, or use a shorter question."
-          : "The assistant hit a snag. Retry, or use text."
+          ? "That took too long. Ask again, or try a shorter question."
+          : "The answer did not come through. Ask again."
       );
       setPendingUserText(null);
       setLastAudioState(null);
-      const nextHistory: AssistantHistoryItem[] = [
+      const nextHistory: ThreadItem[] = [
         ...historyRef.current,
         { role: "user", content: text },
         {
           role: "assistant",
           content: aborted
-            ? "That request timed out. Please try again, or ask the same question more briefly."
-            : "I hit a temporary issue while processing that request. Please try again."
+            ? "That took too long to answer. Please ask again."
+            : "Something went wrong while answering that. Please ask again."
         }
       ];
       historyRef.current = nextHistory;
@@ -1186,7 +1209,7 @@ export function AssistantPanel({
     formData.set("audioMimeType", mimeType);
 
     setStatus("transcribing");
-    setNotice("Turning the recording into a clean question.");
+    setNotice(null);
 
     try {
       const { response, data } = await fetchAssistantResponse(formData);
@@ -1194,7 +1217,7 @@ export function AssistantPanel({
 
       if (!response.ok || !transcriptionData.transcript?.trim()) {
         setStatus("error");
-        setNotice("I couldn't transcribe that clearly. Try again or use text.");
+        setNotice("I couldn't make out the words. Hold the button while you speak, or type the question.");
         return null;
       }
 
@@ -1206,8 +1229,8 @@ export function AssistantPanel({
       setStatus("error");
       setNotice(
         aborted
-          ? "Transcription took too long. Try again, or type the same question."
-          : "Mic capture worked, but transcription failed. Try again or use text."
+          ? "Turning the recording into text took too long. Try again, or type the question."
+          : "The recording could not be turned into text. Try again, or type the question."
       );
       return null;
     }
@@ -1272,7 +1295,7 @@ export function AssistantPanel({
   async function startRecording() {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setStatus("error");
-      setNotice("Voice capture is unavailable here. Type the question instead.");
+      setNotice("This browser cannot record audio. Type the question instead.");
       return;
     }
 
@@ -1280,7 +1303,7 @@ export function AssistantPanel({
       const mimeType = getRecordingMimeType();
       clearAudioPlayback();
       setStatus("arming");
-      setNotice("Allow mic access to start recording.");
+      setNotice(null);
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -1293,7 +1316,7 @@ export function AssistantPanel({
       if (!recordPressActiveRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         setStatus("idle");
-        setNotice("Mic is ready. Hold again to talk.");
+        setNotice("The mic is ready. Hold the button to talk.");
         return;
       }
 
@@ -1338,7 +1361,7 @@ export function AssistantPanel({
       recordPressActiveRef.current = false;
       releaseHandledRef.current = true;
       setStatus("error");
-      setNotice("Mic access failed. Type the question instead.");
+      setNotice("The mic is blocked. Allow it in your browser's site settings, or type the question.");
     }
   }
 
@@ -1356,18 +1379,18 @@ export function AssistantPanel({
     const session = await teardownRecorder();
     if (!session) {
       setStatus("error");
-      setNotice("Voice capture failed. Try again or type the question instead.");
+      setNotice("The recording did not work. Try again, or type the question.");
       return;
     }
 
     if (session.blob.size < 1_500) {
       setStatus("error");
-      setNotice("Too short to transcribe. Try again or type the question instead.");
+      setNotice("That was too short to hear. Hold the button for the whole question.");
       return;
     }
 
     if (reason === "interrupted") {
-      setNotice("The page focus changed, but the captured audio is still being processed.");
+      setNotice(null);
     }
 
     const transcript = await transcribeRecording(session.blob, session.mimeType);
@@ -1420,7 +1443,7 @@ export function AssistantPanel({
     }
 
     if (status === "arming") {
-      setNotice("Mic is ready. Hold again to talk.");
+      setNotice("The mic is ready. Hold the button to talk.");
       return;
     }
   }
@@ -1468,6 +1491,7 @@ export function AssistantPanel({
             onNewConversation={resetConversation}
             floating={false}
             hasReplayAudio={Boolean(lastAudioState)}
+                  starterPrompts={starterPrompts}
           />
         </div>
       ) : null}
@@ -1521,6 +1545,7 @@ export function AssistantPanel({
                   onClose={() => setOpen(false)}
                   floating
                   hasReplayAudio={Boolean(lastAudioState)}
+                  starterPrompts={starterPrompts}
                 />
               </motion.section>
             ) : showClosedTrigger ? (
@@ -1533,7 +1558,8 @@ export function AssistantPanel({
                 onClick={() => setOpen(true)}
                 className={cn(
                   "ml-auto flex w-full items-center gap-3 border border-line bg-[rgba(16,9,10,0.94)] px-4 py-3 text-left shadow-[0_16px_60px_rgba(0,0,0,0.42)] backdrop-blur transition-colors hover:border-line-strong",
-                  isHero && "mx-auto max-w-none"
+                  isHero && "mx-auto max-w-none",
+                  triggerClassName
                 )}
               >
                 <span
@@ -1543,9 +1569,7 @@ export function AssistantPanel({
                   )}
                 />
                 <span className="min-w-0">
-                  <span className="font-structure block text-[11px] uppercase tracking-[0.26em] text-smoke-gray">
-                    {floatingLauncherEyebrow}
-                  </span>
+                  <span className="kicker block">{floatingLauncherEyebrow}</span>
                   <span className="mt-1 block text-sm text-bone-white">
                     {floatingLauncherTitle}
                   </span>

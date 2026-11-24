@@ -1,3 +1,0 @@
-# Stakeholder Management
-
-Type: Expertise

@@ -5,13 +5,15 @@ import { notFound } from "next/navigation";
 import { AssistantOpenButton } from "@/components/assistant-open-button";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { SiteNav } from "@/components/site-nav";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 import { slugifyHeading } from "@/lib/utils";
 
-export async function generateStaticParams() {
-  const projects = await getProjects();
-  return projects.map((project) => ({ slug: project.slug }));
+export function generateStaticParams() {
+  return getProjects().map((project) => ({ slug: project.slug }));
 }
+
+export const dynamicParams = false;
 
 export async function generateMetadata({
   params
@@ -19,12 +21,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const project = await getProjectBySlug(slug);
+  const project = getProjectBySlug(slug);
   if (!project) return {};
 
   return {
-    title: `${project.title} | Shailesh Rana`,
-    description: project.summary
+    title: project.title,
+    description: project.summary,
+    openGraph: { title: project.title, description: project.summary, type: "article" }
   };
 }
 
@@ -34,126 +37,157 @@ export default async function ProjectPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [project, projects] = await Promise.all([getProjectBySlug(slug), getProjects()]);
-
+  const project = getProjectBySlug(slug);
   if (!project) notFound();
 
+  const projects = getProjects();
   const currentIndex = projects.findIndex((item) => item.slug === project.slug);
   const previous = currentIndex > 0 ? projects[currentIndex - 1] : null;
   const next = currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
-  const backHref = "/#projects";
+  const sections = project.headings.filter((heading) => heading.depth === 2);
 
   return (
-    <main className="mx-auto max-w-[88rem] px-6 py-8 pb-32 md:px-10 md:py-10 md:pb-40">
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="min-w-0 space-y-8">
-          <div className="min-w-0 space-y-8 overflow-hidden rounded-[1.5rem] border border-line bg-charcoal-steel/70 p-6 md:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-6">
-              <Link
-                href={backHref}
-                className="text-xs uppercase tracking-[0.28em] text-smoke-gray transition-colors hover:text-bone-white"
+    <>
+      <SiteNav />
+
+      <main className="mx-auto max-w-[96rem] px-6 pb-32 pt-10 md:px-10 md:pb-40 md:pt-14 xl:px-14">
+        <header className="space-y-6 border-b border-line pb-10">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link
+              href={`/#${project.group}`}
+              className="kicker transition-colors hover:text-bone-white"
+            >
+              ← {project.groupLabel}
+            </Link>
+            <span aria-hidden="true" className="h-3 w-px bg-line-strong" />
+            <p className="kicker">
+              {project.kind} · {project.year}
+            </p>
+          </div>
+
+          <h1 className="max-w-[60rem] font-display text-[2.5rem] leading-[0.98] tracking-[-0.035em] text-bone-white md:text-[4rem]">
+            {project.title}
+          </h1>
+
+          <p className="max-w-[46rem] text-lg leading-8 text-bone-white/90 md:text-xl md:leading-9">
+            {project.summary}
+          </p>
+
+          <p className="max-w-[46rem] border-l border-ember-amber/50 pl-4 text-sm leading-6 text-smoke-gray">
+            {project.status}
+          </p>
+
+          {project.links.length ? (
+            <div className="flex flex-wrap gap-3 pt-1">
+              {project.links.map((link, index) => (
+                <a
+                  key={`${link.label}-${link.href}`}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={index === 0 ? "btn btn-primary" : "btn"}
+                >
+                  {link.label}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              ))}
+            </div>
+          ) : null}
+        </header>
+
+        {project.stats.length ? (
+          <dl className="grid border-b border-line md:grid-cols-3">
+            {project.stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="border-b border-line py-7 last:border-b-0 md:border-b-0 md:border-r md:px-8 md:first:pl-0 md:last:border-r-0"
               >
-                Back to projects
-              </Link>
-              <div className="text-xs uppercase tracking-[0.24em] text-smoke-gray">
-                {project.group}
+                <dt className="font-display text-[2.6rem] leading-none tracking-[-0.03em] text-bone-white md:text-[3.1rem]">
+                  {stat.value}
+                </dt>
+                <dd className="mt-3 max-w-[22rem] text-sm leading-6 text-smoke-gray">{stat.label}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+
+        <div className="grid gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-16">
+          <article className="min-w-0">
+            <MarkdownRenderer markdown={project.markdown} />
+          </article>
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-8 space-y-8">
+              {sections.length > 1 ? (
+                <nav aria-label="On this page">
+                  <p className="kicker">On this page</p>
+                  <ul className="mt-4 space-y-3 border-l border-line pl-4">
+                    {sections.map((heading) => (
+                      <li key={heading.text}>
+                        <a
+                          href={`#${slugifyHeading(heading.text)}`}
+                          className="block text-sm leading-6 text-smoke-gray transition-colors hover:text-bone-white"
+                        >
+                          {heading.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              ) : null}
+
+              <div>
+                <p className="kicker">Voice agent</p>
+                <p className="mt-3 text-sm leading-6 text-smoke-gray">
+                  Ask about the method, the limits, or how this compares with the other work.
+                </p>
+                <AssistantOpenButton
+                  contextProjectSlug={project.slug}
+                  source="project"
+                  className="btn mt-4 w-full"
+                >
+                  Ask about this
+                  <span aria-hidden="true">/</span>
+                </AssistantOpenButton>
               </div>
             </div>
-
-            {project.actions.length ? (
-              <div className="flex flex-wrap gap-3 border-b border-line pb-6">
-                {project.actions.map((action) => (
-                  <a
-                    key={`${action.label}-${action.href}`}
-                    href={action.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-structure inline-flex items-center gap-2 border border-line px-4 py-3 text-sm uppercase tracking-[0.1em] text-bone-white transition-colors hover:border-line-strong hover:text-ember-amber"
-                  >
-                    {action.label}
-                    <span aria-hidden="true">/</span>
-                  </a>
-                ))}
-              </div>
-            ) : null}
-
-            <article className="min-w-0 space-y-8">
-              <MarkdownRenderer markdown={project.markdown} />
-            </article>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {previous ? (
-              <Link
-                href={`/projects/${previous.slug}`}
-                className="rounded-[1.25rem] border border-line bg-charcoal-steel/70 p-6 transition-colors hover:border-line-strong"
-              >
-                <p className="text-[11px] uppercase tracking-[0.28em] text-smoke-gray">
-                  Previous
-                </p>
-                <p className="mt-3 text-xl text-bone-white">{previous.title}</p>
-              </Link>
-            ) : (
-              <div />
-            )}
-
-            {next ? (
-              <Link
-                href={`/projects/${next.slug}`}
-                className="rounded-[1.25rem] border border-line bg-charcoal-steel/70 p-6 text-right transition-colors hover:border-line-strong"
-              >
-                <p className="text-[11px] uppercase tracking-[0.28em] text-smoke-gray">
-                  Next
-                </p>
-                <p className="mt-3 text-xl text-bone-white">{next.title}</p>
-              </Link>
-            ) : null}
-          </div>
+          </aside>
         </div>
 
-        <aside className="min-w-0 space-y-6 lg:sticky lg:top-8 lg:self-start">
-          {project.headings.some((heading) => heading.depth >= 2) ? (
-            <section className="rounded-[1.25rem] border border-line bg-charcoal-steel/70 p-5">
-              <p className="text-[11px] uppercase tracking-[0.28em] text-smoke-gray">
-                Jump points
-              </p>
-              <div className="mt-4 space-y-3">
-                {project.headings
-                  .filter((heading) => heading.depth >= 2)
-                  .map((heading) => (
-                    <a
-                      key={`${heading.depth}-${heading.text}`}
-                      href={`#${slugifyHeading(heading.text)}`}
-                      className="block text-sm leading-6 text-smoke-gray transition-colors hover:text-bone-white"
-                    >
-                      {heading.text}
-                    </a>
-                  ))}
-              </div>
-            </section>
-          ) : null}
-
-          <section className="rounded-[1.25rem] border border-line bg-charcoal-steel/70 p-5">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-smoke-gray">
-              Voice agent
-            </p>
-            <p className="mt-3 text-sm leading-7 text-smoke-gray">
-              Get the fast version, role relevance, or the context behind the write-up.
-            </p>
-            <AssistantOpenButton
-              prompt={`Tell me about the ${project.title} project and why it matters.`}
-              contextProjectSlug={project.slug}
-              source="project"
-              className="font-structure mt-4 inline-flex items-center gap-2 border border-line px-4 py-3 text-sm uppercase tracking-[0.1em] text-bone-white transition-colors hover:border-line-strong hover:text-ember-amber"
+        <nav aria-label="More projects" className="mt-20 grid gap-5 border-t border-line pt-8 md:grid-cols-2">
+          {previous ? (
+            <Link
+              href={`/projects/${previous.slug}`}
+              className="group border border-line px-6 py-5 transition-colors hover:border-line-strong"
             >
-              Talk about this project
-              <span aria-hidden="true">/</span>
-            </AssistantOpenButton>
-          </section>
-        </aside>
-      </div>
+              <p className="kicker">← Previous</p>
+              <p className="mt-3 font-display text-[1.5rem] leading-[1.1] text-bone-white transition-colors group-hover:text-ember-amber-bright">
+                {previous.title}
+              </p>
+            </Link>
+          ) : (
+            <span />
+          )}
 
-      <AssistantPanel variant="floating" contextProjectSlug={project.slug} />
-    </main>
+          {next ? (
+            <Link
+              href={`/projects/${next.slug}`}
+              className="group border border-line px-6 py-5 text-right transition-colors hover:border-line-strong"
+            >
+              <p className="kicker">Next →</p>
+              <p className="mt-3 font-display text-[1.5rem] leading-[1.1] text-bone-white transition-colors group-hover:text-ember-amber-bright">
+                {next.title}
+              </p>
+            </Link>
+          ) : null}
+        </nav>
+      </main>
+
+      <AssistantPanel
+        variant="floating"
+        contextProjectSlug={project.slug}
+        triggerClassName="lg:hidden"
+      />
+    </>
   );
 }

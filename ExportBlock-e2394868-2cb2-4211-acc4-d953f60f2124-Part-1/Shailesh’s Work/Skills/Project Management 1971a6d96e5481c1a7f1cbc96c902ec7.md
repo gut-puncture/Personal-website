@@ -1,3 +1,0 @@
-# Project Management
-
-Type: Expertise

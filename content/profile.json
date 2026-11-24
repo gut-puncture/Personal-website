@@ -1,0 +1,131 @@
+{
+  "name": "Shailesh Rana",
+  "role": "Independent AI researcher",
+  "location": "Bengaluru, India",
+  "tagline": "Learning in real time as the machine gets stronger, still betting on human taste, judgment, and nerve.",
+  "strip": [
+    {
+      "label": "Now",
+      "value": "Independent AI researcher, based in Bengaluru."
+    },
+    {
+      "label": "Research",
+      "value": "How language models reach an answer, how they lose one they know, and which abilities appear from prediction alone."
+    },
+    {
+      "label": "Before",
+      "value": "Four years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
+    }
+  ],
+  "about": [
+    "I study what happens inside language models. My papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict.",
+    "I came to research from product. For four years I built AI products as a product manager, most recently owning design, product, development and testing for a B2B software product at Datasutram.ai. I left in May 2026 and now do independent research.",
+    "All the code in these projects was written with AI coding tools, under my direction."
+  ],
+  "experience": [
+    {
+      "id": "datasutram",
+      "company": "Datasutram.ai",
+      "formerName": "Data Sutram",
+      "title": "Product Manager, AI / Member of Technical Staff",
+      "start": "August 2025",
+      "end": "May 2026",
+      "summary": "Owned UX and design, product management, development and testing for the company's only B2B software product, as one of three people supporting it.",
+      "details": [
+        "Built version 2.0 of the B2B app from scratch with Codex, as a proof of concept for merging the design, product and engineering roles.",
+        "Developed an AI-based income estimation model, which became the fastest growing single product in the company.",
+        "Solely led the demo shown at Global Fintech Festival 2025, which led to a 100% year-on-year increase in leads compared with 2024."
+      ]
+    },
+    {
+      "id": "caastle",
+      "company": "CaaStle Technologies",
+      "note": "The company has since ceased operations.",
+      "title": "Product Manager, AI",
+      "start": "October 2022",
+      "end": "April 2025",
+      "summary": "Led the company's AI data platform and shipped AI features and internal assistants.",
+      "details": [
+        "Led the creation of the AI data platform, meant as the Data Science team's ground for experiments and for building internal AI agents.",
+        "Used OpenAI vector embeddings to generate garment collections by occasion and weather, leading to a 9% increase in free trial conversions.",
+        "Built an in-house natural language data query system on Google's Gemini models, with Slack as the interface.",
+        "Built a proof of concept Jira assistant that responded to tickets; average time to ticket closure fell by 50%.",
+        "Won first prize in the company hackathon with a GPT-4 customer service chatbot that cut query resolution time by about 70%.",
+        "Rebuilt the payment statement generation system, cutting the error rate in statements by about 92%."
+      ]
+    },
+    {
+      "id": "bajaj",
+      "company": "Bajaj Finserv Health",
+      "title": "Product Manager, Organic Growth",
+      "start": "May 2022",
+      "end": "September 2022",
+      "summary": "Worked on organic growth and built a system linking diseases, symptoms, lab tests and doctors.",
+      "details": [
+        "Created a system from scratch that links key healthcare elements, used to help diagnosis and to recommend lab tests and doctors.",
+        "Grew organic doctor sign-ups from about 50 a month to about 400 a month.",
+        "Grew organic web traffic from about 80,000 a month to 350,000 a month."
+      ]
+    }
+  ],
+  "earlier": "Before product management he worked as a data analyst.",
+  "education": [
+    {
+      "id": "mba",
+      "degree": "MBA in Finance",
+      "school": "University Business School, Panjab University",
+      "years": "2020 to 2022"
+    },
+    {
+      "id": "be",
+      "degree": "B.E. in Metallurgical Engineering",
+      "school": "PEC University of Technology, Chandigarh",
+      "years": "2013 to 2017"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Mechanistic interpretability",
+      "iconId": "mechanistic-interpretability"
+    },
+    {
+      "name": "Experiment design and model evaluation",
+      "iconId": "evaluation"
+    },
+    {
+      "name": "Training small language models",
+      "iconId": "training"
+    },
+    {
+      "name": "Agentic engineering",
+      "iconId": "agentic-engineering"
+    },
+    {
+      "name": "Retrieval augmented generation",
+      "iconId": "rag-system"
+    },
+    {
+      "name": "Product management",
+      "iconId": "product-management"
+    }
+  ],
+  "roleFit": "He is open to AI research roles, especially in interpretability, model behaviour and evaluation, and to AI product roles that need deep technical ownership. He has four years of experience as an AI product manager.",
+  "workingStyle": "He works independently and on a small budget. All the code in his projects was written with AI coding tools under his direction, and he says so openly on the site.",
+  "contactParagraphs": [
+    "Write to me about AI research, an open role, or a result here that you think is wrong. LinkedIn is the fastest way to reach me.",
+    "I am also happy to talk about product management, physics and DIY projects, or to give advice on anything I have been through (*gyaan dena pasand hai*)."
+  ],
+  "links": {
+    "linkedin": "https://www.linkedin.com/in/shailesh-rana-9236971b6/",
+    "cv": "https://drive.google.com/drive/folders/1yb1t3-OF5uc9kl6p6uryOhMNN8gkMmSQ?usp=drive_link",
+    "email": "shaileshrana1995@gmail.com",
+    "github": "https://github.com/gut-puncture",
+    "medium": "https://medium.com/@shaileshrana1995"
+  },
+  "agentNotes": [
+    "Compensation, notice period, visa status and availability dates are not on the site. For those, point the visitor to LinkedIn or email.",
+    "Private topics such as family, relationships, age, religion, politics and home address are not something the agent discusses.",
+    "The site lists finished, public work only. Shailesh has other research in progress that is not public yet; the agent does not know its details."
+  ],
+  "agentBio": "He studies what happens inside language models. His papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict. He came to research from product: four years as an AI product manager, most recently at Datasutram.ai, which he left in May 2026. He now does independent research."
+}

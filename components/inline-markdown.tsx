@@ -1,42 +1,24 @@
-import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
-export function InlineMarkdown({
-  content,
-  className = ""
-}: {
-  content: string;
-  className?: string;
-}) {
+/** One paragraph of text that may contain emphasis or links. */
+export function InlineMarkdown({ content }: { content: string }) {
   return (
-    <div className={className}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          p: ({ children }) => <>{children}</>,
-          a: ({ href = "", children }) =>
-            href.startsWith("/") ? (
-              <Link
-                href={href}
-                className="font-medium text-bone-white underline decoration-current underline-offset-4"
-              >
-                {children}
-              </Link>
-            ) : (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-bone-white underline decoration-current underline-offset-4"
-              >
-                {children}
-              </a>
-            )
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => <p>{children}</p>,
+        a: ({ href = "", children }) => (
+          <a
+            href={href}
+            target={href.startsWith("/") ? undefined : "_blank"}
+            rel={href.startsWith("/") ? undefined : "noreferrer"}
+            className="text-link"
+          >
+            {children}
+          </a>
+        )
+      }}
+    >
+      {content}
+    </ReactMarkdown>
   );
 }

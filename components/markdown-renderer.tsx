@@ -5,17 +5,6 @@ import remarkGfm from "remark-gfm";
 
 import { slugifyHeading } from "@/lib/utils";
 
-function hasVisibleContent(node: ReactNode): boolean {
-  if (typeof node === "string") return node.trim().length > 0;
-  if (typeof node === "number") return true;
-  if (!node) return false;
-  if (Array.isArray(node)) return node.some((child) => hasVisibleContent(child));
-  if (typeof node === "object" && "props" in node) {
-    return hasVisibleContent((node as { props?: { children?: ReactNode } }).props?.children);
-  }
-  return false;
-}
-
 function textFromNode(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node);
   if (!node) return "";
@@ -26,167 +15,105 @@ function textFromNode(node: ReactNode): string {
   return "";
 }
 
-function splitMarkdownBlocks(markdown: string) {
-  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-  const blocks: string[] = [];
-  const current: string[] = [];
-  let inFence = false;
+const linkClass = "text-link font-medium break-words [overflow-wrap:anywhere]";
 
-  for (const line of lines) {
-    if (/^```/.test(line.trim())) {
-      inFence = !inFence;
-    }
-
-    if (!inFence && line.trim() === "") {
-      if (current.length) {
-        blocks.push(current.join("\n"));
-        current.length = 0;
-      }
-      continue;
-    }
-
-    current.push(line);
-  }
-
-  if (current.length) {
-    blocks.push(current.join("\n"));
-  }
-
-  return blocks;
-}
-
-function isImageOnlyBlock(block: string) {
-  return /^!\[[^\]]*]\([^)]+\)$/.test(block.trim());
-}
-
-function buildImageTable(images: string[]) {
-  const rows = [];
-  for (let index = 0; index < images.length; index += 2) {
-    rows.push([images[index], images[index + 1] ?? " "]);
-  }
-
-  return [
-    "|  |  |",
-    "| --- | --- |",
-    ...rows.map(([left, right]) => `| ${left} | ${right} |`)
-  ].join("\n");
-}
-
-function collapseImageRuns(markdown: string) {
-  const blocks = splitMarkdownBlocks(markdown);
-  const output: string[] = [];
-
-  for (let index = 0; index < blocks.length; ) {
-    if (!isImageOnlyBlock(blocks[index])) {
-      output.push(blocks[index]);
-      index += 1;
-      continue;
-    }
-
-    const run: string[] = [];
-    while (index < blocks.length && isImageOnlyBlock(blocks[index])) {
-      run.push(blocks[index]);
-      index += 1;
-    }
-
-    output.push(run.length > 1 ? buildImageTable(run) : run[0]);
-  }
-
-  return output.join("\n\n");
-}
-
+/** Renders a project page's body. Text keeps a readable line length; figures may run wider. */
 export function MarkdownRenderer({ markdown }: { markdown: string }) {
-  const preparedMarkdown = collapseImageRuns(markdown);
-
   return (
-    <div className="prose prose-invert prose-lg max-w-none min-w-0 break-words [overflow-wrap:anywhere]">
+    <div className="prose prose-invert max-w-none min-w-0 text-[1.0625rem] leading-[1.75] break-words [&>*]:max-w-[44rem] [&>figure]:max-w-none [&>.wide]:max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: ({ children }) => (
-            <h1 className="font-display text-4xl leading-[0.96] tracking-tight text-bone-white break-words [overflow-wrap:anywhere] md:text-5xl">
+          h2: ({ children }) => (
+            <h2
+              id={slugifyHeading(textFromNode(children))}
+              className="mb-4 mt-12 border-t border-line pt-8 font-display text-[1.85rem] font-normal leading-[1.05] tracking-[-0.02em] text-bone-white md:text-[2.15rem]"
+            >
               {children}
-            </h1>
+            </h2>
           ),
-          h2: ({ children }) => {
-            const text = textFromNode(children);
-            return (
-              <h2
-                id={slugifyHeading(text)}
-                className="scroll-mt-24 border-t border-line pt-8 text-2xl font-medium tracking-tight text-bone-white break-words [overflow-wrap:anywhere] md:text-3xl"
-              >
-                {children}
-              </h2>
-            );
-          },
-          h3: ({ children }) => {
-            const text = textFromNode(children);
-            return (
-              <h3
-                id={slugifyHeading(text)}
-                className="scroll-mt-24 text-xl font-medium tracking-tight text-bone-white break-words [overflow-wrap:anywhere] md:text-2xl"
-              >
-                {children}
-              </h3>
-            );
-          },
+          h3: ({ children }) => (
+            <h3
+              id={slugifyHeading(textFromNode(children))}
+              className="mb-3 mt-8 text-lg font-semibold tracking-tight text-bone-white"
+            >
+              {children}
+            </h3>
+          ),
           a: ({ href = "", children }) =>
             href.startsWith("/") ? (
-              <Link
-                href={href}
-                className="font-medium text-bone-white underline decoration-current underline-offset-4 break-words [overflow-wrap:anywhere]"
-              >
+              <Link href={href} className={linkClass}>
                 {children}
               </Link>
             ) : (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-bone-white underline decoration-current underline-offset-4 break-words [overflow-wrap:anywhere]"
-              >
+              <a href={href} target="_blank" rel="noreferrer" className={linkClass}>
                 {children}
               </a>
             ),
-          img: ({ src = "", alt = "" }) => (
-            <span className="not-prose my-6 block">
-              <span className="mx-auto block max-w-[46rem] overflow-hidden rounded-[1rem] border border-line bg-[rgba(10,4,5,0.72)] p-2 md:p-3">
-                <img
-                  src={src}
-                  alt={alt}
-                  className="mx-auto block max-h-[18rem] w-auto max-w-full rounded-[0.8rem] object-contain md:max-h-[22rem] xl:max-h-[24rem]"
+          // An image alone in a paragraph becomes a figure; a video uses the same syntax.
+          p: ({ children, node }) => {
+            const onlyChild =
+              node?.children.length === 1 && node.children[0].type === "element"
+                ? node.children[0]
+                : null;
+            if (onlyChild?.tagName === "img") {
+              return <figure className="not-prose my-8">{children}</figure>;
+            }
+            return <p>{children}</p>;
+          },
+          img: ({ src, alt = "" }) => {
+            const source = typeof src === "string" ? src : "";
+            if (/\.(mp4|webm)$/i.test(source)) {
+              return (
+                <video
+                  src={source}
+                  controls
+                  preload="metadata"
+                  aria-label={alt}
+                  className="max-h-[34rem] w-auto max-w-full border border-line bg-black"
                 />
-              </span>
-            </span>
-          ),
+              );
+            }
+            return (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={source}
+                alt={alt}
+                loading="lazy"
+                className="max-h-[40rem] w-auto max-w-full border border-line bg-[#f7f5f2]"
+              />
+            );
+          },
           code: ({ className, children }) => (
             <code
               className={
-                className
-                  ? className
-                  : "rounded bg-graphite-blue/80 px-1.5 py-0.5 text-[0.9em] text-bone-white"
+                className ?? "bg-graphite-blue px-1.5 py-0.5 text-[0.9em] text-bone-white"
               }
             >
               {children}
             </code>
           ),
           pre: ({ children }) => (
-            <pre className="overflow-x-auto rounded-[1rem] border border-line bg-charcoal-steel p-4">
+            <pre className="overflow-x-auto border border-line bg-charcoal-steel p-4 text-sm">
               {children}
             </pre>
           ),
           table: ({ children }) => (
-            <div className="overflow-x-auto rounded-[1rem] border border-line bg-[rgba(10,4,5,0.36)]">
-              <table className="w-full border-collapse">{children}</table>
+            <div className="wide not-prose my-8 overflow-x-auto border border-line">
+              <table className="w-full border-collapse text-left text-[0.95rem] leading-6">
+                {children}
+              </table>
             </div>
           ),
-          thead: ({ children }) =>
-            hasVisibleContent(children) ? <thead>{children}</thead> : null,
-          th: ({ children }) => <th className="px-4 py-3 text-left">{children}</th>,
-          td: ({ children }) => <td className="align-top px-3 py-3 md:px-4">{children}</td>
+          th: ({ children }) => (
+            <th className="kicker border-b border-line-strong px-4 py-3 font-normal">{children}</th>
+          ),
+          td: ({ children }) => (
+            <td className="border-b border-line px-4 py-3 align-top text-bone-white/90">{children}</td>
+          )
         }}
       >
-        {preparedMarkdown}
+        {markdown}
       </ReactMarkdown>
     </div>
   );

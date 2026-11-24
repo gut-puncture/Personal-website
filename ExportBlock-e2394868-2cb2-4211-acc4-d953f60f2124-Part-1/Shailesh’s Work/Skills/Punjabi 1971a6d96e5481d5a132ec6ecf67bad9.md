@@ -1,3 +1,0 @@
-# Punjabi
-
-Type: Language

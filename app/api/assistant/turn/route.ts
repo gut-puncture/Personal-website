@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { getSessionTurnCount, runAssistantTurn } from "@/lib/assistant";
+import { EMPTY_QUESTION_REPLY, getSessionTurnCount, runAssistantTurn } from "@/lib/assistant";
 import { getAudioExtension, normalizeAudioMimeType } from "@/lib/audio";
-import { createEmptyConversationState } from "@/lib/assistant-state";
+import { normalizeConversationState } from "@/lib/assistant-state";
 import { getSarvamClient } from "@/lib/sarvam";
 import type {
   AssistantCurrentPageContext,
@@ -14,8 +14,10 @@ import type {
 
 export const runtime = "nodejs";
 
-const HOURLY_LIMIT = Number(process.env.ASSISTANT_HOURLY_LIMIT ?? "12");
-const SESSION_LIMIT = Number(process.env.ASSISTANT_SESSION_LIMIT ?? "6");
+// Each turn is now one model call (it used to be three to five), so the same budget
+// covers more turns.
+const HOURLY_LIMIT = Number(process.env.ASSISTANT_HOURLY_LIMIT ?? "30");
+const SESSION_LIMIT = Number(process.env.ASSISTANT_SESSION_LIMIT ?? "10");
 
 type AssistantMode = "transcribe" | "answer" | "speak";
 
@@ -222,7 +224,6 @@ function buildSystemResponse(
     remainingTurns,
     limitReached,
     status = 200,
-    decision = "abstain",
     errorCode
   }: {
     replyText: string;
@@ -230,29 +231,18 @@ function buildSystemResponse(
     remainingTurns: number;
     limitReached: boolean;
     status?: number;
-    decision?: AssistantTurnResponse["decision"];
     errorCode?: string;
   }
 ) {
-  const nextConversationState = conversationState ?? createEmptyConversationState();
-
   return NextResponse.json(
     {
       conversationId,
       replyText,
       spokenText,
       sources: [],
-      usedEvidenceIds: [],
-      selectedFactIds: [],
-      decision,
-      confidenceBand: "high",
-      verifierVerdict: "pass",
       modelUsed: "direct",
-      plannerDecision: decision,
-      plannerRisk: "low",
-      escalationUsed: false,
-      nextConversationState,
-      nextWorkingMemory: nextConversationState,
+      corrected: false,
+      nextConversationState: normalizeConversationState(conversationState),
       remainingTurns,
       limitReached,
       errorCode
@@ -271,9 +261,9 @@ export async function POST(request: Request) {
     if (parsed.mode === "answer" && sessionTurns >= SESSION_LIMIT) {
       return buildSystemResponse(conversationId, parsed.conversationState, {
         replyText:
-          "This conversation has reached its limit. Start a new conversation, or use the CV / LinkedIn links on the site for the next step.",
+          "This conversation has reached its length limit. Start a new conversation to keep going, or reach Shailesh through LinkedIn in the contact section.",
         spokenText:
-          "This conversation has reached its limit. Start a new conversation, or use the C V or LinkedIn links on the site for the next step.",
+          "This conversation has reached its length limit. Start a new conversation to keep going, or reach Shailesh through LinkedIn in the contact section.",
         remainingTurns: 0,
         limitReached: true,
         status: 429,
@@ -286,9 +276,9 @@ export async function POST(request: Request) {
       if (!rateCheck.allowed) {
         return buildSystemResponse(conversationId, parsed.conversationState, {
           replyText:
-            "The hourly assistant limit has been reached. Please try again later, or use the CV, LinkedIn, or email links on the page.",
+            "The voice agent has answered as many questions as it can this hour. Try again later, or reach Shailesh through LinkedIn or email in the contact section.",
           spokenText:
-            "The hourly assistant limit has been reached. Please try again later, or use the C V, LinkedIn, or email links on the page.",
+            "The voice agent has answered as many questions as it can this hour. Try again later, or reach Shailesh through LinkedIn or email in the contact section.",
           remainingTurns: 0,
           limitReached: true,
           status: 429,
@@ -309,9 +299,9 @@ export async function POST(request: Request) {
           {
             conversationId,
             replyText:
-              "I couldn't hear a clear question there. Please try recording again, or type the question instead.",
+              "I couldn't make out any words in that recording. Hold the button while you speak, or type the question.",
             spokenText:
-              "I couldn't hear a clear question there. Please try recording again, or type the question instead.",
+              "I couldn't make out any words in that recording. Hold the button while you speak, or type the question.",
             remainingTurns: Math.max(0, SESSION_LIMIT - sessionTurns),
             limitReached: false,
             errorCode: "transcription_empty"
@@ -348,8 +338,8 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             conversationId,
-            replyText: "Voice playback is unavailable right now.",
-            spokenText: "Voice playback is unavailable right now."
+            replyText: "The voice is unavailable right now. The written answer is above.",
+            spokenText: "The voice is unavailable right now. The written answer is above."
           },
           { status: 502 }
         );
@@ -358,14 +348,10 @@ export async function POST(request: Request) {
 
     if (!transcript) {
       return buildSystemResponse(conversationId, parsed.conversationState, {
-        replyText:
-          "I couldn't hear a clear question there. Please try recording again, or type the question instead.",
-        spokenText:
-          "I couldn't hear a clear question there. Please try recording again, or type the question instead.",
+        replyText: EMPTY_QUESTION_REPLY,
         remainingTurns: Math.max(0, SESSION_LIMIT - sessionTurns),
         limitReached: false,
         status: 400,
-        decision: "clarify",
         errorCode: "empty_turn"
       });
     }
@@ -388,16 +374,15 @@ export async function POST(request: Request) {
     } satisfies AssistantTurnResponse & { transcript: string });
   } catch (error) {
     console.error(error);
-    const fallbackConversationId = crypto.randomUUID();
-    return buildSystemResponse(fallbackConversationId, createEmptyConversationState(), {
-      replyText:
-        "I hit a temporary issue while processing that request. Please try again.",
-      spokenText:
-        "I hit a temporary issue while processing that request. Please try again.",
-      remainingTurns: 0,
+    const missingKey = error instanceof Error && error.message.includes("SARVAM_API_KEY");
+    return buildSystemResponse(crypto.randomUUID(), undefined, {
+      replyText: missingKey
+        ? "The voice agent is not connected on this copy of the site: the Sarvam API key is missing."
+        : "Something went wrong while answering that. Please ask again.",
+      remainingTurns: SESSION_LIMIT,
       limitReached: false,
-      status: 500,
-      errorCode: "server_error"
+      status: missingKey ? 503 : 500,
+      errorCode: missingKey ? "not_configured" : "server_error"
     });
   }
 }

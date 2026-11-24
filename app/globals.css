@@ -6,23 +6,21 @@
   --obsidian: #070203;
   --charcoal-steel: #120507;
   --graphite-blue: #19080d;
-  --graphite-blue-strong: #2d0d14;
   --iron-black: #0e0406;
   --bone-white: #f5e8de;
   --smoke-gray: #b19d9d;
-  --smoke-gray-soft: #755c5f;
+  --smoke-gray-soft: #8a7275;
   --ember-amber: #ff4323;
   --ember-amber-bright: #ff5b3d;
   --ember-amber-soft: rgba(255, 67, 35, 0.14);
   --line: rgba(245, 232, 222, 0.12);
-  --line-strong: rgba(245, 232, 222, 0.24);
+  --line-strong: rgba(245, 232, 222, 0.28);
 }
 
 @theme inline {
   --color-obsidian: var(--obsidian);
   --color-charcoal-steel: var(--charcoal-steel);
   --color-graphite-blue: var(--graphite-blue);
-  --color-graphite-blue-strong: var(--graphite-blue-strong);
   --color-iron-black: var(--iron-black);
   --color-bone-white: var(--bone-white);
   --color-smoke-gray: var(--smoke-gray);
@@ -36,150 +34,185 @@
   --font-body: var(--font-body);
 }
 
-* {
-  box-sizing: border-box;
+/* Base rules live in a layer so utility classes can override them. */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: var(--obsidian);
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 78% 0%, rgba(255, 67, 35, 0.14), transparent 26rem),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.012) 0,
+        rgba(255, 255, 255, 0.012) 1px,
+        transparent 1px,
+        transparent 112px
+      ),
+      var(--obsidian);
+    color: var(--bone-white);
+    font-family: var(--font-body), sans-serif;
+    text-rendering: optimizeLegibility;
+    letter-spacing: -0.01em;
+  }
+
+  a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ember-amber);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: rgba(255, 90, 54, 0.28);
+  }
 }
 
-html {
-  background:
-    radial-gradient(circle at 78% 12%, rgba(255, 67, 35, 0.28), transparent 18rem),
-    radial-gradient(circle at top, rgba(207, 29, 29, 0.24), transparent 34%),
-    linear-gradient(180deg, #140405 0%, #070203 38%, #070203 100%);
-  background-color: var(--obsidian);
-  scroll-behavior: smooth;
-}
+/* One style for each recurring element, used on every page. */
+@layer components {
+  /* Small uppercase label above a section, card or field. */
+  .kicker {
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--smoke-gray);
+  }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(255, 67, 35, 0.05), transparent 12rem),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.012) 0,
-      rgba(255, 255, 255, 0.012) 1px,
-      transparent 1px,
-      transparent 112px
-    ),
-    transparent;
-  color: var(--bone-white);
-  font-family: var(--font-body), sans-serif;
-  text-rendering: optimizeLegibility;
-  letter-spacing: -0.01em;
-}
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid var(--line-strong);
+    background: rgba(0, 0, 0, 0.18);
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--bone-white);
+    cursor: pointer;
+    transition:
+      border-color 150ms ease,
+      color 150ms ease,
+      background-color 150ms ease;
+  }
 
-a {
-  color: inherit;
-  text-decoration-thickness: 1px;
-}
+  .btn:hover {
+    border-color: rgba(255, 67, 35, 0.6);
+    color: var(--ember-amber-bright);
+  }
 
-button,
-input,
-textarea {
-  font: inherit;
-}
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 
-.font-structure {
-  font-family: var(--font-body), sans-serif;
+  .btn-primary {
+    border-color: var(--ember-amber);
+    background: var(--ember-amber);
+    color: #1a0503;
+    font-weight: 600;
+  }
+
+  .btn-primary:hover {
+    border-color: var(--ember-amber-bright);
+    background: var(--ember-amber-bright);
+    color: #1a0503;
+  }
+
+  .btn-quiet {
+    border-color: var(--line);
+    color: var(--smoke-gray);
+  }
+
+  .btn-quiet:hover {
+    border-color: var(--line-strong);
+    color: var(--bone-white);
+  }
+
+  /* Section heading row: label on the left, optional note on the right, rule below. */
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 2rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1rem;
+  }
+
+  .text-link {
+    color: var(--bone-white);
+    text-decoration: underline;
+    text-decoration-color: rgba(245, 232, 222, 0.4);
+    text-underline-offset: 0.22em;
+    transition: color 150ms ease;
+  }
+
+  .text-link:hover {
+    color: var(--ember-amber-bright);
+  }
 }
 
 .hero-outline {
   color: transparent;
   -webkit-text-stroke: 1px rgba(245, 232, 222, 0.48);
-  text-shadow: none;
-}
-
-.hero-kicker {
-  font-size: 0.72rem;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: var(--smoke-gray);
-}
-
-.section-kicker {
-  font-size: 0.72rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--smoke-gray);
-}
-
-.edge-panel {
-  position: relative;
-}
-
-.edge-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--line);
-  box-shadow: inset 0 0 0 1px rgba(255, 67, 35, 0.04);
-  pointer-events: none;
-}
-
-.edge-panel::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 3.25rem;
-  height: 3.25rem;
-  background:
-    linear-gradient(135deg, transparent 0 58%, rgba(255, 67, 35, 0.18) 58% 61%, transparent 61% 100%);
-  pointer-events: none;
-}
-
-.cut-corner {
-  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
-}
-
-::selection {
-  background: rgba(255, 90, 54, 0.24);
-}
-
-.prose {
-  --tw-prose-body: var(--bone-white);
-  --tw-prose-headings: var(--bone-white);
-  --tw-prose-lead: var(--smoke-gray);
-  --tw-prose-links: var(--bone-white);
-  --tw-prose-bold: var(--bone-white);
-  --tw-prose-counters: var(--smoke-gray);
-  --tw-prose-bullets: var(--smoke-gray);
-  --tw-prose-hr: var(--line);
-  --tw-prose-quotes: var(--bone-white);
-  --tw-prose-quote-borders: var(--ember-amber);
-  --tw-prose-captions: var(--smoke-gray);
-  --tw-prose-code: var(--bone-white);
-  --tw-prose-pre-code: var(--bone-white);
-  --tw-prose-pre-bg: rgba(18, 23, 32, 0.9);
-  --tw-prose-th-borders: var(--line-strong);
-  --tw-prose-td-borders: var(--line);
-  max-width: none;
-}
-
-.prose p,
-.prose li {
-  letter-spacing: -0.01em;
-}
-
-.prose img {
-  border-radius: 0.65rem;
-}
-
-.prose a {
-  text-decoration-line: underline;
-  text-decoration-color: currentColor;
-  text-underline-offset: 0.22em;
-}
-
-.prose code::before,
-.prose code::after {
-  content: "";
 }
 
 @media (min-width: 768px) {
   .hero-outline {
     -webkit-text-stroke: 1.45px rgba(245, 232, 222, 0.46);
   }
+}
+
+.prose {
+  --tw-prose-body: rgba(245, 232, 222, 0.9);
+  --tw-prose-headings: var(--bone-white);
+  --tw-prose-lead: var(--smoke-gray);
+  --tw-prose-links: var(--bone-white);
+  --tw-prose-bold: var(--bone-white);
+  --tw-prose-counters: var(--smoke-gray);
+  --tw-prose-bullets: var(--ember-amber);
+  --tw-prose-hr: var(--line);
+  --tw-prose-quotes: var(--bone-white);
+  --tw-prose-quote-borders: var(--ember-amber);
+  --tw-prose-captions: var(--smoke-gray);
+  --tw-prose-code: var(--bone-white);
+  --tw-prose-pre-code: var(--bone-white);
+  --tw-prose-pre-bg: var(--charcoal-steel);
+  --tw-prose-th-borders: var(--line-strong);
+  --tw-prose-td-borders: var(--line);
+  max-width: none;
+}
+
+.prose code::before,
+.prose code::after {
+  content: "";
 }
 
 @media (prefers-reduced-motion: reduce) {

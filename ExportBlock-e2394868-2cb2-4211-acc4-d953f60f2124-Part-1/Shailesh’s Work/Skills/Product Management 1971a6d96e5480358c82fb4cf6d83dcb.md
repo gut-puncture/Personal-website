@@ -1,3 +1,0 @@
-# Product Management
-
-Type: Expertise

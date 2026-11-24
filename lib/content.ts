@@ -1,42 +1,20 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import generated from "@/data/generated/portfolio-content.json";
+import type { PortfolioContent, ProjectEntry, ProjectGroup } from "@/lib/types";
 
-import type { PortfolioContent, ProjectEntry, SkillEntry } from "@/lib/types";
+const content = generated as unknown as PortfolioContent;
 
-const generatedPath = path.join(
-  process.cwd(),
-  "data",
-  "generated",
-  "portfolio-content.json"
-);
-
-let cachedContent: PortfolioContent | null = null;
-
-export async function getPortfolioContent(): Promise<PortfolioContent> {
-  if (cachedContent) return cachedContent;
-  const raw = await fs.readFile(generatedPath, "utf8");
-  cachedContent = JSON.parse(raw) as PortfolioContent;
-  return cachedContent;
+export function getPortfolioContent(): PortfolioContent {
+  return content;
 }
 
-export async function getProjects() {
-  const content = await getPortfolioContent();
+export function getProjects(): ProjectEntry[] {
   return content.projects;
 }
 
-export async function getProjectBySlug(slug: string): Promise<ProjectEntry | undefined> {
-  const projects = await getProjects();
-  return projects.find((project) => project.slug === slug);
+export function getProjectsByGroup(group: ProjectGroup): ProjectEntry[] {
+  return content.projects.filter((project) => project.group === group);
 }
 
-export async function getSkillsByType() {
-  const content = await getPortfolioContent();
-  const grouped = content.skills.reduce<Record<string, SkillEntry[]>>((acc, skill) => {
-    const key = skill.type;
-    acc[key] ??= [];
-    acc[key].push(skill);
-    return acc;
-  }, {});
-
-  return grouped as Record<SkillEntry["type"], SkillEntry[]>;
+export function getProjectBySlug(slug: string): ProjectEntry | undefined {
+  return content.projects.find((project) => project.slug === slug);
 }
