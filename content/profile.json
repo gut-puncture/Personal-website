@@ -6,7 +6,7 @@
   "strip": [
     {
       "label": "Now",
-      "value": "I do independent AI research from Bengaluru."
+      "value": "Independent AI Researcher working on a Stealth Startup"
     },
     {
       "label": "Research",
@@ -14,7 +14,7 @@
     },
     {
       "label": "Before",
-      "value": "Before this I spent five years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
+      "value": "Spent five years as a Member of Product Staff at Datasutram.ai, and an AI product manager at CaaStle and Bajaj Finserv Health."
     }
   ],
   "experience": [
@@ -22,7 +22,7 @@
       "id": "datasutram",
       "company": "Datasutram.ai",
       "formerName": "Data Sutram",
-      "title": "Product Manager, AI / Member of Technical Staff",
+      "title": "Member of Product Staff",
       "start": "August 2025",
       "end": "May 2026",
       "summary": "Owned UX and design, product management, development and testing for the company's only B2B software product, as one of three people supporting it.",
@@ -100,7 +100,7 @@
       "iconId": "product-management"
     }
   ],
-  "roleFit": "He is open to AI research roles, especially in interpretability, model behaviour and evaluation, and to AI product roles that need deep technical ownership. He has five years of experience as an AI product manager.",
+  "roleFit": "He is open to AI research roles, especially in interpretability, model behaviour and evaluation, and to AI product roles that need deep technical ownership. He has five years of experience in AI product roles.",
   "workingStyle": "He works independently and on a small budget. All the code in his projects was written with AI coding tools under his direction, and he says so openly on the site.",
   "contactParagraphs": [
     "Feel free to contact me if you want to chat about AI research, product management, physics or DIY projects.",
@@ -117,9 +117,10 @@
   "agentNotes": [
     "Compensation, notice period, visa status and availability dates are not on the site. For those, point the visitor to LinkedIn or email.",
     "Private topics such as family, relationships, age, religion, politics and home address are not something the agent discusses.",
+    "Shailesh is working on a stealth startup. Nothing else about it is public, so the agent says only that and does not guess what it does.",
     "The site lists finished, public work only. Shailesh has other research in progress that is not public yet; the agent does not know its details."
   ],
-  "agentBio": "He studies what happens inside language models. His papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict. He came to research from product: five years as an AI product manager, most recently at Datasutram.ai, which he left in May 2026. He now does independent research.",
+  "agentBio": "He studies what happens inside language models. His papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict. He came to research from product: five years in AI product roles, most recently as a Member of Product Staff at Datasutram.ai, which he left in May 2026. He now does independent AI research and is working on a stealth startup.",
   "aiNote": "Most of the text on this site was written by AI, from my papers and project notes.",
   "aiNotePage": "This page was written by AI, from my paper and project notes."
 }

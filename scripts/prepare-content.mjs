@@ -230,7 +230,7 @@ function buildDossier(profile, projects) {
     "WORK HISTORY (most recent first)",
     renderExperience(profile),
     profile.earlier,
-    "He describes this as five years as an AI product manager.",
+    "He describes this as five years in product: a Member of Product Staff at Datasutram.ai, and an AI product manager at CaaStle and Bajaj Finserv Health.",
     "",
     "EDUCATION",
     profile.education.map((item) => `${item.degree}, ${item.school}, ${item.years}.`).join("\n"),
