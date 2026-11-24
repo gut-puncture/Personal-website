@@ -32,7 +32,7 @@ const KINDS = [
   "Hardware",
   "Experiment"
 ];
-const SUMMARY_LIMIT = 280;
+const SUMMARY_LIMIT = 320;
 const STATUS_LIMIT = 90;
 const DEEP_TEXT_WORD_LIMIT = 1100;
 
@@ -280,6 +280,7 @@ async function main() {
       tagline: profile.tagline,
       strip: profile.strip,
       aiNote: profile.aiNote,
+      aiNotePage: profile.aiNotePage,
       contactParagraphs: profile.contactParagraphs,
       links: profile.links
     },

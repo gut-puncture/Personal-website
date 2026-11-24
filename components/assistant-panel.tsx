@@ -589,7 +589,7 @@ function AssistantSurface({
                   : "max-w-md leading-7"
               )}
             >
-              Hold the button and speak, or type. It answers from the work on this site and says so when it does not know.
+              Hold the button and speak, or type. An AI model writes the answers from the work on this site, and it can be wrong.
             </p>
           </div>
         </div>

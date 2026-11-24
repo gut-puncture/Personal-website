@@ -12,7 +12,7 @@ Fields:
 - `order`: position inside its group, lowest first.
 - `year`: year the work finished.
 - `kind`: one word shown on the card, such as Paper, Study, Finding, Demo, App.
-- `summary`: one or two sentences, result first. Shown on cards and in search previews.
+- `summary`: two or three linked sentences, 320 characters at most, giving the gist of what was done. Shown on cards and in search previews.
 - `status`: one short line on where the work stands.
 - `links`: buttons at the top of the page (`label`, `href`).
 - `stats`: up to three headline numbers (`value`, `label`). Optional.

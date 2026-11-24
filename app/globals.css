@@ -198,6 +198,28 @@
     color: var(--ember-amber-bright);
   }
 
+  /* The "written by AI" note. Visible on every page that carries AI-written text. */
+  .ai-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    border: 1px solid var(--line-strong);
+    padding: 0.45rem 0.8rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--bone-white);
+  }
+
+  .ai-note::before {
+    content: "AI";
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    padding: 0.15rem 0.35rem;
+    background: var(--ember-amber);
+    color: #1a0503;
+  }
+
   .text-link {
     color: var(--bone-white);
     text-decoration: underline;

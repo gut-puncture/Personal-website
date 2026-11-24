@@ -87,6 +87,9 @@ export default function Home() {
             </div>
           ))}
         </dl>
+        <div className="mx-auto max-w-[96rem] px-6 pb-8 md:px-10 md:pb-10 xl:px-14">
+          <p className="ai-note">{profile.aiNote}</p>
+        </div>
       </section>
 
       <div className="mx-auto max-w-[96rem] space-y-24 px-6 py-16 md:space-y-28 md:px-10 md:py-20 xl:px-14">
@@ -157,8 +160,8 @@ export default function Home() {
               Ask the voice agent about my work.
             </p>
             <p className="max-w-[40rem] text-base leading-7 text-smoke-gray">
-              You can speak or type. It knows every project on this site, and it tells you when it
-              doesn&apos;t know something.
+              You can ask it by speaking or by typing. It knows every project on this site, and it
+              will tell you when it does not know something.
             </p>
           </div>
 

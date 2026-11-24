@@ -5,7 +5,7 @@ group: "research"
 order: 5
 year: "2026"
 kind: "Study"
-summary: "A 7-billion-parameter model, Qwen 2.5, gets long additions right more often when the answer is one digit longer than the numbers being added. That should be the harder case. At 10 digits it got 44% right, against 20% when the answer stays the same length."
+summary: "I tested how well a 7-billion-parameter model, Qwen 2.5, adds numbers that are 10 to 18 digits long. It got more answers right when the sum was one digit longer than the numbers being added, which should be the harder case. This suggests that the model expects the answer to be longer than the numbers."
 status: "Code, results and figures are public. A small study, not peer reviewed."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/Long-Number-Addition" }
@@ -30,12 +30,12 @@ agent: >
 cover: { src: "/media/how-a-7-billion-parameter-ai-cannot-add/accuracy-by-length.png", alt: "Chart of addition accuracy by number length, higher when the answer gains a digit" }
 ---
 
-Qwen 2.5 7B is an open language model with 7 billion parameters. I found that it adds long numbers more accurately when the maths should be harder. Sometimes the sum of two numbers gains an extra digit, like an overflow. For example, 6,000,000,000 + 6,000,000,000 = 12,000,000,000. The model got these problems right more often than problems where the sum stayed the same length. At 10 digits, it correctly answered 44% of the overflow problems. It only got 20% of the normal problems right.
+I tested how well Qwen 2.5 7B, an open language model with 7 billion parameters, adds two long numbers. It got more answers right when the sum was one digit longer than the numbers being added, which is the case that should be harder because a digit has to be carried into a new place. An example of such a sum is 6,000,000,000 + 6,000,000,000 = 12,000,000,000. At 10 digits the model got 44% of these problems right, and only 20% of the problems where the sum stays the same length.
 
-The explanation that fits is a length bias. The model just expects the sum of two long numbers to be one digit longer. When the sum actually is longer, this bias helps the model. When the sum is not longer, the bias makes the model output an answer of the wrong length.
+The explanation that fits this pattern is a length bias. The model seems to expect the sum of two long numbers to be one digit longer than the numbers themselves. When the sum really is longer, this expectation helps, and when it is not, the model produces an answer of the wrong length.
 
 ![Bar chart of accuracy by number of digits, 10 to 18, for problems whose sum stays the same length and problems whose sum gains a digit. The sums that gain a digit are as accurate or more accurate at every length.](/media/how-a-7-billion-parameter-ai-cannot-add/accuracy-by-length.png)
-*"Easy" sums stay the same length. "Hard" sums gain a digit. Each bar represents 50 problems.*
+*"Easy" sums stay the same length and "hard" sums gain a digit. Each bar is 50 problems.*
 
 ## Results
 
@@ -51,19 +51,19 @@ The explanation that fits is a length bias. The model just expects the sum of tw
 | 17 | 2% | 6% |
 | 18 | 0% | 0% |
 
-The model was more accurate on the overflow problems at seven of the nine lengths. It tied at the other two lengths. Overall, the model only got 79 out of 900 problems right. It fails at long addition in both cases. The surprising part is that it does better on the harder version.
+The sums that gain a digit were more accurate at seven of the nine lengths and tied at the other two. Overall the model got only 79 of the 900 problems right, so it is bad at long addition in both cases. What is surprising is that it does better on the harder kind.
 
 ## Method
 
-I generated 900 maths problems. For each length from 10 to 18 digits, I created 50 pairs of random numbers whose sum stays the same length. I created another 50 pairs whose sum gains a digit. The prompt only contained the two numbers and an equals sign, like "4000000000 + 4000000000 =". The model answered with its most likely output. I counted an answer as correct if the last sequence of five or more digits matched the true sum.
+I generated 900 problems. For each length from 10 to 18 digits there are 50 pairs of random numbers whose sum stays the same length and 50 pairs whose sum gains a digit. The prompt contains only the two numbers and an equals sign, for example "4000000000 + 4000000000 =", and the model answers with its most likely output. An answer counts as correct if the last run of five or more digits in it equals the true sum.
 
-I also recorded the model's internal state at every third layer on the last token of the prompt. I found that the internal states for right and wrong answers drift apart as they move through the network. The biggest gap happens at layer 24 out of 28.
+I also recorded the model's internal state on the last token of the prompt at every third layer. The states for the problems it gets right and the problems it gets wrong move apart as they pass through the network, and the gap is largest at layer 24 of 28.
 
 ## Limits
 
-- I did not count the actual digits in the model's wrong answers. I inferred the length bias from the accuracy scores rather than measuring it directly. Counting the lengths of the wrong answers would test whether the bias is real.
-- Each cell in my table represents only 50 problems. A difference of a few percentage points is just one or two answers.
-- I measured the internal states on the prompt itself, before the model wrote anything. This shows that the model treats right and wrong answers differently inside, but it does not show the bias happening.
-- I only tested one model and used one prompt format.
+- I did not count the digits in the model's wrong answers, so the length bias is inferred from the pattern in the accuracy and was not measured directly. Counting those digits would test whether the bias is real.
+- Each cell in the table is only 50 problems, so a difference of a few percentage points is one or two answers.
+- The internal states were measured on the prompt, before the model wrote anything. They show that the model treats the problems it will get right and wrong differently, but they do not show the bias itself.
+- I tested one model with one prompt format.
 
 The [code, raw results and figures](https://github.com/gut-puncture/Long-Number-Addition) are public.

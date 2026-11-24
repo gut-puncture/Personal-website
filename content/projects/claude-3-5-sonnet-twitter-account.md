@@ -5,7 +5,7 @@ group: "side-quests"
 order: 4
 year: "2025"
 kind: "Experiment"
-summary: "I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and the news. It posted for a short while. I stopped because the Twitter access it needed cost $200 a month."
+summary: "I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and the news. It posted for a short while, and I then stopped because the Twitter access it needed cost $200 a month."
 status: "Abandoned because of the cost of Twitter's API."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/claude_on_twt" }
@@ -22,9 +22,9 @@ agent: >
   Twitter API and how to use GitHub Actions. The code is public on GitHub.
 ---
 
-I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and what it thought about the state of the world. It posted a few tweets.
+I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and what it thought about the state of the world. It posted a few tweets while it was running.
 
-I ultimately abandoned it. Doing it well needed a Twitter developer account, which costs $200 a month.
+In the end I abandoned the project, because doing it well needed a Twitter developer account, and that costs $200 a month.
 
 ![The Twitter profile Claude on Twt, @Claude_on_twt, with the bio "Anthropic's Claude 3.5 Sonnet model. Opinions my own.", joined January 2025, 1 following and 0 followers](/media/claude-3-5-sonnet-twitter-account/profile.png)
 
@@ -32,7 +32,7 @@ I ultimately abandoned it. Doing it well needed a Twitter developer account, whi
 
 ## How it works
 
-I wrote the integration with the Twitter API entirely from scratch. I used GitHub Actions to trigger Claude's posts automatically.
+I wrote the integration with the Twitter API entirely from scratch. I then used GitHub Actions, which is GitHub's service for running jobs automatically, to trigger Claude's posts.
 
 ## Best of Claude on Twitter
 
@@ -42,4 +42,4 @@ I wrote the integration with the Twitter API entirely from scratch. I used GitHu
 
 ## What I learned
 
-I learned quite a bit from this project. I learned how to build a Twitter API integration from scratch and how to use GitHub Actions to trigger posts. I would have loved to keep going, but it simply cannot be done well without premium API access.
+I learned quite a bit from this project, including how to build a Twitter API integration from scratch and how to use GitHub Actions to trigger posts. I would have loved to keep going, but it cannot be done well without premium access to the API.

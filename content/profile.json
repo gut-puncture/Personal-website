@@ -6,7 +6,7 @@
   "strip": [
     {
       "label": "Now",
-      "value": "I do AI research on my own. I live in Bengaluru."
+      "value": "I do independent AI research from Bengaluru."
     },
     {
       "label": "Research",
@@ -14,7 +14,7 @@
     },
     {
       "label": "Before",
-      "value": "Five years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
+      "value": "Before this I spent five years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
     }
   ],
   "experience": [
@@ -120,5 +120,6 @@
     "The site lists finished, public work only. Shailesh has other research in progress that is not public yet; the agent does not know its details."
   ],
   "agentBio": "He studies what happens inside language models. His papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict. He came to research from product: five years as an AI product manager, most recently at Datasutram.ai, which he left in May 2026. He now does independent research.",
-  "aiNote": "The text on this site was written by AI, from my papers and project notes."
+  "aiNote": "Most of the text on this site was written by AI, from my papers and project notes.",
+  "aiNotePage": "This page was written by AI, from my paper and project notes."
 }

@@ -20,7 +20,7 @@ const linkClass = "text-link font-medium break-words [overflow-wrap:anywhere]";
 /** Renders a project page's body. Text keeps a readable line length; figures may run wider. */
 export function MarkdownRenderer({ markdown }: { markdown: string }) {
   return (
-    <div className="prose prose-invert max-w-none min-w-0 text-[1.0625rem] leading-[1.75] break-words [&>*]:max-w-[44rem] [&>figure]:max-w-none [&>.wide]:max-w-none">
+    <div className="prose prose-invert max-w-none min-w-0 text-[1.0625rem] leading-[1.75] break-words [&>*]:max-w-[44rem] [&>figure]:max-w-none [&>.wide]:max-w-none [&>p:first-child]:text-[1.1875rem] [&>p:first-child]:leading-[1.7] [&>p:first-child]:text-bone-white">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

@@ -40,7 +40,10 @@ export type Profile = {
   location: string;
   tagline: string;
   strip: Array<{ label: string; value: string }>;
+  /** Shown on the home page and in the footer. */
   aiNote: string;
+  /** Shown at the top of every project page. */
+  aiNotePage: string;
   contactParagraphs: string[];
   links: {
     linkedin: string;

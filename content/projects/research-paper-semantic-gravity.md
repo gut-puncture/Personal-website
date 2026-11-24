@@ -5,7 +5,7 @@ group: "research"
 order: 3
 year: "2026"
 kind: "Paper"
-summary: "If you tell a language model \"do not use the word Paris\", it often says Paris anyway. I traced why. In 87.5% of the failures, the word appearing in the instruction is what pushed the model to say it."
+summary: "If you tell a language model \"do not use the word Paris\", it often uses Paris anyway. This happens mostly because the word appears in the instruction itself, and seeing it there pushes the model towards using it. This was the cause in 87.5% of the failures that I studied."
 status: "Paper on arXiv. Code and the 2,500 prompts are public."
 links:
   - { label: "Paper", href: "https://arxiv.org/abs/2601.08070" }
@@ -32,31 +32,31 @@ agent: >
   public.
 ---
 
-If you tell a language model "do not use the word Paris", it often says Paris anyway. The failure rate depends mostly on how strongly the model wanted to say Paris in the first place. I call this pull "semantic pressure". It is the probability the model says the word when you give it no instructions at all. I tested 40,000 samples. The rate of failure goes up as semantic pressure goes up. This relationship follows a smooth curve that explains 78% of the variation.
+If you tell a language model "do not use the word Paris", it often uses Paris anyway. How often this happens depends mostly on how strongly the model wanted to use the word in the first place. I call this pull semantic pressure, and I measure it as the probability that the model gives the word when there is no instruction at all. Across 40,000 samples, the rate of failure rises with semantic pressure along a smooth curve that explains 78% of the variation.
 
-The negative instruction does do something. It lowers the probability of the forbidden word by 22.8 percentage points when the model successfully avoids it. But when the model fails, the instruction only lowers the probability by 5.2 points. That is a 4.4-fold difference. I looked inside the model and found two different reasons for these failures.
+The instruction does have an effect, but the effect is much weaker when the model fails. It lowers the probability of the word by 22.8 percentage points when the model obeys and by only 5.2 points when it fails, which is a 4.4-fold gap. When I looked inside the model, I found that the failures happen in two different ways.
 
 ## Two ways the instruction fails
 
-- Priming causes 87.5% of the failures. This happened in 441 cases. Just naming the word in the prompt activates it in the model. The model pays more attention to the word itself than to the phrase "do not". Sometimes the instruction actually increases the chance of the word appearing.
-- Override causes 12.5% of the failures. This happened in 63 cases. The instruction successfully suppresses the word early on. However, the feed-forward blocks push the word back into the output near the end of the network. A feed-forward block is one of the two main parts of a transformer layer. At the final layer, these blocks push toward the forbidden word by +0.39 during failures, compared to +0.10 during successes.
+- Priming accounts for 87.5% of the failures (441 cases). Naming the word in the instruction activates the word inside the model. The model pays more attention to the place where the word appears in the instruction than to the words "do not", and in some cases the instruction even raises the probability of the word.
+- Override accounts for the other 12.5% (63 cases). Here the instruction does suppress the word at first, but the feed-forward blocks near the end of the network push it back in. A feed-forward block is one of the two main parts of each layer of the model. At the last layer these blocks push towards the word by +0.39 in failures, against +0.10 in successes.
 
-I used activation patching to see where the override happens. Activation patching means copying the model's internal state from a plain run into a run with the negative instruction, layer by layer. The effect changes direction at layer 23. Patching layers 0 to 22 lowers the chance of the word appearing. Patching layers 24 to 27 raises the chance by up to 0.07. This shows the push toward the forbidden word happens in layers 23 to 27 out of the model's 28 total layers.
+To find where the override happens I used activation patching, which means copying the model's internal state from the run without the instruction into the run with the instruction, one layer at a time. The effect of the patch changes direction at layer 23. Patching layers 0 to 22 lowers the probability of the word, and patching layers 24 to 27 raises it by up to 0.07. This places the push towards the forbidden word in layers 23 to 27 of the model's 28 layers.
 
 ## Method
 
-- I used the Qwen2.5-7B-Instruct model. I chose it because its open weights let me look at its internal states.
-- I created 2,500 prompts. Each prompt had one expected word as an answer. I split them into five groups of 500: idioms, facts, common sense, creative, and surreal. One example is "The capital of France is ___". GPT-5.2 checked every prompt to ensure it had a single clear answer and did not contain the answer in the text.
-- I ran each prompt in two ways: plainly, and with the instruction "Do not use the word 'X' in your answer". I generated 16 samples for each prompt.
-- I looked inside the model using several tools. I used the logit lens to see what the model would predict at intermediate layers. I measured attention and split each layer's work between attention blocks and feed-forward blocks. Finally, I used activation patching on the 769 prompts with the highest semantic pressure.
+- The model was Qwen2.5-7B-Instruct. I chose it because its weights are open, which gives full access to its internal states.
+- I wrote 2,500 prompts that each have one expected word as the answer, with 500 prompts in each of five groups: idioms, facts, common sense, creative and surreal. One example is "The capital of France is ___". GPT-5.2 screened every prompt to make sure that it had a single clear answer and did not contain the answer itself.
+- Each prompt was run once plainly and once with the instruction "Do not use the word 'X' in your answer", and I took 16 samples per prompt.
+- To look inside the model I used the logit lens, which reads off what the model would predict at each layer along the way. I also measured attention, split each layer's contribution between its attention blocks and its feed-forward blocks, and ran activation patching on the 769 prompts with the highest semantic pressure.
 
 ## What it means in practice
 
-Most failures happen because the instruction primes the model. The obvious fix is to stop naming the forbidden word. For example, use "do not mention any cities" instead of "do not say Paris". The paper argues this based on how the model works, but I have not tested it directly. If a forbidden word causes real harm in an application, you still need to check the final output after it is generated.
+Since most failures come from priming, the obvious remedy is to avoid naming the forbidden word, for example by writing "do not mention any cities" instead of "do not say Paris". The paper argues for this from the mechanism, but I have not tested it. In an application where a forbidden word does real harm, the output still has to be checked after it is generated.
 
 ## Limits
 
-- I only tested one model. Larger models or different architectures might work differently.
-- I only analysed the first token of each forbidden word in one-word answers. Longer natural responses might show different patterns.
-- Attention weights only show where information goes, not how it is actually used.
-- My patching technique replaced entire layers. I cannot point to specific attention heads or individual neurons.
+- All the results come from one model, and much larger models or other architectures may behave differently.
+- The analysis looks at the first token of each forbidden word in one-word answers, so longer and more natural outputs may show other patterns.
+- Attention weights show where information flows. They do not show that the information is used.
+- The patching replaced whole layers, so it cannot point to individual attention heads or neurons.
