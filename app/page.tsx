@@ -5,7 +5,6 @@ import { AssistantPanel } from "@/components/assistant-panel";
 import { ContactSection } from "@/components/contact-section";
 import { LeadProject } from "@/components/lead-project";
 import { BuildCard, ResearchCard, SideQuestRow } from "@/components/project-cards";
-import { SkillGlyph } from "@/components/skill-icons";
 import { SiteNav } from "@/components/site-nav";
 import { getPortfolioContent, getProjectsByGroup } from "@/lib/content";
 
@@ -167,23 +166,6 @@ export default function Home() {
             Open the voice agent
             <span aria-hidden="true">→</span>
           </AssistantOpenButton>
-        </section>
-
-        <section id="skills" className="space-y-6">
-          <div className="section-head">
-            <h2 className="kicker">Skills</h2>
-          </div>
-          <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-5">
-            {profile.skills.map((skill) => (
-              <li
-                key={skill.name}
-                className="flex items-center gap-3 border-b border-line py-4 text-[0.9375rem] text-bone-white lg:border-b-0 lg:border-l lg:py-1 lg:pl-5 lg:first:border-l-0 lg:first:pl-0"
-              >
-                <SkillGlyph id={skill.iconId} className="h-[1.1rem] w-[1.1rem] shrink-0 text-ember-amber" />
-                {skill.name}
-              </li>
-            ))}
-          </ul>
         </section>
 
         <ContactSection profile={profile} />

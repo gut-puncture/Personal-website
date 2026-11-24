@@ -8,7 +8,7 @@ const chartOnDark = "invert-[0.93] hue-rotate-180 saturate-[1.15] contrast-[0.95
 
 /**
  * Research card. "wide" lays the picture beside the text; otherwise the picture sits on
- * top. A card with no picture shows its main number instead.
+ * top and grows to fill the card, so cards in one row line up without empty space.
  */
 export { chartOnDark };
 
@@ -21,8 +21,6 @@ export function ResearchCard({
   layout?: "stacked" | "wide";
   className?: string;
 }) {
-  const keyStat = project.stats[0];
-
   return (
     <Link
       href={`/projects/${project.slug}`}
@@ -35,10 +33,10 @@ export function ResearchCard({
       {project.cover ? (
         <div
           className={cn(
-            "flex items-center overflow-hidden border-line bg-[#121010]",
+            "flex items-center justify-center overflow-hidden border-line bg-[#121010]",
             layout === "wide"
               ? "border-b lg:w-[46%] lg:shrink-0 lg:border-b-0 lg:border-r"
-              : "border-b"
+              : "min-h-64 flex-1 border-b"
           )}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -48,14 +46,14 @@ export function ResearchCard({
             loading="lazy"
             className={cn(
               "w-full object-contain p-3 opacity-90 transition-opacity group-hover:opacity-100",
-              layout === "wide" ? "h-64 lg:h-full lg:max-h-[21rem]" : "h-64 md:h-80",
+              layout === "wide" ? "max-h-[21rem]" : "max-h-80",
               chartOnDark
             )}
           />
         </div>
       ) : null}
 
-      <div className="flex flex-1 flex-col gap-4 px-6 py-6 md:px-7 md:py-7">
+      <div className={cn("flex flex-col gap-4 px-6 py-6 md:px-7 md:py-7", layout === "wide" && "flex-1 justify-center")}>
         <p className="kicker">
           {project.kind} · {project.year}
         </p>
@@ -63,19 +61,21 @@ export function ResearchCard({
           {project.title}
         </h3>
         <p className="max-w-[40rem] text-base leading-7 text-bone-white/85">{project.summary}</p>
-
-        {!project.cover && keyStat ? (
-          <div className="mt-2 border-t border-line pt-5">
-            <p className="font-display text-[3rem] leading-none tracking-[-0.03em] text-ember-amber-bright">
-              {keyStat.value}
-            </p>
-            <p className="mt-2 max-w-[26rem] text-sm leading-6 text-smoke-gray">{keyStat.label}</p>
-          </div>
-        ) : null}
-
-        <p className="mt-auto pt-2 text-sm leading-6 text-smoke-gray">{project.status}</p>
+        <CardFooter status={project.status} />
       </div>
     </Link>
+  );
+}
+
+/** Bottom of every card: where the work stands, and a visible cue that the card opens a page. */
+function CardFooter({ status }: { status: string }) {
+  return (
+    <div className="flex items-end justify-between gap-6 border-t border-line pt-4">
+      <p className="text-sm leading-6 text-smoke-gray">{status}</p>
+      <span className="read-cue shrink-0">
+        Read <span aria-hidden="true">→</span>
+      </span>
+    </div>
   );
 }
 
@@ -93,9 +93,9 @@ export function BuildCard({ project }: { project: ProjectEntry }) {
         {project.title}
       </h3>
       <p className="text-[0.9375rem] leading-7 text-bone-white/80">{project.summary}</p>
-      <p className="mt-auto border-t border-line pt-3 text-sm leading-6 text-smoke-gray">
-        {project.status}
-      </p>
+      <div className="mt-auto">
+        <CardFooter status={project.status} />
+      </div>
     </Link>
   );
 }
@@ -111,11 +111,8 @@ export function SideQuestRow({ project }: { project: ProjectEntry }) {
         {project.title}
       </h3>
       <p className="text-[0.9375rem] leading-7 text-bone-white/75">{project.summary}</p>
-      <span
-        aria-hidden="true"
-        className="hidden text-smoke-gray transition-colors group-hover:text-ember-amber-bright md:block"
-      >
-        →
+      <span className="read-cue hidden md:block">
+        Read <span aria-hidden="true">→</span>
       </span>
     </Link>
   );

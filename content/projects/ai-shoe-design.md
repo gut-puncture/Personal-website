@@ -25,7 +25,7 @@ agent: >
   public on GitHub.
 ---
 
-AI Shoe Design is a web app that designs a shoe to match a fashion brand's existing look. You upload photos of clothes and accessories the brand already sells, and it generates a new shoe design in the same style.
+AI Shoe Design is a web app that designs a shoe to match a fashion brand's existing look. You upload photos of clothes and accessories the brand already sells, and the app generates a new shoe design in the exact same style.
 
 I built it quickly as a proof of concept for a former colleague. It is live and anyone can use it. I would love feedback.
 
@@ -34,9 +34,9 @@ I built it quickly as a proof of concept for a former colleague. It is live and 
 ## How it works
 
 1. You upload up to 10 reference images from the brand's catalogue. Here is [an example set from Zara](https://drive.google.com/drive/folders/1jdL43ntWyyY6yyMNIuvpivMjbT2C-_Gl?usp=drive_link).
-2. OpenAI's o3 model finds the design traits the images share: colour palette, textures, silhouettes, mood. It turns them into one detailed prompt for a single shoe the brand could manufacture, down to materials, heel height, colour codes and things to avoid.
-3. You can read and edit that prompt. Writing the style out in words is the point: it gives the image model clear instructions and lets you change them.
-4. Google's Imagen 4 Ultra model generates the shoe image.
+2. OpenAI's o3 model finds the design traits the images share. It looks at colour palette, textures, silhouettes, and mood. It turns these traits into one detailed prompt for a single shoe the brand could manufacture, including materials, heel height, colour codes, and things to avoid.
+3. You can read and edit that prompt. Writing the style out in words is the whole point. It gives the image model clear instructions and lets you change them easily.
+4. Google's Imagen 4 Ultra model generates the shoe image from the prompt.
 
 ![The Design Chat tab of the app, with the message "Make a wild design!" and eight uploaded reference images](/media/ai-shoe-design/design-chat.png)
 
@@ -44,4 +44,4 @@ I built it quickly as a proof of concept for a former colleague. It is live and 
 
 ## What makes it work
 
-Two models do the heavy lifting. o3 is very good at putting the shared style of a set of images into words. Imagen 4 Ultra is the real star: it follows instructions well, does not make coherence errors and gives reliable results. Shoe design does not begin to show what it can do.
+Two models do the heavy lifting here. The o3 model is very good at putting the shared style of a set of images into words. Imagen 4 Ultra is the real star. It follows instructions well, avoids coherence errors, and gives reliable results. Shoe design barely scratches the surface of what it can do.

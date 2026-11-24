@@ -145,14 +145,12 @@
     color: #1a0503;
   }
 
+  /* A smaller button for secondary actions such as "back". Still white, so it reads as clickable. */
   .btn-quiet {
-    border-color: var(--line);
-    color: var(--smoke-gray);
-  }
-
-  .btn-quiet:hover {
+    min-height: 2.25rem;
+    padding: 0.45rem 0.85rem;
     border-color: var(--line-strong);
-    color: var(--bone-white);
+    background: transparent;
   }
 
   /* Section heading row: label on the left, optional note on the right, rule below. */
@@ -164,6 +162,40 @@
     gap: 0.5rem 2rem;
     border-bottom: 1px solid var(--line);
     padding-bottom: 1rem;
+  }
+
+  /* Rule for the whole site: grey small capitals are labels. Anything you can click is
+     bone white or red, and carries an arrow, an underline or a border. */
+
+  /* Navigation and other small-capital links. Same size as a label, but white. */
+  .nav-link {
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--bone-white);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .nav-link:hover {
+    color: var(--ember-amber-bright);
+  }
+
+  /* "Read →" on a card. Lights up when the card is hovered. */
+  .read-cue {
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.6875rem;
+    line-height: 1.6;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--bone-white);
+    transition: color 150ms ease;
+  }
+
+  .group:hover .read-cue {
+    color: var(--ember-amber-bright);
   }
 
   .text-link {

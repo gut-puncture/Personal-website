@@ -425,7 +425,7 @@ function Thread({
                 <button
                   type="button"
                   onClick={() => void onReplayAudio()}
-                  className="kicker transition-colors hover:text-bone-white"
+                  className="nav-link border border-line px-2.5 py-1.5 tracking-[0.18em] hover:border-line-strong"
                 >
                   Play answer
                 </button>
@@ -552,7 +552,7 @@ function AssistantSurface({
                 <button
                   type="button"
                   onClick={onNewConversation}
-                  className="kicker border border-line px-3 py-2 tracking-[0.18em] transition-colors hover:border-line-strong hover:text-bone-white"
+                  className="nav-link border border-line px-3 py-2 tracking-[0.18em] hover:border-line-strong"
                 >
                   New conversation
                 </button>
@@ -562,7 +562,7 @@ function AssistantSurface({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="kicker border border-line px-3 py-2 tracking-[0.18em] transition-colors hover:border-line-strong hover:text-bone-white"
+                  className="nav-link border border-line px-3 py-2 tracking-[0.18em] hover:border-line-strong"
                 >
                   Close
                 </button>

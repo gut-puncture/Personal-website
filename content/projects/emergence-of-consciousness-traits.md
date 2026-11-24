@@ -12,10 +12,7 @@ links:
   - { label: "Code", href: "https://github.com/gut-puncture/Emergence-of-Consciousness-Traits" }
   - { label: "Models", href: "https://huggingface.co/AngryYoungBhaloo/ect-savanna-runs" }
   - { label: "Data", href: "https://huggingface.co/datasets/AngryYoungBhaloo/ect-pretraining-corpus" }
-stats:
-  - { value: "5 of 5", label: "training runs in which narrow forms of all four traits appeared" }
-  - { value: "75%", label: "of tests passed on using a fact from earlier, against 9% for a comparison that ignores the fact" }
-  - { value: "94%", label: "of tests passed on predicting what its own actions change, against 1% for a comparison that ignores the actions" }
+stats: []
 aliases: ["emergence of consciousness traits", "consciousness traits paper", "trained without consciousness", "the savanna paper", "consciousness in a small language model", "conscious this traits", "emergence of conscious traits"]
 agent: >
   This is Shailesh's 2026 paper, Emergence of Consciousness Traits in a Small
@@ -33,54 +30,45 @@ agent: >
   experience, in one small model and one simulated world. The paper, code, training
   text and every model are public on GitHub and Hugging Face.
 cover: { src: "/media/emergence-of-consciousness-traits/overview.png", alt: "How the experiment worked: web text is filtered, a small model is trained on what remains, it then trains in a simulated savanna, and is tested for four traits" }
-evidence:
-  title: "What the model could do after training"
-  intro: "Each test asks the model to predict what happens next in the simulated world. The red bar is the model. The grey bar is a comparison that cannot use the ability being tested."
-  rows:
-    - { name: "Access", meaning: "Using a fact it saw earlier in the day", model: "75%", modelPct: 75, baseline: "9%", baselinePct: 9, modelCaption: "of tests passed", baselineCaption: "for a comparison that ignores the fact" }
-    - { name: "Self-modelling", meaning: "Predicting what its own actions will change", model: "94%", modelPct: 94, baseline: "1%", baselinePct: 1, modelCaption: "of tests passed", baselineCaption: "for a comparison that ignores the actions" }
-    - { name: "Integration", meaning: "Combining two facts given hours apart", model: "36%", modelPct: 36, baseline: "11%", baselinePct: 11, modelCaption: "of tests passed", baselineCaption: "for a comparison that ignores one of the facts" }
-    - { name: "Metacognition", meaning: "Being less sure when things may have changed out of sight", model: "0.57", modelPct: 57, baseline: "0.03", baselinePct: 3, modelCaption: "uncertainty about where the herd is, when the herd could have moved", baselineCaption: "uncertainty when the herd could not have moved" }
-  footnote: "Averages over five training runs. These are tests of ability only. The paper makes no claim about experience."
 ---
 
-I trained a small language model (SLM) of about 100 million parameters from scratch on web text with anything that could teach it to imitate consciousness removed. I then trained it to forecast and act in a simulated savanna, rewarded only for accurate forecasts. Nothing described or rewarded any trait.
+I trained a small AI language model from scratch. It has about 100 million parameters. I trained it on web text, but I removed anything that could teach it to imitate consciousness. I then trained it to act and predict events in a simulated savanna. I rewarded it only when its forecasts were accurate. I did not describe or reward any specific traits.
 
-Across five training runs, narrow forms of four traits appeared every time: access, self-modelling, metacognition and integration. On access, the model passed 75% of tests, against 9% for a forecaster that ignores the fact being tested. Integration was the weakest. I tested each trait only as an ability and claim nothing about subjective experience.
+Narrow forms of four traits appeared in all five of my training runs. These traits were access, self-modelling, metacognition, and integration. For access, the model passed 75% of the tests. A forecaster that ignores the tested fact passed only 9%. Integration was the weakest trait. I tested each trait only as an ability. I do not claim the model has any subjective experience.
 
 ## Why the training text was filtered
 
-Large models learn from human writing full of talk about knowing and being a self, so their traits may be copied. From 108 million passages of educational web pages, a filter removed writing about awareness, selves, beliefs, emotions and psychology, and whole forms such as fiction, dialogue, news and biography, since a story can show checking without naming it.
+Large models learn from human writing that discusses knowing and being a self. This means their traits might just be copied from the text. I used a filter on 108 million passages of educational web pages. The filter removed writing about awareness, selves, beliefs, emotions, and psychology. It also removed formats like fiction, dialogue, news, and biography. I did this because a story can demonstrate checking behaviour without explicitly naming it.
 
-A large language model labelled samples, and two small classifiers trained on its labels sorted every passage. 4.1 million passages survived, about 2.6 billion tokens of mostly dry technical writing. Before the savanna, the model did no better on the tests than a forecaster that ignores the tested facts.
+A large language model labelled sample passages. I trained two small classifiers on these labels to sort every passage. This left 4.1 million passages, which is about 2.6 billion tokens of mostly dry technical writing. Before training in the simulated savanna, my model performed no better on tests than a forecaster that ignores the facts.
 
 ## The savanna
 
-The model reads a plain-English logbook of one grazing animal's day, hour by hour, and answers questions about the next hour or two. The animal sees only where it stands. It hears where the herd is only by spending an hour listening, and sees a lion in the reeds only by looking. The logbook uses 41 words, none of them "I" or a word for knowing or feeling.
+The model reads a plain-English logbook tracking one grazing animal hour by hour. It then answers questions about the next one or two hours. The animal only sees the space where it stands. It can only hear the herd if it spends an hour listening. It can only see a lion in the reeds if it looks. The logbook uses only 41 words. It never uses "I" or any words related to knowing or feeling.
 
-In three stages, a scripted program acted while the model forecast (prediction); then the model acted (acting); then an action became more likely only if it led to better forecasts than an alternative action played under identical chance events (reward).
+The training had three stages. First, a scripted program acted while the model made predictions. Second, the model acted itself. Finally, an action became more likely only if it led to better forecasts than an alternative action under identical chance events.
 
 ![Pipeline: 108 million web passages are filtered, a 100-million-parameter model is pre-trained on what remains, trained in three stages on a savanna logbook, then tested for four traits](/media/emergence-of-consciousness-traits/overview.png)
+*The training pipeline: filtering text, pre-training the model, training in the savanna, and testing for four traits.*
 
 ## Results
 
-Scores are five-run averages; most tests edit one earlier fact on an unseen day, and the model passes only if right on every version.
+These scores are averages across the five runs. Most tests change one earlier fact on an unseen day. The model passes only if it gets every version right.
 
-- Access (using a fact from earlier): 75%, against 9% for the comparison forecaster and 5% before the savanna.
-- Self-modelling (forecasting what its own actions change): 94% on an action's effect, against 1%, and 82% on whether an action will work, against 6%.
-- Metacognition (being less sure when things may have changed unseen, and choosing when to check): uncertainty about the herd was 0.57 after two sunny hours, when it may have moved, and 0.03 after two cloudy hours, near the ideal 0.57 and 0.00. After the reward stage it listened in 32% and 48% of cases where listening could help, against 16% and 19% where it could not. It looked for the lion on at most 1.5% of occasions when its presence was uncertain.
-- Integration (combining two facts stated hours apart): 36%, against 11% (runs ranged from 18% to 46%), tested through one rule.
+- Access means using a fact from earlier. The model scored 75%. The comparison forecaster scored 9%, and the model scored 5% before the savanna training.
+- Self-modelling means forecasting what the model's own actions will change. The model scored 94% on predicting an action's effect, compared to 1% for the baseline. It scored 82% on predicting if an action will work, compared to 6%.
+- Metacognition means being less sure when things might have changed unseen, and choosing when to check. The model's uncertainty about the herd was 0.57 after two sunny hours when the herd might have moved. Its uncertainty was 0.03 after two cloudy hours. The ideal scores are 0.57 and 0.00. After the final reward stage, the model listened in 32% and 48% of the cases where listening helped. It listened in only 16% and 19% of cases where it did not help. It looked for the lion at most 1.5% of the time when it was uncertain if the lion was there.
+- Integration means combining two facts stated hours apart. The model scored 36%, compared to 11% for the baseline. The individual runs ranged from 18% to 46%. I tested this using a single rule.
 
 ![Bar chart of test pass rates for each trait, model against a forecaster that ignores the tested fact, and the model's uncertainty about the herd after sunny and cloudy hours](/media/emergence-of-consciousness-traits/prediction-stage-results.png)
+*Results after the prediction stage but before the reward stage. The circles show each of the five runs.*
 
-*Results after the prediction stage, before any reward. Circles show each of the five runs.*
-
-Most of this came from forecasting alone; choosing when to check came only with the reward stage, and only in part. The paper's main contribution is an account of what a world must contain for each trait to help prediction.
+Most of these abilities appeared from forecasting alone. The ability to choose when to check only appeared during the reward stage, and even then, only partially. The main contribution of this paper is explaining what a world must contain for each trait to help prediction.
 
 ## Limits
 
-- One small model in one simplified world.
-- The tests read forecasts and choices, never the network's internal activity.
-- No filter is airtight, and without a comparison model trained on unfiltered text I cannot measure the filter's effect.
-- Two outcomes missed success criteria set in advance: one self-modelling score in run 5 dropped 5.28 points against a 5-point limit, and in four runs listening rose where it tells the animal nothing.
-- The account of what a world must contain is reasoning, not yet tested directly.
+- I used one small model in one simplified world.
+- I tested the model by reading its forecasts and choices, never its internal network activity.
+- No text filter is perfect. Because I do not have a comparison model trained on unfiltered text, I cannot measure the filter's true effect.
+- Two outcomes did not meet the success criteria I set in advance. In run 5, one self-modelling score dropped 5.28 points, which missed the 5-point limit. In four runs, the model started listening more even when listening told it nothing.
+- My explanation of what a world must contain is based on reasoning. I have not tested it directly yet.

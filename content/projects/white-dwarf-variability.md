@@ -32,33 +32,33 @@ agent: >
 cover: { src: "/media/white-dwarf-variability/overview.png", alt: "Brightness of the two stars plotted against position in the cycle; earlier and later nights follow the same curve" }
 ---
 
-I found a 117.4-minute brightness cycle in the white dwarf SDSS J112148.80+103934.2. A white dwarf is the dense, Earth-sized remnant left when a star like the Sun runs out of fuel. The cycle appears in three separate sets of observations: ground-based measurements from ZTF (the Zwicky Transient Facility, a sky-survey camera at Palomar Observatory), five observing sectors of TESS (NASA's Transiting Exoplanet Survey Satellite), and changes in the star's spectrum from SDSS (the Sloan Digital Sky Survey).
+I found a 117.4-minute brightness cycle in the white dwarf SDSS J112148.80+103934.2. A white dwarf is the dense, Earth-sized remnant left behind when a star like the Sun runs out of fuel. This cycle shows up in three separate sets of observations. First, it appears in ground-based measurements from the Zwicky Transient Facility, which is a sky-survey camera at Palomar Observatory. Second, it appears in five observing sectors of NASA's Transiting Exoplanet Survey Satellite. Third, it appears in changes in the star's spectrum from the Sloan Digital Sky Survey.
 
-I also found a 3.431-day candidate cycle in a second white dwarf, WDJ215009.13+471257.26. Measurements in the survey images place the signal at this star rather than at a neighbour, but it still needs confirmation with another telescope.
+I also found a 3.431-day candidate cycle in a second white dwarf, WDJ215009.13+471257.26. Measurements in the survey images place the changing signal at this star rather than at a neighbour. However, it still needs confirmation using another telescope.
 
 ## What is new and what is not
 
-- Both stars were already known. What appears new is the measured cycles.
-- A catalogue and literature search, completed on 3 October 2026, found no earlier report of either period. That is not proof that nobody reported them first.
-- The first star was already known to be magnetic. The ATLAS survey had flagged it as a "dubious" variable, with suggested periods that do not include 117.4 minutes. That earlier flag deserves credit.
-- Neither result has had independent review by an astronomer. This is a public research record, not a peer-reviewed paper.
-- I have not established what causes the cycles. Rotation, a companion star and other explanations all remain open.
+- Both stars were already known. What appears new are the measured cycles.
+- I searched catalogues and literature on 3 October 2026. I found no earlier report of either period. This does not prove nobody found them first.
+- The first star was already known to be magnetic. The ATLAS survey had flagged it as a "dubious" variable, but their suggested periods did not include 117.4 minutes. That earlier flag deserves credit.
+- An astronomer has not reviewed either result. This is a public research record, not a peer-reviewed paper.
+- I have not established what causes the cycles. Rotation, a companion star, and other explanations remain open.
 
 ![Three panels of brightness against position in the cycle, for the 117.4-minute star in green and red light and for the 3.431-day candidate in green light. Measurements from earlier and later nights follow the same curve.](/media/white-dwarf-variability/overview.png)
-*Each dot averages measurements at the same point in the cycle. The curve was fitted to earlier nights only; later nights were not used to draw it.*
+*Each dot is an average of measurements at the same point in the cycle. I fitted the curve to earlier nights only; I did not use later nights to draw it.*
 
 ## Method
 
-1. I screened 400 nearby, faint, blue stars from SDSS and Gaia (the European Space Agency satellite that measures star positions and distances).
-2. For each star I searched the earlier 75% of ZTF observing nights for repeating cycles and saved the 20 strongest candidates.
+1. I screened 400 nearby, faint, blue stars from the Sloan Digital Sky Survey and Gaia, a satellite that measures star positions and distances.
+2. For each star, I searched the earlier 75% of Zwicky Transient Facility observing nights for repeating cycles. I saved the 20 strongest candidates.
 3. I tested those candidates on the later 25% of nights without choosing new periods. A cycle found in the early nights had to predict the later ones.
-4. For the 117.4-minute star I checked TESS observations and 96 SDSS spectra taken over 24 nights. A spectral feature chosen from the first 16 nights predicted the final eight.
-5. For the second star I fitted it and its neighbours together in 359 ZTF images, to check which source varies.
+4. For the 117.4-minute star, I checked TESS observations and 96 SDSS spectra taken over 24 nights. A spectral feature chosen from the first 16 nights predicted the final eight.
+5. For the second star, I fitted it and its neighbours together in 359 ZTF images to check which source was actually varying.
 
 ## Limits
 
-The second star's image measurements reuse the same ZTF light, so they show which source varies but do not independently confirm the cycle. The significance tests rest on noise assumptions that are imperfect, and the spectral follow-up began after some spectra had been inspected, so it was not fully blind.
+The second star's image measurements reuse the same ZTF light. They show which source varies, but they do not independently confirm the cycle. My significance tests rely on imperfect noise assumptions. I also began the spectral follow-up after inspecting some spectra, so the process was not fully blind.
 
 ## What exists
 
-The analysis and code were produced with OpenAI Codex under my direction. The [repository](https://github.com/gut-puncture/white-dwarf-variability) holds the full record. One command downloads 123 MB of original observations, checks every file and recalculates the results from scratch, in about two minutes on my machine after the download. Rerunning it checks the calculation; it does not replace review by an astronomer.
+I produced the analysis and code with OpenAI Codex under my direction. The [repository](https://github.com/gut-puncture/white-dwarf-variability) holds the full record. One command downloads 123 MB of original observations, checks every file, and recalculates the results from scratch. It takes about two minutes on my machine after the download. Rerunning it checks the maths; it does not replace review by an astronomer.

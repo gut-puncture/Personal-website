@@ -26,27 +26,27 @@ agent: >
   data by hand. The code is not public.
 ---
 
-Smart Medical Search lets you describe your symptoms in plain words and suggests which kind of doctor to see. Under it is a search index that links many kinds of medical terms to each other: diseases, symptoms, lab tests, medicines, doctor specialties and more.
+Smart Medical Search lets you describe your symptoms in plain words and suggests which kind of doctor you should see. It runs on a search index that links many kinds of medical terms together, including diseases, symptoms, lab tests, medicines, and doctor specialties.
 
-I built it in 2 days. It works for the main use, matching symptoms to a specialty, but it has two known problems, described below.
+I built it in 2 days. It works well for matching symptoms to a medical specialty, but it has two known problems that I describe below.
 
 ## How it works
 
-The index is built with text embedding models, which turn text into numbers that capture meaning, so a query finds terms with similar meaning. You type a query and choose the category you want back. I care most about "Medical Specialty or Department", because the biggest use on doctor consultation apps is someone describing symptoms and the app recommending a kind of doctor.
+The index uses text embedding models. These models turn text into numbers that capture meaning, so a query finds terms with similar meanings. You type a query and choose the category you want back. I care most about the "Medical Specialty or Department" category. The biggest use case on doctor consultation apps is someone describing their symptoms so the app can recommend a specific kind of doctor.
 
 ![The Medical Terms Search page with the query "I feel burning sensation in my chest, just above my stomach after eating", the category Medical Specialty or Department ticked, and the top result gastrologist](/media/smart-medical-search/search-screen.png)
 
-For this query the top result, a gastroenterology specialist, is right.
+For the query in the image, the top result is a gastroenterology specialist, which is correct.
 
 ## Known problems
 
-As of February 2025, neither is fixed. Both look like simple fixes.
+As of February 2025, neither problem is fixed, but both look like simple fixes.
 
-- Mapping symptoms to diseases works poorly. That is a big use case, so it matters.
-- The index has many near-duplicate terms, so the top 4 or 5 results are often the same answer repeated. The query above shows it.
+- Mapping symptoms directly to diseases works poorly. This is a big use case, so it matters.
+- The index has many near-duplicate terms. The top 4 or 5 results are often the same answer repeated. The query above shows this happening.
 
 ![The full result list for the same query: gastrologist, gastrology, gastroenterologist, gastroenterological and gastroenterology, five near-identical terms](/media/smart-medical-search/duplicate-results.png)
 
 ## Background
 
-At a previous company, before ChatGPT, I designed a way to build an index linking diseases to symptoms, lab tests, medicines, specialties and hospitals. Collecting the data was the hard part: the plan was to have several doctors supply it over many hours. I left before the project started, and it never happened. When I mentioned it to a former colleague, I realised text embedding models make it easy to build. Honestly, it is a shame it took me this long to see that.
+At a previous company, before ChatGPT existed, I designed a way to build an index linking diseases to symptoms, lab tests, medicines, specialties, and hospitals. Collecting the data was the hard part. We planned to have several doctors supply the data by hand over many hours. I left before the project started, and it never happened. When I mentioned it to a former colleague recently, I realised text embedding models make this easy to build. Honestly, it is a shame it took me this long to see that.

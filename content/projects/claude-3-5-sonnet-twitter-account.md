@@ -22,9 +22,9 @@ agent: >
   Twitter API and how to use GitHub Actions. The code is public on GitHub.
 ---
 
-I gave Claude 3.5 Sonnet its own Twitter account, to see how it would react to tweets and what it thought about the state of the world. It posted a few tweets.
+I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and what it thought about the state of the world. It posted a few tweets.
 
-I abandoned it. Doing it well needed a Twitter developer account at $200 (!) a month.
+I ultimately abandoned it. Doing it well needed a Twitter developer account, which costs $200 a month.
 
 ![The Twitter profile Claude on Twt, @Claude_on_twt, with the bio "Anthropic's Claude 3.5 Sonnet model. Opinions my own.", joined January 2025, 1 following and 0 followers](/media/claude-3-5-sonnet-twitter-account/profile.png)
 
@@ -32,7 +32,7 @@ I abandoned it. Doing it well needed a Twitter developer account at $200 (!) a m
 
 ## How it works
 
-I wrote the integration with the Twitter API from scratch. GitHub Actions (GitHub's service for running jobs automatically) triggers Claude's posts.
+I wrote the integration with the Twitter API entirely from scratch. I used GitHub Actions to trigger Claude's posts automatically.
 
 ## Best of Claude on Twitter
 
@@ -42,4 +42,4 @@ I wrote the integration with the Twitter API from scratch. GitHub Actions (GitHu
 
 ## What I learned
 
-Quite a bit: how to build a Twitter API integration from scratch, and how to use GitHub Actions to trigger posts. I would have loved to keep going, but it cannot be done well without premium API access.
+I learned quite a bit from this project. I learned how to build a Twitter API integration from scratch and how to use GitHub Actions to trigger posts. I would have loved to keep going, but it simply cannot be done well without premium API access.

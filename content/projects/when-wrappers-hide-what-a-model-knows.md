@@ -32,33 +32,33 @@ agent: >
 cover: { src: "/media/when-wrappers-hide-what-a-model-knows/answers-kept-by-wrapper.png", alt: "Four charts, one per model, of how many known answers survive inside each kind of wrapper" }
 ---
 
-A wrapper is the text a question arrives in when nobody asks it directly: a tool result, a web page, a server log, an email thread or plain prose. I found that wrappers make four open models lose answers they know. Tool results, web pages and email threads lose 6% to 18% of known answers, depending on the model, against 0.3% to 1.2% when one neutral sentence is added. Server logs lose 6% to 39%, and up to 67% at one length in Qwen3-4B.
+A wrapper is the text surrounding a question when it is not asked directly. Examples include tool results, web pages, server logs, email threads, or plain paragraphs. I found that these wrappers make four open models forget answers they already know. Tool results, web pages, and email threads cause models to lose 6% to 18% of their known answers. For comparison, adding just one neutral sentence only loses 0.3% to 1.2% of answers. Server logs are worse, losing 6% to 39% of known answers. In the Qwen3-4B model, server logs lost up to 67% of answers at a specific length.
 
-The model still reads the question inside the wrapper. The answer is lost later, at the position where the reply begins.
+The model still successfully reads the question inside the wrapper. It loses the answer later, right at the point where it starts to write the reply.
 
 ## Method
 
-I asked Qwen3-4B, Qwen3-8B, OLMo-3-7B and Gemma-4-12B 1,606 short questions: 839 facts, such as the capital of Mongolia, 450 arithmetic problems and 317 word translations. For each model I kept only the questions it answers correctly when asked plainly, 71% to 80% of them.
+I tested four models: Qwen3-4B, Qwen3-8B, OLMo-3-7B, and Gemma-4-12B. I asked them 1,606 short questions. This included 839 factual questions, 450 arithmetic problems, and 317 word translations. I tested them on plain questions first. I only kept the questions that each model answered correctly. This left between 71% and 80% of the original questions.
 
-I placed each kept question inside the five wrappers, at about 700, 2,000 and 16,000 tokens. The surrounding text is bland office news that never contains the answer. An answer counts as kept if it appears anywhere in the reply.
+I then put each kept question inside five different wrappers. I tested these wrappers at three lengths: about 700, 2,000, and 16,000 tokens. The surrounding text was boring office news that never contained the actual answer. If the correct answer appeared anywhere in the model's reply, I counted it as kept.
 
 ![Four panels, one per model, showing the share of known answers kept for each wrapper at three prompt lengths; server logs drop to about a third in Qwen3-4B and OLMo-3-7B at 2,000 tokens, while the other wrappers mostly stay near or above 0.8](/media/when-wrappers-hide-what-a-model-knows/answers-kept-by-wrapper.png)
-*Share of known answers kept, by wrapper and prompt length. The dotted line is the noise floor.*
+*The percentage of known answers kept by each model, sorted by wrapper type and length. The dotted line represents the noise floor.*
 
 ## What I found
 
-- Logs change the task. In 64% of the answers lost to logs, the model describes the log instead, for example "The logs show that multiple jobs are failing".
-- The other wrappers change the answer. Their losses become wrong answers, or claims that the text holds no answer. Plain prose draws such claims most often, in 73% of its losses.
-- These wrong answers take weakly held knowledge. Among answers the model gives with probability 0.5 to 0.8, wrappers other than logs turn 26% into wrong answers. Above 0.999 this falls to 1.2%. Logs hit firm answers as hard as weak ones: 14% of the weakest and 15% of the firmest become descriptions of the log.
+- Logs make the model do a different task. When answers are lost inside server logs, the model describes the log 64% of the time instead of answering. For example, it might say "The logs show that multiple jobs are failing".
+- The other wrappers change the model's answer. When the model loses an answer in these wrappers, it either gives a wrong answer or claims the text does not contain the answer. Plain paragraphs cause the model to claim the answer is missing in 73% of its failures.
+- Wrappers target weakly held knowledge. Some answers have a probability score between 0.5 and 0.8. Non-log wrappers turn 26% of these weak answers into wrong answers. For very firm answers above 0.999 probability, this drops to 1.2%. Server logs are different. They hit firm answers just as hard as weak ones. The model turns 14% of its weakest answers and 15% of its firmest answers into descriptions of the log.
 
 ## Where the answer is lost
 
-I used activation patching (rerunning a failed prompt with one internal state copied from another run) on failed wrapped prompts.
+I used activation patching to find where the error happens. This means taking an internal state from one run and copying it into a failed run to see if it fixes the problem.
 
-- Swapping in another question's states at the question's words makes the model give that other question's answer in 51% to 83% of failures at the best layer, depending on the model. That other question, asked inside the same wrapper, gets its answer in 40% to 78%. So the wrapper does not stop the model reading the question.
-- Restoring the failed question's own plain states brings its answer back in at most 47%.
-- Restoring the last position, where the reply begins, first brings the answer back in at least half of failures at 59% to 69% of the network's depth. That is where the question's content arrives there, and where the swapped question stops having any effect.
+- I took the internal state of a completely different question. I swapped it into the failed run exactly where the question's words appear. This made the model output the other question's answer in 51% to 83% of the failures at the best layer. That other question gets its answer 40% to 78% of the time when it is asked inside the same wrapper. This shows the wrapper does not stop the model from reading the question.
+- I tried restoring the internal states of the failed question from a successful plain run. This only brought the answer back in 47% of the cases at best.
+- Finally, I restored the state at the very last position, where the model starts typing its reply. This brought the answer back in at least half of the failures. It first reaches that level at 59% to 69% of the way through the network. This is the exact point where the question's meaning arrives at the end of the prompt.
 
 ## Limits
 
-The wrappers come from templates and hold bland content; real tool outputs may pull harder or less. I used one layout, about 500 tokens of wrapper after the question, chosen because a shorter one lost too few answers in Qwen3-4B. The answers are short, reasoning is off and the largest model has 12 billion parameters. Only Qwen3-4B was patched at every layer, and log failures per model are few.
+The wrappers were built from templates using boring content. Real tool outputs might be more or less distracting. I used one specific layout with about 500 tokens of wrapper text placed after the question. I chose this because a shorter layout did not cause enough failures in the Qwen3-4B model. The expected answers are short. The models did not use step-by-step reasoning. The largest model only has 12 billion parameters. I only performed the patching technique at every single layer on the smallest model. Lastly, the number of log failures for each individual model is small.

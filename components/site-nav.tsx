@@ -17,7 +17,7 @@ export function SiteNav({ variant = "bar" }: { variant?: "overlay" | "bar" }) {
       }
     >
       <div className="mx-auto flex w-full max-w-[96rem] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 py-5 md:px-10 xl:px-14">
-        <Link href="/" className="kicker tracking-[0.38em] transition-colors hover:text-bone-white">
+        <Link href="/" className="nav-link tracking-[0.38em]">
           Shailesh Rana
         </Link>
         <nav aria-label="Sections" className="flex flex-wrap items-center gap-x-5 gap-y-1">
@@ -25,7 +25,7 @@ export function SiteNav({ variant = "bar" }: { variant?: "overlay" | "bar" }) {
             <Link
               key={link.href}
               href={link.href}
-              className="kicker py-1 transition-colors hover:text-bone-white"
+              className="nav-link py-1"
             >
               {link.label}
             </Link>

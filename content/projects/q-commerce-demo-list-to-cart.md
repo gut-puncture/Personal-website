@@ -27,23 +27,23 @@ agent: >
   LinkedIn and the code is public on GitHub.
 ---
 
-List to Cart is a demo for quick-commerce apps (grocery apps that deliver in minutes). You upload a photo of a shopping list and the app builds a cart from it. The list can be a WhatsApp screenshot, a notes app list or even a handwritten one.
+List to Cart is a demo for quick-commerce grocery apps that deliver in minutes. You upload a photo of a shopping list and the app builds a cart from it. The list can be a WhatsApp screenshot, a notes app list, or even a handwritten one.
 
-It works as a demo. A video of it running is on [LinkedIn](https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/).
+It works as a demo. You can watch a video of it running on [LinkedIn](https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/).
 
 ![Phone screen titled Your Grocery List, showing the item Ripe Banana with a row of recommended banana products, each with a match score and an Add to Cart button, and the next item, High protein eggs, below](/media/q-commerce-demo-list-to-cart/cart-screen.jpg)
 
 ## How it works
 
-1. You upload the image. Claude 3.5 Sonnet reads it and keeps only the grocery item names, leaving out any other text.
-2. For each item, the app shows several similar products. It turns the item name into a vector embedding (a list of numbers that captures meaning) and compares it with the embedding of each product's title, description and quantity, using Elasticsearch vector search. That search is very quick and suited to production. Prefixes and suffixes count, so "Green Apple" or "Apple - 500gm" get different suggestions from "Apple".
-3. You pick products from the suggestions. The list items run down the screen and each item's suggestions run across it. This makes filling a cart very quick, which matters in quick commerce, where delivery is so fast that slow cart-building is one of the biggest pain points.
+1. You upload the image. Claude 3.5 Sonnet reads it and keeps only the grocery item names, ignoring any other text.
+2. For each item, the app shows several similar products. It turns the item name into a vector embedding, which is a list of numbers that captures meaning. It then compares this embedding with the embedding of each product's title, description, and quantity using Elasticsearch vector search. That search is very quick and suited for real apps. Prefixes and suffixes count, so "Green Apple" or "Apple - 500gm" get different suggestions than just "Apple".
+3. You pick products from the suggestions. The list items run down the screen and each item's suggestions run across it. This makes filling a cart very quick. Speed matters in quick commerce, where slow cart-building is a major pain point.
 
 ## What production would need
 
-- A smaller, probably open-source model to read the list in place of Claude 3.5 Sonnet.
-- Recommendations that take the user's own attributes into account. The demo does not.
+- A smaller, probably open-source model to read the list instead of Claude 3.5 Sonnet.
+- Recommendations that take the user's own preferences into account. My demo does not do this.
 
 ## Why I built it
 
-I am forgetful, and I am usually asleep when my cook arrives in the morning. I wanted to fill a cart and schedule a morning delivery for the cook to receive. No app had that, so my wife and I kept our list in a WhatsApp chat. That made me realise a simpler flow: take a screenshot of the list, upload it, and get a cart.
+I am forgetful, and I am usually asleep when my cook arrives in the morning. I wanted to fill a cart and schedule a morning delivery for the cook to receive. No app offered that feature, so my wife and I kept our list in a WhatsApp chat instead. That gave me a simpler idea: take a screenshot of the list, upload it, and get a full cart instantly.

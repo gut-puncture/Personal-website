@@ -10,24 +10,6 @@ export type ProjectStat = {
   label: string;
 };
 
-export type EvidenceRow = {
-  name: string;
-  meaning: string;
-  model: string;
-  modelPct: number;
-  modelCaption: string;
-  baseline: string;
-  baselinePct: number;
-  baselineCaption: string;
-};
-
-export type ProjectEvidence = {
-  title: string;
-  intro: string;
-  footnote: string;
-  rows: EvidenceRow[];
-};
-
 export type HeadingItem = {
   depth: number;
   text: string;
@@ -47,16 +29,9 @@ export type ProjectEntry = {
   stats: ProjectStat[];
   /** Picture shown on the project's card on the home page. */
   cover: { src: string; alt: string } | null;
-  /** Results explained as model-against-comparison bars. Shown in place of bare numbers. */
-  evidence: ProjectEvidence | null;
   aliases: string[];
   markdown: string;
   headings: HeadingItem[];
-};
-
-export type SkillEntry = {
-  name: string;
-  iconId: string;
 };
 
 export type Profile = {
@@ -65,7 +40,6 @@ export type Profile = {
   location: string;
   tagline: string;
   strip: Array<{ label: string; value: string }>;
-  skills: SkillEntry[];
   aiNote: string;
   contactParagraphs: string[];
   links: {

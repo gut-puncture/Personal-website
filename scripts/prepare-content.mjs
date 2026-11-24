@@ -155,40 +155,6 @@ async function loadProject(file) {
     cover = { src: String(data.cover.src), alt: String(data.cover.alt) };
   }
 
-  let evidence = null;
-  if (data.evidence) {
-    const rows = Array.isArray(data.evidence.rows) ? data.evidence.rows : [];
-    if (!data.evidence.title || !data.evidence.intro || !rows.length) {
-      fail(file, `"evidence" needs a title, an intro and at least one row`);
-    }
-    for (const row of rows) {
-      for (const key of ["name", "meaning", "model", "baseline", "modelCaption", "baselineCaption"]) {
-        if (!row?.[key]) fail(file, `every evidence row needs "${key}"`);
-      }
-      for (const key of ["modelPct", "baselinePct"]) {
-        const value = Number(row[key]);
-        if (!Number.isFinite(value) || value < 0 || value > 100) {
-          fail(file, `evidence "${key}" must be a number from 0 to 100`);
-        }
-      }
-    }
-    evidence = {
-      title: String(data.evidence.title),
-      intro: String(data.evidence.intro),
-      footnote: data.evidence.footnote ? String(data.evidence.footnote) : "",
-      rows: rows.map((row) => ({
-        name: String(row.name),
-        meaning: String(row.meaning),
-        model: String(row.model),
-        modelPct: Number(row.modelPct),
-        modelCaption: String(row.modelCaption),
-        baseline: String(row.baseline),
-        baselinePct: Number(row.baselinePct),
-        baselineCaption: String(row.baselineCaption)
-      }))
-    };
-  }
-
   return {
     slug,
     title: readString(file, data, "title", { max: 70 }),
@@ -202,7 +168,6 @@ async function loadProject(file) {
     links: links.map((link) => ({ label: String(link.label), href: String(link.href) })),
     stats: stats.map((stat) => ({ value: String(stat.value), label: String(stat.label) })),
     cover,
-    evidence,
     aliases,
     agentBrief: readString(file, data, "agent"),
     markdown,
@@ -314,7 +279,6 @@ async function main() {
       location: profile.location,
       tagline: profile.tagline,
       strip: profile.strip,
-      skills: profile.skills,
       aiNote: profile.aiNote,
       contactParagraphs: profile.contactParagraphs,
       links: profile.links

@@ -30,12 +30,12 @@ agent: >
 cover: { src: "/media/how-a-7-billion-parameter-ai-cannot-add/accuracy-by-length.png", alt: "Chart of addition accuracy by number length, higher when the answer gains a digit" }
 ---
 
-Qwen 2.5 7B, an open language model with 7 billion parameters, adds long numbers more accurately in the case that should be harder. When the sum of two numbers is one digit longer than the numbers themselves (an overflow, as in 6,000,000,000 + 6,000,000,000 = 12,000,000,000), it was right more often than when the sum stayed the same length. At 10 digits it got 44% of overflow problems right, against 20% of the others.
+Qwen 2.5 7B is an open language model with 7 billion parameters. I found that it adds long numbers more accurately when the maths should be harder. Sometimes the sum of two numbers gains an extra digit, like an overflow. For example, 6,000,000,000 + 6,000,000,000 = 12,000,000,000. The model got these problems right more often than problems where the sum stayed the same length. At 10 digits, it correctly answered 44% of the overflow problems. It only got 20% of the normal problems right.
 
-The explanation that fits is a length bias: the model expects the sum of two long numbers to be one digit longer than they are. When the sum really is longer, the bias helps. When it is not, the bias pulls the model toward an answer of the wrong length.
+The explanation that fits is a length bias. The model just expects the sum of two long numbers to be one digit longer. When the sum actually is longer, this bias helps the model. When the sum is not longer, the bias makes the model output an answer of the wrong length.
 
 ![Bar chart of accuracy by number of digits, 10 to 18, for problems whose sum stays the same length and problems whose sum gains a digit. The sums that gain a digit are as accurate or more accurate at every length.](/media/how-a-7-billion-parameter-ai-cannot-add/accuracy-by-length.png)
-*"Easy" sums stay the same length; "Hard" sums gain a digit. Each bar is 50 problems.*
+*"Easy" sums stay the same length. "Hard" sums gain a digit. Each bar represents 50 problems.*
 
 ## Results
 
@@ -51,19 +51,19 @@ The explanation that fits is a length bias: the model expects the sum of two lon
 | 17 | 2% | 6% |
 | 18 | 0% | 0% |
 
-Overflow problems were more accurate at seven of the nine lengths and tied at the other two. Overall the model got 79 of 900 problems right, so long addition fails in both cases. The overflow advantage is the surprising part.
+The model was more accurate on the overflow problems at seven of the nine lengths. It tied at the other two lengths. Overall, the model only got 79 out of 900 problems right. It fails at long addition in both cases. The surprising part is that it does better on the harder version.
 
 ## Method
 
-I generated 900 problems: for each length from 10 to 18 digits, 50 pairs of random numbers whose sum stays the same length and 50 whose sum gains a digit. The prompt was only the two numbers and an equals sign, for example "4000000000 + 4000000000 =". The model answered with its single most likely output each time. An answer counted as correct if the last number of five or more digits in its output equalled the true sum.
+I generated 900 maths problems. For each length from 10 to 18 digits, I created 50 pairs of random numbers whose sum stays the same length. I created another 50 pairs whose sum gains a digit. The prompt only contained the two numbers and an equals sign, like "4000000000 + 4000000000 =". The model answered with its most likely output. I counted an answer as correct if the last sequence of five or more digits matched the true sum.
 
-I also recorded the model's internal state at every third layer, on the last token of the prompt. The internal states of right and wrong answers drift further apart through the network, with the largest gap at layer 24 of 28.
+I also recorded the model's internal state at every third layer on the last token of the prompt. I found that the internal states for right and wrong answers drift apart as they move through the network. The biggest gap happens at layer 24 out of 28.
 
 ## Limits
 
-- The study did not count the digits in the model's wrong answers. The length bias is inferred from the accuracy pattern, not measured directly. Counting answer lengths would test it.
-- Each cell of the table rests on 50 problems, so a difference of a few points is one or two answers.
-- The internal measurements were taken on the prompt, before the model writes anything. They show that right and wrong answers differ inside the model; they do not show the bias itself.
-- One model, one prompt format.
+- I did not count the actual digits in the model's wrong answers. I inferred the length bias from the accuracy scores rather than measuring it directly. Counting the lengths of the wrong answers would test whether the bias is real.
+- Each cell in my table represents only 50 problems. A difference of a few percentage points is just one or two answers.
+- I measured the internal states on the prompt itself, before the model wrote anything. This shows that the model treats right and wrong answers differently inside, but it does not show the bias happening.
+- I only tested one model and used one prompt format.
 
 The [code, raw results and figures](https://github.com/gut-puncture/Long-Number-Addition) are public.

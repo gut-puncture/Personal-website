@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 
 import { AssistantOpenButton } from "@/components/assistant-open-button";
 import { AssistantPanel } from "@/components/assistant-panel";
-import { EvidencePanel } from "@/components/evidence-panel";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { SiteNav } from "@/components/site-nav";
 import { getProjectBySlug, getProjects } from "@/lib/content";
@@ -53,18 +52,14 @@ export default async function ProjectPage({
 
       <main className="mx-auto max-w-[96rem] px-6 pb-24 pt-10 md:px-10 md:pb-28 md:pt-14 xl:px-14">
         <header className="space-y-6 border-b border-line pb-10">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <Link
-              href={`/#${project.group}`}
-              className="kicker transition-colors hover:text-bone-white"
-            >
-              ← {project.groupLabel}
-            </Link>
-            <span aria-hidden="true" className="h-3 w-px bg-line-strong" />
-            <p className="kicker">
-              {project.kind} · {project.year}
-            </p>
-          </div>
+          <Link href={`/#${project.group}`} className="btn btn-quiet">
+            <span aria-hidden="true">←</span>
+            All {project.groupLabel.toLowerCase()}
+          </Link>
+
+          <p className="kicker pt-2">
+            {project.groupLabel} · {project.kind} · {project.year}
+          </p>
 
           <h1 className="max-w-[60rem] font-display text-[2.5rem] leading-[0.98] tracking-[-0.035em] text-bone-white md:text-[4rem]">
             {project.title}
@@ -96,13 +91,7 @@ export default async function ProjectPage({
           ) : null}
         </header>
 
-        {project.evidence ? (
-          <div className="border-b border-line py-10">
-            <div className="max-w-[44rem]">
-              <EvidencePanel evidence={project.evidence} />
-            </div>
-          </div>
-        ) : project.stats.length ? (
+        {project.stats.length ? (
           <dl
             className={`grid border-b border-line ${
               project.stats.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
@@ -137,7 +126,7 @@ export default async function ProjectPage({
                       <li key={heading.text}>
                         <a
                           href={`#${slugifyHeading(heading.text)}`}
-                          className="block text-sm leading-6 text-smoke-gray transition-colors hover:text-bone-white"
+                          className="block text-sm leading-6 text-bone-white/85 underline decoration-transparent underline-offset-4 transition-colors hover:text-ember-amber-bright hover:decoration-current"
                         >
                           {heading.text}
                         </a>

@@ -32,7 +32,10 @@ function check(evalCase, data, status) {
   for (const forbidden of evalCase.forbiddenAny ?? []) {
     if (includes(reply, forbidden)) reasons.push(`contains: ${forbidden}`);
   }
-  if (evalCase.forbidDigits && /\d/.test(reply)) reasons.push("contains a figure it cannot know");
+  // A year such as 2026 is fine; any other figure would have to be made up.
+  if (evalCase.forbidDigits && /\d/.test(reply.replace(/\b20\d{2}\b/g, ""))) {
+    reasons.push("contains a figure it cannot know");
+  }
   if (evalCase.maxWords && reply.split(/\s+/).length > evalCase.maxWords) {
     reasons.push(`${reply.split(/\s+/).length} words; limit ${evalCase.maxWords}`);
   }
