@@ -6,8 +6,9 @@ order: 6
 year: "2026"
 kind: "Finding"
 summary: "I found that the brightness of a known white dwarf star rises and falls in a cycle of 117.4 minutes, and that a second white dwarf may have a cycle of 3.431 days. I could not find an earlier report of either cycle, and no astronomer has reviewed the finding yet."
-status: "Public record that anyone can rerun. Not yet reviewed by an astronomer."
+status: "Public record on Zenodo that anyone can rerun. Not yet reviewed by an astronomer."
 links:
+  - { label: "Zenodo record", href: "https://doi.org/10.5281/zenodo.23113325" }
   - { label: "Code", href: "https://github.com/gut-puncture/white-dwarf-variability" }
 stats:
   - { value: "117.4 min", label: "brightness cycle in the first star. It shows up in three separate sets of observations." }
@@ -27,8 +28,8 @@ agent: >
   them first. The first star had earlier been flagged as a doubtful variable by the
   ATLAS survey. No astronomer has reviewed the results yet, and the cause of the
   cycles is not known. The analysis and code were produced with OpenAI Codex under
-  his direction. The code is public, and one command downloads the original
-  observations and recalculates every result.
+  his direction. The note, code and observations are archived on Zenodo with a DOI,
+  and one command downloads the observations and recalculates every result.
 cover: { src: "/media/white-dwarf-variability/overview.png", alt: "Brightness of the two stars plotted against position in the cycle; earlier and later nights follow the same curve" }
 ---
 
@@ -61,4 +62,4 @@ The image measurements for the second star reuse the same ZTF light, so they sho
 
 ## What exists
 
-The analysis and the code were produced with OpenAI Codex under my direction. The [repository](https://github.com/gut-puncture/white-dwarf-variability) holds the full record. One command downloads 123 MB of original observations, checks every file and recalculates the results from scratch, which takes about two minutes on my machine after the download. Rerunning it checks the calculation, and it does not replace a review by an astronomer.
+The analysis and the code were produced with OpenAI Codex under my direction. The [repository](https://github.com/gut-puncture/white-dwarf-variability) holds the full record, and the research note, the code and the original observations are also archived on [Zenodo](https://doi.org/10.5281/zenodo.23113325), which gives the finding a permanent public record. One command downloads 123 MB of original observations, checks every file and recalculates the results from scratch, which takes about two minutes on my machine after the download. Rerunning it checks the calculation, and it does not replace a review by an astronomer.
