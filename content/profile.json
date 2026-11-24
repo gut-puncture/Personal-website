@@ -1,26 +1,21 @@
 {
   "name": "Shailesh Rana",
-  "role": "Independent AI researcher",
+  "role": "AI Researcher",
   "location": "Bengaluru, India",
   "tagline": "Learning in real time as the machine gets stronger, still betting on human taste, judgment, and nerve.",
   "strip": [
     {
       "label": "Now",
-      "value": "Independent AI researcher, based in Bengaluru."
+      "value": "I do AI research on my own. I live in Bengaluru."
     },
     {
       "label": "Research",
-      "value": "How language models reach an answer, how they lose one they know, and which abilities appear from prediction alone."
+      "value": "I study what happens inside AI language models when they answer a question."
     },
     {
       "label": "Before",
-      "value": "Four years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
+      "value": "Five years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
     }
-  ],
-  "about": [
-    "I study what happens inside language models. My papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict.",
-    "I came to research from product. For four years I built AI products as a product manager, most recently owning design, product, development and testing for a B2B software product at Datasutram.ai. I left in May 2026 and now do independent research.",
-    "All the code in these projects was written with AI coding tools, under my direction."
   ],
   "experience": [
     {
@@ -89,10 +84,6 @@
       "iconId": "mechanistic-interpretability"
     },
     {
-      "name": "Experiment design and model evaluation",
-      "iconId": "evaluation"
-    },
-    {
       "name": "Training small language models",
       "iconId": "training"
     },
@@ -109,11 +100,12 @@
       "iconId": "product-management"
     }
   ],
-  "roleFit": "He is open to AI research roles, especially in interpretability, model behaviour and evaluation, and to AI product roles that need deep technical ownership. He has four years of experience as an AI product manager.",
+  "roleFit": "He is open to AI research roles, especially in interpretability, model behaviour and evaluation, and to AI product roles that need deep technical ownership. He has five years of experience as an AI product manager.",
   "workingStyle": "He works independently and on a small budget. All the code in his projects was written with AI coding tools under his direction, and he says so openly on the site.",
   "contactParagraphs": [
-    "Write to me about AI research, an open role, or a result here that you think is wrong. LinkedIn is the fastest way to reach me.",
-    "I am also happy to talk about product management, physics and DIY projects, or to give advice on anything I have been through (*gyaan dena pasand hai*)."
+    "Feel free to contact me if you want to chat about AI research, product management, physics or DIY projects.",
+    "Please contact me on LinkedIn if you think I'm a good fit for an AI research role.",
+    "And don't hesitate to message me for advice on anything. I love passing on the fruit of my wisdom (*gyaan dena pasand hai*)."
   ],
   "links": {
     "linkedin": "https://www.linkedin.com/in/shailesh-rana-9236971b6/",
@@ -127,5 +119,6 @@
     "Private topics such as family, relationships, age, religion, politics and home address are not something the agent discusses.",
     "The site lists finished, public work only. Shailesh has other research in progress that is not public yet; the agent does not know its details."
   ],
-  "agentBio": "He studies what happens inside language models. His papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict. He came to research from product: four years as an AI product manager, most recently at Datasutram.ai, which he left in May 2026. He now does independent research."
+  "agentBio": "He studies what happens inside language models. His papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict. He came to research from product: five years as an AI product manager, most recently at Datasutram.ai, which he left in May 2026. He now does independent research.",
+  "aiNote": "The text on this site was written by AI, from my papers and project notes."
 }

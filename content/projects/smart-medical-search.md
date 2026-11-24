@@ -5,8 +5,8 @@ group: "builds"
 order: 4
 year: "2025"
 kind: "Demo"
-summary: "Describe your symptoms in plain words and the search suggests which kind of doctor to see. A search index of medical terms built with text embeddings in 2 days; it works for specialties but has known gaps."
-status: "Demo built in 2 days; symptom-to-disease matching and duplicate results unfixed."
+summary: "You describe your symptoms in plain words and it suggests which kind of doctor to see. I built it in 2 days. It works for finding the right specialty and has known gaps elsewhere."
+status: "Demo. Two known problems are still unfixed."
 links: []
 aliases: ["smart medical search", "medical search", "symptom search", "which doctor should I see", "doctor finder", "smart med search"]
 agent: >

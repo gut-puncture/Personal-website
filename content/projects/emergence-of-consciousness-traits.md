@@ -5,17 +5,17 @@ group: "research"
 order: 1
 year: "2026"
 kind: "Paper"
-summary: "A small language model trained on text filtered of writing about minds developed narrow forms of four consciousness traits just by learning to forecast a simulated world. It passed 75% of access tests, against 9% for a baseline."
-status: "Paper, code, training text and all model weights are public."
+summary: "I trained a small AI model on text with everything that could teach it about consciousness removed. It then learned only to predict a simulated world. Narrow forms of four traits of consciousness still appeared, in all five training runs."
+status: "The paper, code, training text and all trained models are public."
 links:
   - { label: "Paper", href: "https://github.com/gut-puncture/Emergence-of-Consciousness-Traits/blob/main/PAPER.pdf" }
   - { label: "Code", href: "https://github.com/gut-puncture/Emergence-of-Consciousness-Traits" }
   - { label: "Models", href: "https://huggingface.co/AngryYoungBhaloo/ect-savanna-runs" }
   - { label: "Data", href: "https://huggingface.co/datasets/AngryYoungBhaloo/ect-pretraining-corpus" }
 stats:
-  - { value: "5 of 5", label: "training runs showed narrow forms of all four traits" }
-  - { value: "75%", label: "of access tests passed, against 9% for a forecaster that ignores the earlier fact" }
-  - { value: "94%", label: "of tests on what the animal's actions change, against 1% for a forecaster that ignores actions" }
+  - { value: "5 of 5", label: "training runs in which narrow forms of all four traits appeared" }
+  - { value: "75%", label: "of tests passed on using a fact from earlier, against 9% for a comparison that ignores the fact" }
+  - { value: "94%", label: "of tests passed on predicting what its own actions change, against 1% for a comparison that ignores the actions" }
 aliases: ["emergence of consciousness traits", "consciousness traits paper", "trained without consciousness", "the savanna paper", "consciousness in a small language model", "conscious this traits", "emergence of conscious traits"]
 agent: >
   This is Shailesh's 2026 paper, Emergence of Consciousness Traits in a Small
@@ -32,6 +32,16 @@ agent: >
   against 11 percent. The traits were tested only as abilities, with no claim about
   experience, in one small model and one simulated world. The paper, code, training
   text and every model are public on GitHub and Hugging Face.
+cover: { src: "/media/emergence-of-consciousness-traits/overview.png", alt: "How the experiment worked: web text is filtered, a small model is trained on what remains, it then trains in a simulated savanna, and is tested for four traits" }
+evidence:
+  title: "What the model could do after training"
+  intro: "Each test asks the model to predict what happens next in the simulated world. The red bar is the model. The grey bar is a comparison that cannot use the ability being tested."
+  rows:
+    - { name: "Access", meaning: "Using a fact it saw earlier in the day", model: "75%", modelPct: 75, baseline: "9%", baselinePct: 9, modelCaption: "of tests passed", baselineCaption: "for a comparison that ignores the fact" }
+    - { name: "Self-modelling", meaning: "Predicting what its own actions will change", model: "94%", modelPct: 94, baseline: "1%", baselinePct: 1, modelCaption: "of tests passed", baselineCaption: "for a comparison that ignores the actions" }
+    - { name: "Integration", meaning: "Combining two facts given hours apart", model: "36%", modelPct: 36, baseline: "11%", baselinePct: 11, modelCaption: "of tests passed", baselineCaption: "for a comparison that ignores one of the facts" }
+    - { name: "Metacognition", meaning: "Being less sure when things may have changed out of sight", model: "0.57", modelPct: 57, baseline: "0.03", baselinePct: 3, modelCaption: "uncertainty about where the herd is, when the herd could have moved", baselineCaption: "uncertainty when the herd could not have moved" }
+  footnote: "Averages over five training runs. These are tests of ability only. The paper makes no claim about experience."
 ---
 
 I trained a small language model (SLM) of about 100 million parameters from scratch on web text with anything that could teach it to imitate consciousness removed. I then trained it to forecast and act in a simulated savanna, rewarded only for accurate forecasts. Nothing described or rewarded any trait.

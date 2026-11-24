@@ -5,8 +5,8 @@ group: "builds"
 order: 6
 year: "2025"
 kind: "Demo"
-summary: "A demo that checks a photo of a packed grocery crate against the customer it is meant for: the produce must be near-flawless for a premium customer, acceptable for an average one. It answers approved or not approved."
-status: "Demo on free Hugging Face hosting; it may be asleep when you visit."
+summary: "A demo that looks at a photo of a packed grocery crate and decides if it is good enough for the customer it is going to. A premium customer needs near-perfect produce. An average customer can get acceptable produce."
+status: "Demo on free hosting, so it may take a while to wake up."
 links:
   - { label: "Demo", href: "https://huggingface.co/spaces/AngryYoungBhaloo/grocery_crate_classification" }
   - { label: "Code", href: "https://github.com/gut-puncture/grocery_crate_classification" }

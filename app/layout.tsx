@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bodoni_Moda, IBM_Plex_Sans } from "next/font/google";
 
 import "@/app/globals.css";
+import { SiteFooter } from "@/components/site-footer";
 
 const display = Bodoni_Moda({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const body = IBM_Plex_Sans({
 });
 
 const description =
-  "Shailesh Rana is an independent AI researcher. Papers on how language models reach an answer, how they lose one they know, and which abilities appear from prediction alone.";
+  "Shailesh Rana is an AI researcher. This site has his papers on what happens inside AI language models, and the things he built before as a product manager.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://shaileshrana.vercel.app"),
@@ -40,7 +41,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${display.variable} ${body.variable}`}>{children}</body>
+      <body className={`${display.variable} ${body.variable}`}>
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }

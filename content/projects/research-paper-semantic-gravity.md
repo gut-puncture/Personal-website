@@ -2,18 +2,18 @@
 title: "Semantic Gravity Wells: Why Negative Constraints Backfire"
 slug: "research-paper-semantic-gravity"
 group: "research"
-order: 4
+order: 3
 year: "2026"
 kind: "Paper"
-summary: "Tell a language model \"do not use the word X\" and how often it fails depends mostly on how strongly it wanted to say X. In 87.5% of failures, naming the word in the instruction primed the model to say it."
-status: "Paper on arXiv; code and the 2,500 prompts are public."
+summary: "If you tell a language model \"do not use the word Paris\", it often says Paris anyway. I traced why. In 87.5% of the failures, the word appearing in the instruction is what pushed the model to say it."
+status: "Paper on arXiv. Code and the 2,500 prompts are public."
 links:
   - { label: "Paper", href: "https://arxiv.org/abs/2601.08070" }
   - { label: "Code", href: "https://github.com/gut-puncture/Semantic-Gravity-RP" }
 stats:
-  - { value: "78%", label: "of the variation in violation rate explained by the word's probability without the instruction" }
-  - { value: "4.4×", label: "weaker suppression in failures than in successes: 5.2 against 22.8 percentage points" }
-  - { value: "87.5%", label: "of failures showed priming: the instruction's mention of the word pushed toward it" }
+  - { value: "87.5%", label: "of failures were caused by priming: naming the forbidden word in the instruction made the model more likely to say it." }
+  - { value: "12.5%", label: "of failures happened another way: the model understood the instruction, but its last layers pushed the word out anyway." }
+  - { value: "4.4×", label: "weaker push against the word when the model failed than when it obeyed." }
 aliases: ["semantic gravity", "semantic gravity wells", "negative constraints paper", "forbidden word paper", "do not say Paris paper", "why negative constraints backfire", "semantic gravity wealth"]
 agent: >
   Semantic Gravity Wells is a 2026 research paper by Shailesh, on arXiv, about why

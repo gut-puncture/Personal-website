@@ -5,8 +5,8 @@ group: "side-quests"
 order: 3
 year: "2025"
 kind: "Hardware"
-summary: "A home-built gadget to automate watering my plants: an ESP32 Wi-Fi microcontroller reading a soil moisture sensor, sealed in a weatherproof box in a planter. The sensing unit works; its battery power is not yet reliable."
-status: "Sensing unit working in a planter; power supply still to be sorted."
+summary: "A gadget I am building to water my plants automatically. A small Wi-Fi board reads a soil moisture sensor from a weatherproof box in the planter. The sensor part works. The battery power doesn't yet."
+status: "The sensor works in the planter. The power supply still needs fixing."
 links: []
 aliases: ["garden watering system", "plant watering", "the garden project", "ESP32 project", "soil moisture sensor", "automatic plant watering"]
 agent: >

@@ -16,7 +16,7 @@ export default function NotFound() {
         </p>
         <Link href="/" className="btn btn-primary mt-8">
           Go to the home page
-          <span aria-hidden="true">/</span>
+          <span aria-hidden="true">→</span>
         </Link>
       </main>
     </>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AssistantOpenButton } from "@/components/assistant-open-button";
 import { AssistantPanel } from "@/components/assistant-panel";
+import { EvidencePanel } from "@/components/evidence-panel";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { SiteNav } from "@/components/site-nav";
 import { getProjectBySlug, getProjects } from "@/lib/content";
@@ -50,7 +51,7 @@ export default async function ProjectPage({
     <>
       <SiteNav />
 
-      <main className="mx-auto max-w-[96rem] px-6 pb-32 pt-10 md:px-10 md:pb-40 md:pt-14 xl:px-14">
+      <main className="mx-auto max-w-[96rem] px-6 pb-24 pt-10 md:px-10 md:pb-28 md:pt-14 xl:px-14">
         <header className="space-y-6 border-b border-line pb-10">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Link
@@ -95,8 +96,18 @@ export default async function ProjectPage({
           ) : null}
         </header>
 
-        {project.stats.length ? (
-          <dl className="grid border-b border-line md:grid-cols-3">
+        {project.evidence ? (
+          <div className="border-b border-line py-10">
+            <div className="max-w-[44rem]">
+              <EvidencePanel evidence={project.evidence} />
+            </div>
+          </div>
+        ) : project.stats.length ? (
+          <dl
+            className={`grid border-b border-line ${
+              project.stats.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
+            }`}
+          >
             {project.stats.map((stat) => (
               <div
                 key={stat.label}
@@ -105,7 +116,7 @@ export default async function ProjectPage({
                 <dt className="font-display text-[2.6rem] leading-none tracking-[-0.03em] text-bone-white md:text-[3.1rem]">
                   {stat.value}
                 </dt>
-                <dd className="mt-3 max-w-[22rem] text-sm leading-6 text-smoke-gray">{stat.label}</dd>
+                <dd className="mt-3 max-w-[26rem] text-sm leading-6 text-smoke-gray">{stat.label}</dd>
               </div>
             ))}
           </dl>
@@ -147,7 +158,7 @@ export default async function ProjectPage({
                   className="btn mt-4 w-full"
                 >
                   Ask about this
-                  <span aria-hidden="true">/</span>
+                  <span aria-hidden="true">→</span>
                 </AssistantOpenButton>
               </div>
             </div>

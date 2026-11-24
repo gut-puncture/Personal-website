@@ -5,8 +5,8 @@ group: "builds"
 order: 5
 year: "2025"
 kind: "App"
-summary: "A web app that designs a shoe to match a fashion brand's look: upload photos of the brand's clothes and accessories, and it writes a design brief and generates an image of a new shoe."
-status: "Live app; built quickly as a proof of concept."
+summary: "A web app that designs a shoe to match a fashion brand. You upload photos of the brand's clothes and accessories, and it writes a design brief and generates a picture of a new shoe."
+status: "Live app. Built quickly as a proof of concept."
 links:
   - { label: "App", href: "https://ai-shoe-design-app.vercel.app/" }
   - { label: "Code", href: "https://github.com/gut-puncture/AI-shoe-design-app" }

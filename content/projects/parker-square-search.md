@@ -5,8 +5,8 @@ group: "side-quests"
 order: 2
 year: "2025"
 kind: "Experiment"
-summary: "A search for a 3×3 magic square made of nine different perfect squares, an unsolved maths problem. I reduced the problem to one variable using Pell equations, so the search loops over a single number."
-status: "Search code public; a few hours' side project with no more time planned."
+summary: "A search for a 3×3 magic square made of nine different square numbers, which is an unsolved maths problem. I rewrote the problem so the search only has to loop over one number."
+status: "The search code is public. I spent a few hours on it and don't plan more."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/Parker-Square-Search" }
 aliases: ["Parker square", "Parker square search", "magic square of squares", "Matt Parker", "Pell equation search"]

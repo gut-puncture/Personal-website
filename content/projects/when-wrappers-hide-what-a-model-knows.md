@@ -2,18 +2,17 @@
 title: "When wrappers hide what a language model knows"
 slug: "when-wrappers-hide-what-a-model-knows"
 group: "research"
-order: 3
+order: 4
 year: "2026"
 kind: "Paper"
-summary: "Placing a question inside a tool result, web page or email makes four open models lose 6% to 18% of answers they know, and server logs up to 39%. The model still reads the question; the answer is lost later, where the reply begins."
-status: "Paper, code, data and results public on GitHub."
+summary: "Language models often get questions buried inside tool results, web pages, emails or server logs. I found that this makes them lose answers they know: 6% to 18% of them inside tool results, web pages and emails, and up to 39% inside server logs."
+status: "Paper, code, data and results are public on GitHub."
 links:
   - { label: "Paper", href: "https://github.com/gut-puncture/interface-formatting-study/blob/main/paper/main.pdf" }
   - { label: "Code", href: "https://github.com/gut-puncture/interface-formatting-study" }
 stats:
-  - { value: "6%–18%", label: "of known answers lost inside tool results, web pages and emails, against a noise floor of 0.3%–1.2%" }
-  - { value: "64%", label: "of answers lost to server logs replaced by a description of the log" }
-  - { value: "51%–83%", label: "of failed prompts answered with another question's answer once its internal states are swapped in" }
+  - { value: "6%–18%", label: "of answers the model knows are lost when the question sits inside a tool result, web page or email." }
+  - { value: "up to 39%", label: "of known answers lost inside server logs. The model usually starts describing the log instead of answering." }
 aliases: ["When wrappers hide what a language model knows", "wrappers paper", "interface formatting study", "the question gets through the answer does not", "rappers paper"]
 agent: >
   When Wrappers Hide What a Language Model Knows is a 2026 paper by Shailesh Rana, subtitled
@@ -30,6 +29,7 @@ agent: >
   wrappers come from templates, the answers are short, and the largest model has 12
   billion parameters. The
   paper, code, data and results are public on GitHub.
+cover: { src: "/media/when-wrappers-hide-what-a-model-knows/answers-kept-by-wrapper.png", alt: "Four charts, one per model, of how many known answers survive inside each kind of wrapper" }
 ---
 
 A wrapper is the text a question arrives in when nobody asks it directly: a tool result, a web page, a server log, an email thread or plain prose. I found that wrappers make four open models lose answers they know. Tool results, web pages and email threads lose 6% to 18% of known answers, depending on the model, against 0.3% to 1.2% when one neutral sentence is added. Server logs lose 6% to 39%, and up to 67% at one length in Qwen3-4B.

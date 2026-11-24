@@ -1,11 +1,11 @@
 import Image from "next/image";
 
-import { AboutSection } from "@/components/about-section";
 import { AssistantOpenButton } from "@/components/assistant-open-button";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { ContactSection } from "@/components/contact-section";
 import { LeadProject } from "@/components/lead-project";
-import { ProjectRow, ProjectTile } from "@/components/project-row";
+import { BuildCard, ResearchCard, SideQuestRow } from "@/components/project-cards";
+import { SkillGlyph } from "@/components/skill-icons";
 import { SiteNav } from "@/components/site-nav";
 import { getPortfolioContent, getProjectsByGroup } from "@/lib/content";
 
@@ -16,7 +16,7 @@ export default function Home() {
   const sideQuests = getProjectsByGroup("side-quests");
 
   return (
-    <main className="relative overflow-x-clip pb-24 md:pb-32">
+    <main className="relative overflow-x-clip pb-20 md:pb-24">
       <section className="relative min-h-[100svh] overflow-hidden border-b border-line">
         <div className="absolute inset-0">
           <Image
@@ -61,7 +61,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-3">
               <a href="#research" className="btn btn-primary">
                 See the research
-                <span aria-hidden="true">/</span>
+                <span aria-hidden="true">↓</span>
               </a>
               <a href={profile.links.cv} target="_blank" rel="noreferrer" className="btn">
                 Open CV
@@ -69,7 +69,7 @@ export default function Home() {
               </a>
               <AssistantOpenButton source="hero" className="btn">
                 Ask the voice agent
-                <span aria-hidden="true">/</span>
+                <span aria-hidden="true">→</span>
               </AssistantOpenButton>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function Home() {
       </section>
 
       <div className="mx-auto max-w-[96rem] space-y-24 px-6 py-16 md:space-y-28 md:px-10 md:py-20 xl:px-14">
-        <section id="research" className="space-y-8">
+        <section id="research" className="space-y-6">
           <div className="section-head">
             <h2 className="kicker">Research</h2>
             <p className="kicker normal-case tracking-[0.04em]">
@@ -101,65 +101,90 @@ export default function Home() {
 
           {leadProject ? <LeadProject project={leadProject} /> : null}
 
-          <div>
-            {research.map((project) => (
-              <ProjectRow key={project.slug} project={project} size="large" />
-            ))}
+          {/* Mixed sizes: two rows of a wide and a narrow card, then one full-width card. */}
+          <div className="grid gap-6 lg:grid-cols-12">
+            {research.map((project, index) => {
+              const spans = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7"];
+              const isLast = index === research.length - 1 && index >= spans.length;
+              return (
+                <ResearchCard
+                  key={project.slug}
+                  project={project}
+                  layout={isLast ? "wide" : "stacked"}
+                  className={isLast ? "lg:col-span-12" : spans[index % spans.length]}
+                />
+              );
+            })}
           </div>
         </section>
 
-        <section id="builds" className="space-y-8">
+        <section id="builds" className="space-y-6">
           <div className="section-head">
             <h2 className="kicker">Builds</h2>
             <p className="kicker normal-case tracking-[0.04em]">
-              Demos and prototypes from my product years
+              Things I built while working as a product manager
             </p>
           </div>
 
-          <div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {builds.map((project) => (
-              <ProjectRow key={project.slug} project={project} size="medium" />
+              <BuildCard key={project.slug} project={project} />
             ))}
           </div>
         </section>
 
-        <section id="side-quests" className="space-y-8">
+        <section id="side-quests" className="space-y-2">
           <div className="section-head">
             <h2 className="kicker">Side quests</h2>
-            <p className="kicker normal-case tracking-[0.04em]">Small things built for fun</p>
+            <p className="kicker normal-case tracking-[0.04em]">Small things I made for fun</p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div>
             {sideQuests.map((project) => (
-              <ProjectTile key={project.slug} project={project} />
+              <SideQuestRow key={project.slug} project={project} />
             ))}
           </div>
         </section>
 
         <section
           aria-labelledby="voice-agent-heading"
-          className="grid gap-6 border-y border-line py-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+          className="grid gap-6 border border-line bg-[linear-gradient(90deg,rgba(255,67,35,0.08),transparent_60%)] px-6 py-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-10 md:py-10"
         >
           <div className="space-y-3">
             <h2 id="voice-agent-heading" className="kicker">
               Voice agent
             </h2>
             <p className="max-w-[40rem] font-display text-[1.75rem] leading-[1.1] tracking-[-0.02em] text-bone-white md:text-[2.1rem]">
-              Ask it anything about the work, aloud or in text.
+              Ask the voice agent about my work.
             </p>
             <p className="max-w-[40rem] text-base leading-7 text-smoke-gray">
-              It has read every project on this site and answers with the actual results, their
-              limits, and how they compare.
+              You can speak or type. It knows every project on this site, and it tells you when it
+              doesn&apos;t know something.
             </p>
           </div>
 
-          <AssistantOpenButton source="external" className="btn">
+          <AssistantOpenButton source="external" className="btn btn-primary">
             Open the voice agent
-            <span aria-hidden="true">/</span>
+            <span aria-hidden="true">→</span>
           </AssistantOpenButton>
         </section>
 
-        <AboutSection profile={profile} />
+        <section id="skills" className="space-y-6">
+          <div className="section-head">
+            <h2 className="kicker">Skills</h2>
+          </div>
+          <ul className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-5">
+            {profile.skills.map((skill) => (
+              <li
+                key={skill.name}
+                className="flex items-center gap-3 border-b border-line py-4 text-[0.9375rem] text-bone-white lg:border-b-0 lg:border-l lg:py-1 lg:pl-5 lg:first:border-l-0 lg:first:pl-0"
+              >
+                <SkillGlyph id={skill.iconId} className="h-[1.1rem] w-[1.1rem] shrink-0 text-ember-amber" />
+                {skill.name}
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <ContactSection profile={profile} />
       </div>

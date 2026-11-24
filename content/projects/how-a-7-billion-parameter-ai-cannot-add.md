@@ -5,14 +5,14 @@ group: "research"
 order: 5
 year: "2026"
 kind: "Study"
-summary: "Qwen 2.5 7B adds long numbers better when the sum is one digit longer than the numbers, the case that should be harder: 44% right at 10 digits, against 20% when the sum stays the same length. The pattern fits a bias toward longer answers."
-status: "Code, results and figures public; small study, not peer reviewed."
+summary: "A 7-billion-parameter model, Qwen 2.5, gets long additions right more often when the answer is one digit longer than the numbers being added. That should be the harder case. At 10 digits it got 44% right, against 20% when the answer stays the same length."
+status: "Code, results and figures are public. A small study, not peer reviewed."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/Long-Number-Addition" }
 stats:
-  - { value: "44%", label: "of 10-digit problems right when the sum gains a digit, against 20% when it does not" }
-  - { value: "7 of 9", label: "lengths from 10 to 18 digits where sums that gain a digit were more accurate; the other two tied" }
-  - { value: "79 of 900", label: "problems answered correctly overall, across all lengths and both kinds" }
+  - { value: "44% vs 20%", label: "correct at 10 digits when the answer gains a digit, against when it does not." }
+  - { value: "7 of 9", label: "number lengths, from 10 to 18 digits, where the answers that gain a digit were more accurate. The other two were tied." }
+  - { value: "79 of 900", label: "problems answered correctly in total." }
 aliases: ["the AI cannot add", "AI can't add", "long number addition", "length bias", "universal length bias", "Qwen addition study", "seven billion parameter AI", "how a 7 billion parameter AI cannot add"]
 agent: >
   This is a 2026 study by Shailesh of how the open language model Qwen 2.5 7B adds
@@ -27,6 +27,7 @@ agent: >
   when it is not. The study did not count the digits in the wrong answers, so the
   bias is inferred from the accuracy pattern rather than measured directly. Each
   group has only 50 problems per length. The code and results are public.
+cover: { src: "/media/how-a-7-billion-parameter-ai-cannot-add/accuracy-by-length.png", alt: "Chart of addition accuracy by number length, higher when the answer gains a digit" }
 ---
 
 Qwen 2.5 7B, an open language model with 7 billion parameters, adds long numbers more accurately in the case that should be harder. When the sum of two numbers is one digit longer than the numbers themselves (an overflow, as in 6,000,000,000 + 6,000,000,000 = 12,000,000,000), it was right more often than when the sum stayed the same length. At 10 digits it got 44% of overflow problems right, against 20% of the others.

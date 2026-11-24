@@ -608,7 +608,7 @@ function AssistantSurface({
               >
                 <span>{prompt}</span>
                 <span aria-hidden="true" className="text-ember-amber">
-                  /
+                  →
                 </span>
               </button>
             ))}

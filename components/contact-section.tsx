@@ -3,11 +3,11 @@ import type { Profile } from "@/lib/types";
 
 export function ContactSection({ profile }: { profile: Profile }) {
   const links = [
-    { label: "LinkedIn", href: profile.links.linkedin, primary: true },
-    { label: "CV", href: profile.links.cv, primary: true },
-    { label: "Email", href: `mailto:${profile.links.email}`, primary: false },
-    { label: "GitHub", href: profile.links.github, primary: false },
-    { label: "Medium", href: profile.links.medium, primary: false }
+    { label: "LinkedIn", href: profile.links.linkedin },
+    { label: "CV", href: profile.links.cv },
+    { label: "Email", href: `mailto:${profile.links.email}` },
+    { label: "GitHub", href: profile.links.github },
+    { label: "Medium", href: profile.links.medium }
   ];
 
   return (
@@ -32,12 +32,12 @@ export function ContactSection({ profile }: { profile: Profile }) {
                   href={link.href}
                   target={external ? "_blank" : undefined}
                   rel={external ? "noreferrer" : undefined}
-                  className={`flex items-center justify-between border-t border-line py-3.5 text-base transition-colors hover:border-ember-amber/50 hover:text-ember-amber-bright ${
-                    link.primary ? "text-bone-white" : "text-smoke-gray"
-                  }`}
+                  className="group flex items-center justify-between border-t border-line py-3.5 text-base text-bone-white transition-colors hover:border-ember-amber/50 hover:text-ember-amber-bright"
                 >
                   <span>{link.label}</span>
-                  <span aria-hidden="true">{external ? "↗" : "→"}</span>
+                  <span aria-hidden="true" className="text-smoke-gray transition-colors group-hover:text-ember-amber-bright">
+                    ↗
+                  </span>
                 </a>
               </li>
             );

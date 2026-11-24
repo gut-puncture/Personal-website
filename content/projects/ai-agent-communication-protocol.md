@@ -5,8 +5,8 @@ group: "builds"
 order: 3
 year: "2025"
 kind: "Prototype"
-summary: "An unfinished design for how a team of AI agents talk to each other: a shared message bus that runs in one process on a laptop and logs every message so a whole task can be replayed."
-status: "Unfinished; the design is written up but the build is not complete."
+summary: "An unfinished design for how a team of AI agents can talk to each other. All messages go through one shared channel and are logged, so a whole task can be replayed later."
+status: "Unfinished. The design is written up; the build is not complete."
 links: []
 aliases: ["agent communication protocol", "agent protocol", "message bus", "multi agent protocol", "agents talking to each other"]
 agent: >

@@ -5,8 +5,8 @@ group: "builds"
 order: 1
 year: "2025"
 kind: "Demo"
-summary: "A quick-commerce demo that turns a photo of a shopping list into a cart: upload a screenshot or a handwritten list, and pick each item from a row of matching products."
-status: "Working demo; not built for production."
+summary: "Take a photo of a shopping list and get a full cart. You upload a screenshot or a handwritten list, and pick each item from a row of matching products."
+status: "Working demo. Not built for production use."
 links:
   - { label: "Demo", href: "https://www.linkedin.com/feed/update/urn:li:activity:7290723046720434176/" }
   - { label: "Code", href: "https://github.com/gut-puncture/list_to_cart" }

@@ -5,8 +5,8 @@ group: "builds"
 order: 2
 year: "2025"
 kind: "Prototype"
-summary: "A pipeline that lets a language model keep learning from its chats with a user: it scores which messages matter, condenses them into insights and fine-tunes on them. The model recalled about 86% of the insights and lost under 2% on its original skills."
-status: "Prototype tested over 3 fine-tuning rounds; needs changes before use at scale."
+summary: "A system that lets a language model keep learning from its chats with a user. It picks the messages that matter, turns them into short insights and trains the model on them. In my test the model recalled about 86% of the insights."
+status: "Prototype, tested over 3 rounds of training. Needs changes before real use."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/Continuous-Learning-LLM" }
 aliases: ["continuous learning LLM", "continual learning", "continuous learning", "the learning LLM", "self learning chatbot", "CLM"]

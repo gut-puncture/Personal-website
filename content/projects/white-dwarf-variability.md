@@ -5,14 +5,13 @@ group: "research"
 order: 6
 year: "2026"
 kind: "Finding"
-summary: "I measured a 117.4-minute brightness cycle in a known white dwarf, seen in three separate sets of observations, and a 3.431-day candidate cycle in a second. I found no earlier report of either period; neither has had expert review."
-status: "Public research record that anyone can rerun; not yet reviewed by an astronomer."
+summary: "I found a brightness cycle of 117.4 minutes in a known white dwarf star, and a possible 3.431-day cycle in a second one. I could not find an earlier report of either. No astronomer has reviewed this yet."
+status: "Public record that anyone can rerun. Not yet reviewed by an astronomer."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/white-dwarf-variability" }
 stats:
-  - { value: "117.4 min", label: "brightness cycle in SDSS J112148.80+103934.2, found in early nights and confirmed in later ones" }
-  - { value: "5", label: "separate TESS observing sectors in which the same 117.4-minute cycle appears" }
-  - { value: "3.431 days", label: "candidate cycle in WDJ215009.13+471257.26, still to be confirmed with another telescope" }
+  - { value: "117.4 min", label: "brightness cycle in the first star. It shows up in three separate sets of observations." }
+  - { value: "3.431 days", label: "possible cycle in the second star. It still needs to be confirmed with another telescope." }
 aliases: ["white dwarf variability", "white dwarf project", "the white dwarf finding", "two white dwarfs", "repeating brightness", "117 minute star", "the astronomy project", "white dwarf variable tea"]
 agent: >
   This is an astronomy finding Shailesh made in 2026, as a non-astronomer. A white
@@ -30,6 +29,7 @@ agent: >
   cycles is not known. The analysis and code were produced with OpenAI Codex under
   his direction. The code is public, and one command downloads the original
   observations and recalculates every result.
+cover: { src: "/media/white-dwarf-variability/overview.png", alt: "Brightness of the two stars plotted against position in the cycle; earlier and later nights follow the same curve" }
 ---
 
 I found a 117.4-minute brightness cycle in the white dwarf SDSS J112148.80+103934.2. A white dwarf is the dense, Earth-sized remnant left when a star like the Sun runs out of fuel. The cycle appears in three separate sets of observations: ground-based measurements from ZTF (the Zwicky Transient Facility, a sky-survey camera at Palomar Observatory), five observing sectors of TESS (NASA's Transiting Exoplanet Survey Satellite), and changes in the star's spectrum from SDSS (the Sloan Digital Sky Survey).

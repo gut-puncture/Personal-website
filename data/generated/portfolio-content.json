@@ -1,96 +1,27 @@
 {
   "profile": {
     "name": "Shailesh Rana",
-    "role": "Independent AI researcher",
+    "role": "AI Researcher",
     "location": "Bengaluru, India",
     "tagline": "Learning in real time as the machine gets stronger, still betting on human taste, judgment, and nerve.",
     "strip": [
       {
         "label": "Now",
-        "value": "Independent AI researcher, based in Bengaluru."
+        "value": "I do AI research on my own. I live in Bengaluru."
       },
       {
         "label": "Research",
-        "value": "How language models reach an answer, how they lose one they know, and which abilities appear from prediction alone."
+        "value": "I study what happens inside AI language models when they answer a question."
       },
       {
         "label": "Before",
-        "value": "Four years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
-      }
-    ],
-    "about": [
-      "I study what happens inside language models. My papers trace where a model settles on an answer, why it says a word it was told not to say, how the format of a prompt hides answers the model knows, and whether traits linked to consciousness appear in a model that was only ever trained to predict.",
-      "I came to research from product. For four years I built AI products as a product manager, most recently owning design, product, development and testing for a B2B software product at Datasutram.ai. I left in May 2026 and now do independent research.",
-      "All the code in these projects was written with AI coding tools, under my direction."
-    ],
-    "experience": [
-      {
-        "id": "datasutram",
-        "company": "Datasutram.ai",
-        "formerName": "Data Sutram",
-        "title": "Product Manager, AI / Member of Technical Staff",
-        "start": "August 2025",
-        "end": "May 2026",
-        "summary": "Owned UX and design, product management, development and testing for the company's only B2B software product, as one of three people supporting it.",
-        "details": [
-          "Built version 2.0 of the B2B app from scratch with Codex, as a proof of concept for merging the design, product and engineering roles.",
-          "Developed an AI-based income estimation model, which became the fastest growing single product in the company.",
-          "Solely led the demo shown at Global Fintech Festival 2025, which led to a 100% year-on-year increase in leads compared with 2024."
-        ]
-      },
-      {
-        "id": "caastle",
-        "company": "CaaStle Technologies",
-        "note": "The company has since ceased operations.",
-        "title": "Product Manager, AI",
-        "start": "October 2022",
-        "end": "April 2025",
-        "summary": "Led the company's AI data platform and shipped AI features and internal assistants.",
-        "details": [
-          "Led the creation of the AI data platform, meant as the Data Science team's ground for experiments and for building internal AI agents.",
-          "Used OpenAI vector embeddings to generate garment collections by occasion and weather, leading to a 9% increase in free trial conversions.",
-          "Built an in-house natural language data query system on Google's Gemini models, with Slack as the interface.",
-          "Built a proof of concept Jira assistant that responded to tickets; average time to ticket closure fell by 50%.",
-          "Won first prize in the company hackathon with a GPT-4 customer service chatbot that cut query resolution time by about 70%.",
-          "Rebuilt the payment statement generation system, cutting the error rate in statements by about 92%."
-        ]
-      },
-      {
-        "id": "bajaj",
-        "company": "Bajaj Finserv Health",
-        "title": "Product Manager, Organic Growth",
-        "start": "May 2022",
-        "end": "September 2022",
-        "summary": "Worked on organic growth and built a system linking diseases, symptoms, lab tests and doctors.",
-        "details": [
-          "Created a system from scratch that links key healthcare elements, used to help diagnosis and to recommend lab tests and doctors.",
-          "Grew organic doctor sign-ups from about 50 a month to about 400 a month.",
-          "Grew organic web traffic from about 80,000 a month to 350,000 a month."
-        ]
-      }
-    ],
-    "education": [
-      {
-        "id": "mba",
-        "degree": "MBA in Finance",
-        "school": "University Business School, Panjab University",
-        "years": "2020 to 2022"
-      },
-      {
-        "id": "be",
-        "degree": "B.E. in Metallurgical Engineering",
-        "school": "PEC University of Technology, Chandigarh",
-        "years": "2013 to 2017"
+        "value": "Five years as an AI product manager at Datasutram.ai, CaaStle and Bajaj Finserv Health."
       }
     ],
     "skills": [
       {
         "name": "Mechanistic interpretability",
         "iconId": "mechanistic-interpretability"
-      },
-      {
-        "name": "Experiment design and model evaluation",
-        "iconId": "evaluation"
       },
       {
         "name": "Training small language models",
@@ -109,9 +40,11 @@
         "iconId": "product-management"
       }
     ],
+    "aiNote": "The text on this site was written by AI, from my papers and project notes.",
     "contactParagraphs": [
-      "Write to me about AI research, an open role, or a result here that you think is wrong. LinkedIn is the fastest way to reach me.",
-      "I am also happy to talk about product management, physics and DIY projects, or to give advice on anything I have been through (*gyaan dena pasand hai*)."
+      "Feel free to contact me if you want to chat about AI research, product management, physics or DIY projects.",
+      "Please contact me on LinkedIn if you think I'm a good fit for an AI research role.",
+      "And don't hesitate to message me for advice on anything. I love passing on the fruit of my wisdom (*gyaan dena pasand hai*)."
     ],
     "links": {
       "linkedin": "https://www.linkedin.com/in/shailesh-rana-9236971b6/",
@@ -125,13 +58,13 @@
     {
       "slug": "emergence-of-consciousness-traits",
       "title": "Emergence of Consciousness Traits in a SLM",
-      "summary": "A small language model trained on text filtered of writing about minds developed narrow forms of four consciousness traits just by learning to forecast a simulated world. It passed 75% of access tests, against 9% for a baseline.",
+      "summary": "I trained a small AI model on text with everything that could teach it about consciousness removed. It then learned only to predict a simulated world. Narrow forms of four traits of consciousness still appeared, in all five training runs.",
       "group": "research",
       "groupLabel": "Research",
       "order": 1,
       "year": "2026",
       "kind": "Paper",
-      "status": "Paper, code, training text and all model weights are public.",
+      "status": "The paper, code, training text and all trained models are public.",
       "links": [
         {
           "label": "Paper",
@@ -153,17 +86,68 @@
       "stats": [
         {
           "value": "5 of 5",
-          "label": "training runs showed narrow forms of all four traits"
+          "label": "training runs in which narrow forms of all four traits appeared"
         },
         {
           "value": "75%",
-          "label": "of access tests passed, against 9% for a forecaster that ignores the earlier fact"
+          "label": "of tests passed on using a fact from earlier, against 9% for a comparison that ignores the fact"
         },
         {
           "value": "94%",
-          "label": "of tests on what the animal's actions change, against 1% for a forecaster that ignores actions"
+          "label": "of tests passed on predicting what its own actions change, against 1% for a comparison that ignores the actions"
         }
       ],
+      "cover": {
+        "src": "/media/emergence-of-consciousness-traits/overview.png",
+        "alt": "How the experiment worked: web text is filtered, a small model is trained on what remains, it then trains in a simulated savanna, and is tested for four traits"
+      },
+      "evidence": {
+        "title": "What the model could do after training",
+        "intro": "Each test asks the model to predict what happens next in the simulated world. The red bar is the model. The grey bar is a comparison that cannot use the ability being tested.",
+        "footnote": "Averages over five training runs. These are tests of ability only. The paper makes no claim about experience.",
+        "rows": [
+          {
+            "name": "Access",
+            "meaning": "Using a fact it saw earlier in the day",
+            "model": "75%",
+            "modelPct": 75,
+            "modelCaption": "of tests passed",
+            "baseline": "9%",
+            "baselinePct": 9,
+            "baselineCaption": "for a comparison that ignores the fact"
+          },
+          {
+            "name": "Self-modelling",
+            "meaning": "Predicting what its own actions will change",
+            "model": "94%",
+            "modelPct": 94,
+            "modelCaption": "of tests passed",
+            "baseline": "1%",
+            "baselinePct": 1,
+            "baselineCaption": "for a comparison that ignores the actions"
+          },
+          {
+            "name": "Integration",
+            "meaning": "Combining two facts given hours apart",
+            "model": "36%",
+            "modelPct": 36,
+            "modelCaption": "of tests passed",
+            "baseline": "11%",
+            "baselinePct": 11,
+            "baselineCaption": "for a comparison that ignores one of the facts"
+          },
+          {
+            "name": "Metacognition",
+            "meaning": "Being less sure when things may have changed out of sight",
+            "model": "0.57",
+            "modelPct": 57,
+            "modelCaption": "uncertainty about where the herd is, when the herd could have moved",
+            "baseline": "0.03",
+            "baselinePct": 3,
+            "baselineCaption": "uncertainty when the herd could not have moved"
+          }
+        ]
+      },
       "aliases": [
         "emergence of consciousness traits",
         "consciousness traits paper",
@@ -196,13 +180,13 @@
     {
       "slug": "the-shape-of-wisdom",
       "title": "The Shape of Wisdom: how models converge on an answer",
-      "summary": "In four open language models, the answer to a factual question becomes readable from the internal state within one layer, 47% to 71% of the way through. Late in the network, moving a wrong answer's state to the right answer's centre fixes 83% to 97% of them.",
+      "summary": "When a language model answers a factual question, the answer shows up inside the model at one specific layer, between 47% and 71% of the way through. Late in the model, moving its internal state to where the right answer sits fixed 83% to 97% of wrong answers.",
       "group": "research",
       "groupLabel": "Research",
       "order": 2,
       "year": "2026",
       "kind": "Paper",
-      "status": "Paper on arXiv (version 2); code, dataset and results public.",
+      "status": "Paper on arXiv. Code, dataset and results are public.",
       "links": [
         {
           "label": "Paper",
@@ -216,17 +200,18 @@
       "stats": [
         {
           "value": "47%–71%",
-          "label": "of the way through the network, the single layer where the answer becomes readable"
+          "label": "how far through the model the answer appears, depending on the model. It appears within a single layer."
         },
         {
           "value": "83%–97%",
-          "label": "of wrong answers corrected by moving the state to the right answer's centroid, against 2%–4% for a random move"
-        },
-        {
-          "value": "0.75–0.82",
-          "label": "AUC for spotting near misses from the state, against 0.49–0.66 for the model's own confidence"
+          "label": "of wrong answers fixed by moving the model's internal state to where the right answer sits. A random move of the same size fixed 2%–4%."
         }
       ],
+      "cover": {
+        "src": "/media/the-shape-of-wisdom/states-by-layer.png",
+        "alt": "Questions about twelve countries inside a language model: a tangled cloud in early layers that separates by country from layer 15"
+      },
+      "evidence": null,
       "aliases": [
         "Shape of Wisdom",
         "the shape of wisdom paper",
@@ -252,76 +237,15 @@
       ]
     },
     {
-      "slug": "when-wrappers-hide-what-a-model-knows",
-      "title": "When wrappers hide what a language model knows",
-      "summary": "Placing a question inside a tool result, web page or email makes four open models lose 6% to 18% of answers they know, and server logs up to 39%. The model still reads the question; the answer is lost later, where the reply begins.",
+      "slug": "research-paper-semantic-gravity",
+      "title": "Semantic Gravity Wells: Why Negative Constraints Backfire",
+      "summary": "If you tell a language model \"do not use the word Paris\", it often says Paris anyway. I traced why. In 87.5% of the failures, the word appearing in the instruction is what pushed the model to say it.",
       "group": "research",
       "groupLabel": "Research",
       "order": 3,
       "year": "2026",
       "kind": "Paper",
-      "status": "Paper, code, data and results public on GitHub.",
-      "links": [
-        {
-          "label": "Paper",
-          "href": "https://github.com/gut-puncture/interface-formatting-study/blob/main/paper/main.pdf"
-        },
-        {
-          "label": "Code",
-          "href": "https://github.com/gut-puncture/interface-formatting-study"
-        }
-      ],
-      "stats": [
-        {
-          "value": "6%–18%",
-          "label": "of known answers lost inside tool results, web pages and emails, against a noise floor of 0.3%–1.2%"
-        },
-        {
-          "value": "64%",
-          "label": "of answers lost to server logs replaced by a description of the log"
-        },
-        {
-          "value": "51%–83%",
-          "label": "of failed prompts answered with another question's answer once its internal states are swapped in"
-        }
-      ],
-      "aliases": [
-        "When wrappers hide what a language model knows",
-        "wrappers paper",
-        "interface formatting study",
-        "the question gets through the answer does not",
-        "rappers paper"
-      ],
-      "markdown": "A wrapper is the text a question arrives in when nobody asks it directly: a tool result, a web page, a server log, an email thread or plain prose. I found that wrappers make four open models lose answers they know. Tool results, web pages and email threads lose 6% to 18% of known answers, depending on the model, against 0.3% to 1.2% when one neutral sentence is added. Server logs lose 6% to 39%, and up to 67% at one length in Qwen3-4B.\n\nThe model still reads the question inside the wrapper. The answer is lost later, at the position where the reply begins.\n\n## Method\n\nI asked Qwen3-4B, Qwen3-8B, OLMo-3-7B and Gemma-4-12B 1,606 short questions: 839 facts, such as the capital of Mongolia, 450 arithmetic problems and 317 word translations. For each model I kept only the questions it answers correctly when asked plainly, 71% to 80% of them.\n\nI placed each kept question inside the five wrappers, at about 700, 2,000 and 16,000 tokens. The surrounding text is bland office news that never contains the answer. An answer counts as kept if it appears anywhere in the reply.\n\n![Four panels, one per model, showing the share of known answers kept for each wrapper at three prompt lengths; server logs drop to about a third in Qwen3-4B and OLMo-3-7B at 2,000 tokens, while the other wrappers mostly stay near or above 0.8](/media/when-wrappers-hide-what-a-model-knows/answers-kept-by-wrapper.png)\n*Share of known answers kept, by wrapper and prompt length. The dotted line is the noise floor.*\n\n## What I found\n\n- Logs change the task. In 64% of the answers lost to logs, the model describes the log instead, for example \"The logs show that multiple jobs are failing\".\n- The other wrappers change the answer. Their losses become wrong answers, or claims that the text holds no answer. Plain prose draws such claims most often, in 73% of its losses.\n- These wrong answers take weakly held knowledge. Among answers the model gives with probability 0.5 to 0.8, wrappers other than logs turn 26% into wrong answers. Above 0.999 this falls to 1.2%. Logs hit firm answers as hard as weak ones: 14% of the weakest and 15% of the firmest become descriptions of the log.\n\n## Where the answer is lost\n\nI used activation patching (rerunning a failed prompt with one internal state copied from another run) on failed wrapped prompts.\n\n- Swapping in another question's states at the question's words makes the model give that other question's answer in 51% to 83% of failures at the best layer, depending on the model. That other question, asked inside the same wrapper, gets its answer in 40% to 78%. So the wrapper does not stop the model reading the question.\n- Restoring the failed question's own plain states brings its answer back in at most 47%.\n- Restoring the last position, where the reply begins, first brings the answer back in at least half of failures at 59% to 69% of the network's depth. That is where the question's content arrives there, and where the swapped question stops having any effect.\n\n## Limits\n\nThe wrappers come from templates and hold bland content; real tool outputs may pull harder or less. I used one layout, about 500 tokens of wrapper after the question, chosen because a shorter one lost too few answers in Qwen3-4B. The answers are short, reasoning is off and the largest model has 12 billion parameters. Only Qwen3-4B was patched at every layer, and log failures per model are few.",
-      "headings": [
-        {
-          "depth": 2,
-          "text": "Method"
-        },
-        {
-          "depth": 2,
-          "text": "What I found"
-        },
-        {
-          "depth": 2,
-          "text": "Where the answer is lost"
-        },
-        {
-          "depth": 2,
-          "text": "Limits"
-        }
-      ]
-    },
-    {
-      "slug": "research-paper-semantic-gravity",
-      "title": "Semantic Gravity Wells: Why Negative Constraints Backfire",
-      "summary": "Tell a language model \"do not use the word X\" and how often it fails depends mostly on how strongly it wanted to say X. In 87.5% of failures, naming the word in the instruction primed the model to say it.",
-      "group": "research",
-      "groupLabel": "Research",
-      "order": 4,
-      "year": "2026",
-      "kind": "Paper",
-      "status": "Paper on arXiv; code and the 2,500 prompts are public.",
+      "status": "Paper on arXiv. Code and the 2,500 prompts are public.",
       "links": [
         {
           "label": "Paper",
@@ -334,18 +258,20 @@
       ],
       "stats": [
         {
-          "value": "78%",
-          "label": "of the variation in violation rate explained by the word's probability without the instruction"
+          "value": "87.5%",
+          "label": "of failures were caused by priming: naming the forbidden word in the instruction made the model more likely to say it."
+        },
+        {
+          "value": "12.5%",
+          "label": "of failures happened another way: the model understood the instruction, but its last layers pushed the word out anyway."
         },
         {
           "value": "4.4×",
-          "label": "weaker suppression in failures than in successes: 5.2 against 22.8 percentage points"
-        },
-        {
-          "value": "87.5%",
-          "label": "of failures showed priming: the instruction's mention of the word pushed toward it"
+          "label": "weaker push against the word when the model failed than when it obeyed."
         }
       ],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "semantic gravity",
         "semantic gravity wells",
@@ -376,15 +302,77 @@
       ]
     },
     {
+      "slug": "when-wrappers-hide-what-a-model-knows",
+      "title": "When wrappers hide what a language model knows",
+      "summary": "Language models often get questions buried inside tool results, web pages, emails or server logs. I found that this makes them lose answers they know: 6% to 18% of them inside tool results, web pages and emails, and up to 39% inside server logs.",
+      "group": "research",
+      "groupLabel": "Research",
+      "order": 4,
+      "year": "2026",
+      "kind": "Paper",
+      "status": "Paper, code, data and results are public on GitHub.",
+      "links": [
+        {
+          "label": "Paper",
+          "href": "https://github.com/gut-puncture/interface-formatting-study/blob/main/paper/main.pdf"
+        },
+        {
+          "label": "Code",
+          "href": "https://github.com/gut-puncture/interface-formatting-study"
+        }
+      ],
+      "stats": [
+        {
+          "value": "6%–18%",
+          "label": "of answers the model knows are lost when the question sits inside a tool result, web page or email."
+        },
+        {
+          "value": "up to 39%",
+          "label": "of known answers lost inside server logs. The model usually starts describing the log instead of answering."
+        }
+      ],
+      "cover": {
+        "src": "/media/when-wrappers-hide-what-a-model-knows/answers-kept-by-wrapper.png",
+        "alt": "Four charts, one per model, of how many known answers survive inside each kind of wrapper"
+      },
+      "evidence": null,
+      "aliases": [
+        "When wrappers hide what a language model knows",
+        "wrappers paper",
+        "interface formatting study",
+        "the question gets through the answer does not",
+        "rappers paper"
+      ],
+      "markdown": "A wrapper is the text a question arrives in when nobody asks it directly: a tool result, a web page, a server log, an email thread or plain prose. I found that wrappers make four open models lose answers they know. Tool results, web pages and email threads lose 6% to 18% of known answers, depending on the model, against 0.3% to 1.2% when one neutral sentence is added. Server logs lose 6% to 39%, and up to 67% at one length in Qwen3-4B.\n\nThe model still reads the question inside the wrapper. The answer is lost later, at the position where the reply begins.\n\n## Method\n\nI asked Qwen3-4B, Qwen3-8B, OLMo-3-7B and Gemma-4-12B 1,606 short questions: 839 facts, such as the capital of Mongolia, 450 arithmetic problems and 317 word translations. For each model I kept only the questions it answers correctly when asked plainly, 71% to 80% of them.\n\nI placed each kept question inside the five wrappers, at about 700, 2,000 and 16,000 tokens. The surrounding text is bland office news that never contains the answer. An answer counts as kept if it appears anywhere in the reply.\n\n![Four panels, one per model, showing the share of known answers kept for each wrapper at three prompt lengths; server logs drop to about a third in Qwen3-4B and OLMo-3-7B at 2,000 tokens, while the other wrappers mostly stay near or above 0.8](/media/when-wrappers-hide-what-a-model-knows/answers-kept-by-wrapper.png)\n*Share of known answers kept, by wrapper and prompt length. The dotted line is the noise floor.*\n\n## What I found\n\n- Logs change the task. In 64% of the answers lost to logs, the model describes the log instead, for example \"The logs show that multiple jobs are failing\".\n- The other wrappers change the answer. Their losses become wrong answers, or claims that the text holds no answer. Plain prose draws such claims most often, in 73% of its losses.\n- These wrong answers take weakly held knowledge. Among answers the model gives with probability 0.5 to 0.8, wrappers other than logs turn 26% into wrong answers. Above 0.999 this falls to 1.2%. Logs hit firm answers as hard as weak ones: 14% of the weakest and 15% of the firmest become descriptions of the log.\n\n## Where the answer is lost\n\nI used activation patching (rerunning a failed prompt with one internal state copied from another run) on failed wrapped prompts.\n\n- Swapping in another question's states at the question's words makes the model give that other question's answer in 51% to 83% of failures at the best layer, depending on the model. That other question, asked inside the same wrapper, gets its answer in 40% to 78%. So the wrapper does not stop the model reading the question.\n- Restoring the failed question's own plain states brings its answer back in at most 47%.\n- Restoring the last position, where the reply begins, first brings the answer back in at least half of failures at 59% to 69% of the network's depth. That is where the question's content arrives there, and where the swapped question stops having any effect.\n\n## Limits\n\nThe wrappers come from templates and hold bland content; real tool outputs may pull harder or less. I used one layout, about 500 tokens of wrapper after the question, chosen because a shorter one lost too few answers in Qwen3-4B. The answers are short, reasoning is off and the largest model has 12 billion parameters. Only Qwen3-4B was patched at every layer, and log failures per model are few.",
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Method"
+        },
+        {
+          "depth": 2,
+          "text": "What I found"
+        },
+        {
+          "depth": 2,
+          "text": "Where the answer is lost"
+        },
+        {
+          "depth": 2,
+          "text": "Limits"
+        }
+      ]
+    },
+    {
       "slug": "how-a-7-billion-parameter-ai-cannot-add",
       "title": "How a 7-Billion-Parameter AI Cannot Add",
-      "summary": "Qwen 2.5 7B adds long numbers better when the sum is one digit longer than the numbers, the case that should be harder: 44% right at 10 digits, against 20% when the sum stays the same length. The pattern fits a bias toward longer answers.",
+      "summary": "A 7-billion-parameter model, Qwen 2.5, gets long additions right more often when the answer is one digit longer than the numbers being added. That should be the harder case. At 10 digits it got 44% right, against 20% when the answer stays the same length.",
       "group": "research",
       "groupLabel": "Research",
       "order": 5,
       "year": "2026",
       "kind": "Study",
-      "status": "Code, results and figures public; small study, not peer reviewed.",
+      "status": "Code, results and figures are public. A small study, not peer reviewed.",
       "links": [
         {
           "label": "Code",
@@ -393,18 +381,23 @@
       ],
       "stats": [
         {
-          "value": "44%",
-          "label": "of 10-digit problems right when the sum gains a digit, against 20% when it does not"
+          "value": "44% vs 20%",
+          "label": "correct at 10 digits when the answer gains a digit, against when it does not."
         },
         {
           "value": "7 of 9",
-          "label": "lengths from 10 to 18 digits where sums that gain a digit were more accurate; the other two tied"
+          "label": "number lengths, from 10 to 18 digits, where the answers that gain a digit were more accurate. The other two were tied."
         },
         {
           "value": "79 of 900",
-          "label": "problems answered correctly overall, across all lengths and both kinds"
+          "label": "problems answered correctly in total."
         }
       ],
+      "cover": {
+        "src": "/media/how-a-7-billion-parameter-ai-cannot-add/accuracy-by-length.png",
+        "alt": "Chart of addition accuracy by number length, higher when the answer gains a digit"
+      },
+      "evidence": null,
       "aliases": [
         "the AI cannot add",
         "AI can't add",
@@ -434,13 +427,13 @@
     {
       "slug": "white-dwarf-variability",
       "title": "Two White Dwarfs with Repeating Brightness",
-      "summary": "I measured a 117.4-minute brightness cycle in a known white dwarf, seen in three separate sets of observations, and a 3.431-day candidate cycle in a second. I found no earlier report of either period; neither has had expert review.",
+      "summary": "I found a brightness cycle of 117.4 minutes in a known white dwarf star, and a possible 3.431-day cycle in a second one. I could not find an earlier report of either. No astronomer has reviewed this yet.",
       "group": "research",
       "groupLabel": "Research",
       "order": 6,
       "year": "2026",
       "kind": "Finding",
-      "status": "Public research record that anyone can rerun; not yet reviewed by an astronomer.",
+      "status": "Public record that anyone can rerun. Not yet reviewed by an astronomer.",
       "links": [
         {
           "label": "Code",
@@ -450,17 +443,18 @@
       "stats": [
         {
           "value": "117.4 min",
-          "label": "brightness cycle in SDSS J112148.80+103934.2, found in early nights and confirmed in later ones"
-        },
-        {
-          "value": "5",
-          "label": "separate TESS observing sectors in which the same 117.4-minute cycle appears"
+          "label": "brightness cycle in the first star. It shows up in three separate sets of observations."
         },
         {
           "value": "3.431 days",
-          "label": "candidate cycle in WDJ215009.13+471257.26, still to be confirmed with another telescope"
+          "label": "possible cycle in the second star. It still needs to be confirmed with another telescope."
         }
       ],
+      "cover": {
+        "src": "/media/white-dwarf-variability/overview.png",
+        "alt": "Brightness of the two stars plotted against position in the cycle; earlier and later nights follow the same curve"
+      },
+      "evidence": null,
       "aliases": [
         "white dwarf variability",
         "white dwarf project",
@@ -494,13 +488,13 @@
     {
       "slug": "q-commerce-demo-list-to-cart",
       "title": "List to Cart",
-      "summary": "A quick-commerce demo that turns a photo of a shopping list into a cart: upload a screenshot or a handwritten list, and pick each item from a row of matching products.",
+      "summary": "Take a photo of a shopping list and get a full cart. You upload a screenshot or a handwritten list, and pick each item from a row of matching products.",
       "group": "builds",
       "groupLabel": "Builds",
       "order": 1,
       "year": "2025",
       "kind": "Demo",
-      "status": "Working demo; not built for production.",
+      "status": "Working demo. Not built for production use.",
       "links": [
         {
           "label": "Demo",
@@ -512,6 +506,8 @@
         }
       ],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "list to cart",
         "list to cart demo",
@@ -540,13 +536,13 @@
     {
       "slug": "continuous-learning-llm",
       "title": "Continuous Learning LLM",
-      "summary": "A pipeline that lets a language model keep learning from its chats with a user: it scores which messages matter, condenses them into insights and fine-tunes on them. The model recalled about 86% of the insights and lost under 2% on its original skills.",
+      "summary": "A system that lets a language model keep learning from its chats with a user. It picks the messages that matter, turns them into short insights and trains the model on them. In my test the model recalled about 86% of the insights.",
       "group": "builds",
       "groupLabel": "Builds",
       "order": 2,
       "year": "2025",
       "kind": "Prototype",
-      "status": "Prototype tested over 3 fine-tuning rounds; needs changes before use at scale.",
+      "status": "Prototype, tested over 3 rounds of training. Needs changes before real use.",
       "links": [
         {
           "label": "Code",
@@ -554,6 +550,8 @@
         }
       ],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "continuous learning LLM",
         "continual learning",
@@ -581,15 +579,17 @@
     {
       "slug": "ai-agent-communication-protocol",
       "title": "AI Agent Communication Protocol",
-      "summary": "An unfinished design for how a team of AI agents talk to each other: a shared message bus that runs in one process on a laptop and logs every message so a whole task can be replayed.",
+      "summary": "An unfinished design for how a team of AI agents can talk to each other. All messages go through one shared channel and are logged, so a whole task can be replayed later.",
       "group": "builds",
       "groupLabel": "Builds",
       "order": 3,
       "year": "2025",
       "kind": "Prototype",
-      "status": "Unfinished; the design is written up but the build is not complete.",
+      "status": "Unfinished. The design is written up; the build is not complete.",
       "links": [],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "agent communication protocol",
         "agent protocol",
@@ -616,15 +616,17 @@
     {
       "slug": "smart-medical-search",
       "title": "Smart Medical Search",
-      "summary": "Describe your symptoms in plain words and the search suggests which kind of doctor to see. A search index of medical terms built with text embeddings in 2 days; it works for specialties but has known gaps.",
+      "summary": "You describe your symptoms in plain words and it suggests which kind of doctor to see. I built it in 2 days. It works for finding the right specialty and has known gaps elsewhere.",
       "group": "builds",
       "groupLabel": "Builds",
       "order": 4,
       "year": "2025",
       "kind": "Demo",
-      "status": "Demo built in 2 days; symptom-to-disease matching and duplicate results unfixed.",
+      "status": "Demo. Two known problems are still unfixed.",
       "links": [],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "smart medical search",
         "medical search",
@@ -652,13 +654,13 @@
     {
       "slug": "ai-shoe-design",
       "title": "AI Shoe Design",
-      "summary": "A web app that designs a shoe to match a fashion brand's look: upload photos of the brand's clothes and accessories, and it writes a design brief and generates an image of a new shoe.",
+      "summary": "A web app that designs a shoe to match a fashion brand. You upload photos of the brand's clothes and accessories, and it writes a design brief and generates a picture of a new shoe.",
       "group": "builds",
       "groupLabel": "Builds",
       "order": 5,
       "year": "2025",
       "kind": "App",
-      "status": "Live app; built quickly as a proof of concept.",
+      "status": "Live app. Built quickly as a proof of concept.",
       "links": [
         {
           "label": "App",
@@ -670,6 +672,8 @@
         }
       ],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "AI shoe design",
         "the shoe app",
@@ -692,13 +696,13 @@
     {
       "slug": "q-commerce-demo-grocery-crate-analysis-wrt-customer-profile",
       "title": "Grocery Crate Quality Check",
-      "summary": "A demo that checks a photo of a packed grocery crate against the customer it is meant for: the produce must be near-flawless for a premium customer, acceptable for an average one. It answers approved or not approved.",
+      "summary": "A demo that looks at a photo of a packed grocery crate and decides if it is good enough for the customer it is going to. A premium customer needs near-perfect produce. An average customer can get acceptable produce.",
       "group": "builds",
       "groupLabel": "Builds",
       "order": 6,
       "year": "2025",
       "kind": "Demo",
-      "status": "Demo on free Hugging Face hosting; it may be asleep when you visit.",
+      "status": "Demo on free hosting, so it may take a while to wake up.",
       "links": [
         {
           "label": "Demo",
@@ -710,6 +714,8 @@
         }
       ],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "grocery crate",
         "grocery cart demo",
@@ -733,15 +739,17 @@
     {
       "slug": "the-medium-ai-articles",
       "title": "Medium Articles on How AI Works",
-      "summary": "Four Medium posts that explain how today's AI works in plain language, from neural network basics and transformers to a plan for AI agents that act as virtual employees.",
+      "summary": "Four Medium posts that explain how today's AI works in plain language. They go from the basics of neural networks to transformers, and end with a plan for AI agents that work like employees.",
       "group": "side-quests",
       "groupLabel": "Side quests",
       "order": 1,
       "year": "2024",
       "kind": "Writing",
-      "status": "Four posts published; the series has paused.",
+      "status": "Four posts published. The series is paused.",
       "links": [],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "Medium articles",
         "the Medium posts",
@@ -765,13 +773,13 @@
     {
       "slug": "parker-square-search",
       "title": "Parker Square Search",
-      "summary": "A search for a 3×3 magic square made of nine different perfect squares, an unsolved maths problem. I reduced the problem to one variable using Pell equations, so the search loops over a single number.",
+      "summary": "A search for a 3×3 magic square made of nine different square numbers, which is an unsolved maths problem. I rewrote the problem so the search only has to loop over one number.",
       "group": "side-quests",
       "groupLabel": "Side quests",
       "order": 2,
       "year": "2025",
       "kind": "Experiment",
-      "status": "Search code public; a few hours' side project with no more time planned.",
+      "status": "The search code is public. I spent a few hours on it and don't plan more.",
       "links": [
         {
           "label": "Code",
@@ -779,6 +787,8 @@
         }
       ],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "Parker square",
         "Parker square search",
@@ -805,15 +815,17 @@
     {
       "slug": "garden-watering-system",
       "title": "Garden Watering System",
-      "summary": "A home-built gadget to automate watering my plants: an ESP32 Wi-Fi microcontroller reading a soil moisture sensor, sealed in a weatherproof box in a planter. The sensing unit works; its battery power is not yet reliable.",
+      "summary": "A gadget I am building to water my plants automatically. A small Wi-Fi board reads a soil moisture sensor from a weatherproof box in the planter. The sensor part works. The battery power doesn't yet.",
       "group": "side-quests",
       "groupLabel": "Side quests",
       "order": 3,
       "year": "2025",
       "kind": "Hardware",
-      "status": "Sensing unit working in a planter; power supply still to be sorted.",
+      "status": "The sensor works in the planter. The power supply still needs fixing.",
       "links": [],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "garden watering system",
         "plant watering",
@@ -845,13 +857,13 @@
     {
       "slug": "claude-3-5-sonnet-twitter-account",
       "title": "Claude with a Twitter Account",
-      "summary": "I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and the state of the world. It posted for a short while; I abandoned it because API access good enough to run it cost $200 a month.",
+      "summary": "I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and the news. It posted for a short while. I stopped because the Twitter access it needed cost $200 a month.",
       "group": "side-quests",
       "groupLabel": "Side quests",
       "order": 4,
       "year": "2025",
       "kind": "Experiment",
-      "status": "Abandoned: running it well needed paid API access at $200 a month.",
+      "status": "Abandoned because of the cost of Twitter's API.",
       "links": [
         {
           "label": "Code",
@@ -859,6 +871,8 @@
         }
       ],
       "stats": [],
+      "cover": null,
+      "evidence": null,
       "aliases": [
         "Claude on Twitter",
         "Claude Twitter account",

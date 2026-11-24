@@ -5,15 +5,14 @@ group: "research"
 order: 2
 year: "2026"
 kind: "Paper"
-summary: "In four open language models, the answer to a factual question becomes readable from the internal state within one layer, 47% to 71% of the way through. Late in the network, moving a wrong answer's state to the right answer's centre fixes 83% to 97% of them."
-status: "Paper on arXiv (version 2); code, dataset and results public."
+summary: "When a language model answers a factual question, the answer shows up inside the model at one specific layer, between 47% and 71% of the way through. Late in the model, moving its internal state to where the right answer sits fixed 83% to 97% of wrong answers."
+status: "Paper on arXiv. Code, dataset and results are public."
 links:
   - { label: "Paper", href: "https://arxiv.org/abs/2606.01202" }
   - { label: "Code", href: "https://github.com/gut-puncture/The-Shape-of-Wisdom" }
 stats:
-  - { value: "47%–71%", label: "of the way through the network, the single layer where the answer becomes readable" }
-  - { value: "83%–97%", label: "of wrong answers corrected by moving the state to the right answer's centroid, against 2%–4% for a random move" }
-  - { value: "0.75–0.82", label: "AUC for spotting near misses from the state, against 0.49–0.66 for the model's own confidence" }
+  - { value: "47%–71%", label: "how far through the model the answer appears, depending on the model. It appears within a single layer." }
+  - { value: "83%–97%", label: "of wrong answers fixed by moving the model's internal state to where the right answer sits. A random move of the same size fixed 2%–4%." }
 aliases: ["Shape of Wisdom", "the shape of wisdom paper", "answer centroids", "how language models converge on an answer", "shape of wisdom", "shape of wise dom"]
 agent: >
   The Shape of Wisdom, How Language Models Converge on an Answer, is a 2026 paper by
@@ -31,6 +30,7 @@ agent: >
   the model's confidence. Limits: short
   factual questions with 62 fixed answers, and models of 1 to 9 billion parameters. The
   paper, code, dataset and results are public.
+cover: { src: "/media/the-shape-of-wisdom/states-by-layer.png", alt: "Questions about twelve countries inside a language model: a tangled cloud in early layers that separates by country from layer 15" }
 ---
 
 When a language model answers a factual question, its internal state moves into a region shared by every question that gets the same answer, summarised by its centre, the answer centroid. In four open models the answer becomes readable from the state within a single layer, between 47% and 71% of the way through the network. After that layer, moving a wrongly answered question's state to the right answer's centroid makes the model give the right answer in 83% to 97% of cases late in the network, against 2% to 4% for a random move of the same size.

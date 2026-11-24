@@ -5,8 +5,8 @@ group: "side-quests"
 order: 4
 year: "2025"
 kind: "Experiment"
-summary: "I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and the state of the world. It posted for a short while; I abandoned it because API access good enough to run it cost $200 a month."
-status: "Abandoned: running it well needed paid API access at $200 a month."
+summary: "I gave Claude 3.5 Sonnet its own Twitter account to see how it would react to tweets and the news. It posted for a short while. I stopped because the Twitter access it needed cost $200 a month."
+status: "Abandoned because of the cost of Twitter's API."
 links:
   - { label: "Code", href: "https://github.com/gut-puncture/claude_on_twt" }
 aliases: ["Claude on Twitter", "Claude Twitter account", "Claude on twt", "the Twitter bot", "Claude 3.5 Sonnet Twitter"]

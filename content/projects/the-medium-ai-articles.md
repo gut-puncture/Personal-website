@@ -5,8 +5,8 @@ group: "side-quests"
 order: 1
 year: "2024"
 kind: "Writing"
-summary: "Four Medium posts that explain how today's AI works in plain language, from neural network basics and transformers to a plan for AI agents that act as virtual employees."
-status: "Four posts published; the series has paused."
+summary: "Four Medium posts that explain how today's AI works in plain language. They go from the basics of neural networks to transformers, and end with a plan for AI agents that work like employees."
+status: "Four posts published. The series is paused."
 links: []
 aliases: ["Medium articles", "the Medium posts", "AI explained articles", "AI simplified", "his blog posts", "medium AI articles"]
 agent: >
